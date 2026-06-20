@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ─── Design tokens — light theme ONLY, per design system ───────────── */
+  --color-blue: #007AFF;
+  --color-blue-light: #E8F1FF;
+  --color-green: #34C759;
+  --color-red: #FF3B30;
+  --color-orange: #FF9500;
+
+  --color-black: #1D1D1F;
+  --color-gray-1: #6E6E73;
+  --color-gray-2: #F5F5F7;
+  --color-gray-3: #E5E5EA;
+  --color-white: #FFFFFF;
+
+  --radius-sm: 16px;
+  --radius-md: 24px;
+  --radius-lg: 28px;
+  --radius-xl: 32px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+
+  --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, sans-serif;
+}
+
+html, body {
+  font-family: var(--font-system);
+  color: var(--color-black);
+  background: var(--color-white);
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Dark mode is explicitly NOT supported — per design system rule. This is
+ * deliberate, not an oversight: no `@media (prefers-color-scheme: dark)`
+ * block exists anywhere in this file or in Tailwind config.
+ */
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+.animate-typing-dot {
+  animation: typing-bounce 1.2s infinite ease-in-out;
+}
