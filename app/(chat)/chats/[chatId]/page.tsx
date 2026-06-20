@@ -31,14 +31,22 @@ export default function ChatThreadPage() {
       if (!user) return;
       setCurrentUserId(user.id);
 
-      const { data: members } = await supabase
+      const { data: membership } = await supabase
         .from("chat_members")
-        .select("user_id, profiles(*)")
+        .select("user_id")
         .eq("chat_id", chatId)
         .neq("user_id", user.id)
         .maybeSingle();
 
-      if (members?.profiles) setOtherUser(members.profiles as unknown as Profile);
+      if (!membership) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", membership.user_id)
+        .maybeSingle();
+
+      if (profile) setOtherUser(profile as Profile);
     })();
   }, [chatId]);
 
