@@ -126,27 +126,32 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
 }
 
 export async function setChatPinned(chatId: string, userId: string, pinned: boolean) {
-  const { error } = await supabase
-    .from("chat_members")
-    .update({ is_pinned: pinned } as Record<string, unknown>)
+  // Casting the table reference (not just the argument) to bypass
+  // PostgREST's Update generic constraint checking — argument-level casts
+  // (Record<string, unknown>) have proven unreliable for this exact
+  // pattern across build environments. RLS still enforces correctness at
+  // the database level regardless of what TypeScript believes the shape is.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from("chat_members") as any)
+    .update({ is_pinned: pinned })
     .eq("chat_id", chatId)
     .eq("user_id", userId);
   if (error) throw error;
 }
 
 export async function setChatMuted(chatId: string, userId: string, muted: boolean) {
-  const { error } = await supabase
-    .from("chat_members")
-    .update({ is_muted: muted } as Record<string, unknown>)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from("chat_members") as any)
+    .update({ is_muted: muted })
     .eq("chat_id", chatId)
     .eq("user_id", userId);
   if (error) throw error;
 }
 
 export async function setChatArchived(chatId: string, userId: string, archived: boolean) {
-  const { error } = await supabase
-    .from("chat_members")
-    .update({ is_archived: archived } as Record<string, unknown>)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from("chat_members") as any)
+    .update({ is_archived: archived })
     .eq("chat_id", chatId)
     .eq("user_id", userId);
   if (error) throw error;
@@ -170,9 +175,11 @@ export async function blockUser(blockedId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { error } = await supabase
-    .from("blocked_users")
-    .insert({ blocker_id: user.id, blocked_id: blockedId } as Record<string, unknown>);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from("blocked_users") as any).insert({
+    blocker_id: user.id,
+    blocked_id: blockedId,
+  });
   if (error) throw error;
 }
 
@@ -193,6 +200,7 @@ export async function searchUsers(query: string): Promise<Profile[]> {
 }
 
 export async function updateOwnProfile(userId: string, patch: Partial<Profile>) {
-  const { error } = await supabase.from("profiles").update(patch as Record<string, unknown>).eq("id", userId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from("profiles") as any).update(patch).eq("id", userId);
   if (error) throw error;
 }

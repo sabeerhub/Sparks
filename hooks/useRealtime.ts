@@ -96,14 +96,15 @@ export function usePresence(userId: string | null) {
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
           await channel.track({ online_at: new Date().toISOString() });
-          await supabase.from("profiles").update({ is_online: true } as Record<string, unknown>).eq("id", userId);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase.from("profiles") as any).update({ is_online: true }).eq("id", userId);
         }
       });
 
     const markOffline = async () => {
-      await supabase
-        .from("profiles")
-        .update({ is_online: false, last_seen_at: new Date().toISOString() } as Record<string, unknown>)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("profiles") as any)
+        .update({ is_online: false, last_seen_at: new Date().toISOString() })
         .eq("id", userId);
     };
 
