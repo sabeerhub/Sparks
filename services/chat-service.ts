@@ -20,7 +20,13 @@ const supabase = createClient();
  * the other person's row requires the security-definer function.
  */
 export async function startDirectChat(otherUserId: string): Promise<string> {
-  const { data, error } = await supabase.rpc("create_direct_chat", {
+  // Same generic-inference fragility as insert/update/select calls
+  // elsewhere in this codebase — casting supabase itself to any for this
+  // call bypasses postgrest-js's rpc() Functions constraint checking,
+  // which has shown the same unreliability on Vercel's build despite the
+  // Args shape matching the Database type exactly.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).rpc("create_direct_chat", {
     p_other_user_id: otherUserId,
   });
   if (error) throw error;

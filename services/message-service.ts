@@ -42,7 +42,11 @@ export async function sendMessage({
   const sharedKey = await keyManager.getSharedKey(chatId, theirPublicKeyJwk);
   const { ciphertext, iv } = await encryptMessage(plaintext, sharedKey);
 
-  const { data, error } = await supabase.rpc("send_message", {
+  // Same generic-inference fragility as insert/update/select calls
+  // elsewhere in this codebase — see startDirectChat() in chat-service.ts
+  // for the full explanation.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).rpc("send_message", {
     p_chat_id: chatId,
     p_ciphertext: ciphertext,
     p_iv: iv,
