@@ -31,12 +31,6 @@ export default function ChatThreadPage() {
       if (!user) return;
       setCurrentUserId(user.id);
 
-      // Type the response shape explicitly rather than relying on
-      // Supabase's generic inference from the hand-written Database type.
-      // That inference has shown inconsistent behavior across build
-      // environments (collapsing to `never` for reasons that didn't
-      // reproduce in isolated testing) — asserting the known real shape
-      // here is more reliable than chasing the exact trigger further.
       const membershipQuery = await supabase
         .from("chat_members")
         .select("user_id")
@@ -121,7 +115,7 @@ export default function ChatThreadPage() {
             />
           ))
         )}
-        {isOtherTyping && <TypingIndicator label={otherUser.full_name.split(" ")[0]} />}
+        {isOtherTyping && <TypingIndicator label={otherUser.full_name.split(" ")[0] ?? otherUser.full_name} />}
         <div ref={bottomRef} />
       </div>
 

@@ -9,14 +9,6 @@ import { BottomNav } from "@/components/layout/BottomNav";
  * MVP scope note: voice/video call infrastructure (WebRTC signaling via
  * Supabase Realtime, ICE/TURN config) is intentionally out of scope for
  * this deliverable — the PRD lists calls as a feature card on the landing
- * page, but the core deliverable here is the messaging system. This screen
- * is wired to real chat data for "who would I call" but call initiation
- * is a stub, flagged honestly rather than faked with a working-looking button.
- */
-/**
- * MVP scope note: voice/video call infrastructure (WebRTC signaling via
- * Supabase Realtime, ICE/TURN config) is intentionally out of scope for
- * this deliverable — the PRD lists calls as a feature card on the landing
  * page, but the core deliverable here is the messaging system. The row
  * layout below matches the design reference exactly so it's ready to wire
  * up to a `calls` table the moment that backend exists; until then this
@@ -68,7 +60,7 @@ export default function ActivityPage() {
             {filtered.map((call) => (
               <div key={call.id} className="flex items-center gap-3 px-5 py-3">
                 <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-semibold" style={{ background: "var(--color-blue)" }}>
-                  {call.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                  {call.name.split(" ").map((n) => n[0] ?? "").join("").slice(0, 2)}
                 </div>
                 <div className="flex-1">
                   <div className="font-semibold text-sm">{call.name}</div>

@@ -33,6 +33,8 @@ export default function WelcomePage() {
     else router.push("/onboarding/profile-setup");
   };
 
+  if (!slide) return null;
+
   return (
     <ScreenContainer>
       <StatusBar />

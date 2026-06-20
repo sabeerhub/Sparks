@@ -39,19 +39,20 @@ class SlidingWindowRateLimiter {
   }
 
   /** Milliseconds until the next slot frees up, or 0 if available now. */
-  msUntilNextSlot(): number {
+msUntilNextSlot(): number {
     const now = Date.now();
     this.evictExpired(now);
 
     if (this.timestamps.length < this.config.maxRequests) return 0;
 
     const oldest = this.timestamps[0];
+    if (oldest === undefined) return 0;
     return Math.max(0, this.config.windowMs - (now - oldest));
   }
 
   private evictExpired(now: number) {
     const cutoff = now - this.config.windowMs;
-    while (this.timestamps.length && this.timestamps[0] < cutoff) {
+    while (this.timestamps.length > 0 && (this.timestamps[0] as number) < cutoff) {
       this.timestamps.shift();
     }
   }

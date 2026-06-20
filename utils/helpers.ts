@@ -70,5 +70,5 @@ export function classNames(...parts: Array<string | false | null | undefined>): 
 export function colorFromString(str: string): string {
   const palette = ["#007AFF", "#34C759", "#FF9500", "#FF3B30", "#AF52DE", "#5AC8FA"];
   const index = str.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % palette.length;
-  return palette[index];
+  return palette[index] ?? palette[0]!;
 }
