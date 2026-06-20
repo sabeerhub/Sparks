@@ -128,7 +128,7 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
 export async function setChatPinned(chatId: string, userId: string, pinned: boolean) {
   const { error } = await supabase
     .from("chat_members")
-    .update({ is_pinned: pinned })
+    .update({ is_pinned: pinned } as Record<string, unknown>)
     .eq("chat_id", chatId)
     .eq("user_id", userId);
   if (error) throw error;
@@ -137,7 +137,7 @@ export async function setChatPinned(chatId: string, userId: string, pinned: bool
 export async function setChatMuted(chatId: string, userId: string, muted: boolean) {
   const { error } = await supabase
     .from("chat_members")
-    .update({ is_muted: muted })
+    .update({ is_muted: muted } as Record<string, unknown>)
     .eq("chat_id", chatId)
     .eq("user_id", userId);
   if (error) throw error;
@@ -146,7 +146,7 @@ export async function setChatMuted(chatId: string, userId: string, muted: boolea
 export async function setChatArchived(chatId: string, userId: string, archived: boolean) {
   const { error } = await supabase
     .from("chat_members")
-    .update({ is_archived: archived })
+    .update({ is_archived: archived } as Record<string, unknown>)
     .eq("chat_id", chatId)
     .eq("user_id", userId);
   if (error) throw error;
@@ -163,7 +163,16 @@ export async function deleteChatForSelf(chatId: string, userId: string) {
 }
 
 export async function blockUser(blockedId: string) {
-  const { error } = await supabase.from("blocked_users").insert({ blocked_id: blockedId });
+  // blocker_id must be set explicitly to satisfy the
+  // blocked_users_insert_own RLS policy's with-check (blocker_id =
+  // auth.uid()) — omitting it (as the previous version did) would fail
+  // the insert at the database level regardless of how it's typed.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase
+    .from("blocked_users")
+    .insert({ blocker_id: user.id, blocked_id: blockedId } as Record<string, unknown>);
   if (error) throw error;
 }
 
@@ -184,6 +193,6 @@ export async function searchUsers(query: string): Promise<Profile[]> {
 }
 
 export async function updateOwnProfile(userId: string, patch: Partial<Profile>) {
-  const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
+  const { error } = await supabase.from("profiles").update(patch as Record<string, unknown>).eq("id", userId);
   if (error) throw error;
 }

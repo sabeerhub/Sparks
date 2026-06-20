@@ -122,6 +122,33 @@ export interface ChatListItem {
 }
 
 /**
+ * App-level session registry, separate from what Supabase Auth tracks
+ * internally — gives "log out of all devices" something deterministic to
+ * revoke against. See supabase/migrations/0001_init_schema.sql.
+ */
+export interface UserSession {
+  id: string;
+  user_id: string;
+  device_label: string;
+  refresh_token_id: string;
+  created_at: string;
+  last_active_at: string;
+  revoked_at: string | null;
+}
+
+export interface BlockedUser {
+  blocker_id: string;
+  blocked_id: string;
+  created_at: string;
+}
+
+export interface TypingStatus {
+  chat_id: string;
+  user_id: string;
+  started_at: string;
+}
+
+/**
  * Minimal Supabase Database type for createClient<Database>() typing.
  * In production, replace with `supabase gen types typescript` output.
  *
@@ -143,6 +170,9 @@ export interface Database {
       messages: { Row: EncryptedMessageRow; Insert: Partial<EncryptedMessageRow>; Update: Partial<EncryptedMessageRow>; Relationships: [] };
       message_receipts: { Row: MessageReceipt; Insert: Partial<MessageReceipt>; Update: Partial<MessageReceipt>; Relationships: [] };
       message_reactions: { Row: MessageReaction; Insert: Partial<MessageReaction>; Update: Partial<MessageReaction>; Relationships: [] };
+      user_sessions: { Row: UserSession; Insert: Partial<UserSession>; Update: Partial<UserSession>; Relationships: [] };
+      blocked_users: { Row: BlockedUser; Insert: Partial<BlockedUser>; Update: Partial<BlockedUser>; Relationships: [] };
+      typing_status: { Row: TypingStatus; Insert: Partial<TypingStatus>; Update: Partial<TypingStatus>; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: {

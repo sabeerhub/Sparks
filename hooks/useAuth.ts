@@ -132,14 +132,29 @@ export function useAuth() {
         publicKey = JSON.stringify(publicJwk);
       }
 
-      const { error } = await supabase.from("profiles").insert({
+      // Typed explicitly rather than relying on Supabase's Insert generic
+      // inference against the hand-written Database type — that inference
+      // has shown inconsistent behavior across build environments for
+      // other queries in this codebase (see services/chat-service.ts and
+      // the chat thread page for the same pattern). Defining the literal
+      // here and casting once is more reliable than depending on it.
+      const newProfile: {
+        id: string;
+        username: string;
+        full_name: string;
+        bio: string | null;
+        avatar_url: string | null;
+        public_key: string;
+      } = {
         id: authUser.id,
         username: input.username,
         full_name: input.fullName,
         bio: input.bio ?? null,
         avatar_url: input.avatarUrl ?? null,
         public_key: publicKey,
-      });
+      };
+
+      const { error } = await supabase.from("profiles").insert(newProfile as Record<string, unknown>);
 
       if (error) throw error;
       sessionStorage.removeItem("sparks_pending_public_key");
@@ -160,7 +175,7 @@ export function useAuth() {
     if (authUser) {
       await supabase
         .from("user_sessions")
-        .update({ revoked_at: new Date().toISOString() })
+        .update({ revoked_at: new Date().toISOString() } as Record<string, unknown>)
         .eq("user_id", authUser.id);
     }
     await supabase.auth.signOut({ scope: "global" });

@@ -176,7 +176,7 @@ export async function editMessage(messageId: string, chatId: string, newPlaintex
 
   const { error } = await supabase
     .from("messages")
-    .update({ ciphertext, iv, edited_at: new Date().toISOString() })
+    .update({ ciphertext, iv, edited_at: new Date().toISOString() } as Record<string, unknown>)
     .eq("id", messageId);
 
   if (error) throw error;
@@ -186,15 +186,24 @@ export async function editMessage(messageId: string, chatId: string, newPlaintex
 export async function deleteMessage(messageId: string) {
   const { error } = await supabase
     .from("messages")
-    .update({ ciphertext: "", iv: "", deleted_at: new Date().toISOString() })
+    .update({ ciphertext: "", iv: "", deleted_at: new Date().toISOString() } as Record<string, unknown>)
     .eq("id", messageId);
   if (error) throw error;
 }
 
 export async function reactToMessage(messageId: string, emoji: string) {
+  // user_id must be set explicitly to satisfy the reactions_insert_self_only
+  // RLS policy's with-check (user_id = auth.uid()) — same missing-field
+  // bug pattern as the original blockUser(), fixed the same way.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
   const { error } = await supabase
     .from("message_reactions")
-    .upsert({ message_id: messageId, emoji }, { onConflict: "message_id,user_id" });
+    .upsert(
+      { message_id: messageId, user_id: user.id, emoji } as Record<string, unknown>,
+      { onConflict: "message_id,user_id" }
+    );
   if (error) throw error;
 }
 
@@ -205,22 +214,30 @@ export async function removeReaction(messageId: string) {
 
 export async function markDelivered(messageIds: string[]) {
   if (!messageIds.length) return;
-  const rows = messageIds.map((id) => ({ message_id: id, status: "delivered" as const }));
-  const { error } = await supabase.from("message_receipts").upsert(rows, { onConflict: "message_id,user_id" });
+  // user_id required by receipts_insert_self_only's with-check (user_id =
+  // auth.uid()) — same missing-field pattern fixed elsewhere in this file.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const rows = messageIds.map((id) => ({ message_id: id, user_id: user.id, status: "delivered" as const }));
+  const { error } = await supabase.from("message_receipts").upsert(rows as Record<string, unknown>[], { onConflict: "message_id,user_id" });
   if (error) throw error;
 }
 
 export async function markRead(messageIds: string[]) {
   if (!messageIds.length) return;
-  const rows = messageIds.map((id) => ({ message_id: id, status: "read" as const }));
-  const { error } = await supabase.from("message_receipts").upsert(rows, { onConflict: "message_id,user_id" });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const rows = messageIds.map((id) => ({ message_id: id, user_id: user.id, status: "read" as const }));
+  const { error } = await supabase.from("message_receipts").upsert(rows as Record<string, unknown>[], { onConflict: "message_id,user_id" });
   if (error) throw error;
 }
 
 export async function setTyping(chatId: string, isTyping: boolean) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
   if (isTyping) {
-    const { data: { user } } = await supabase.auth.getUser();
-    await supabase.from("typing_status").upsert({ chat_id: chatId, user_id: user!.id });
+    await supabase.from("typing_status").upsert({ chat_id: chatId, user_id: user.id } as Record<string, unknown>);
   } else {
     await supabase.from("typing_status").delete().eq("chat_id", chatId);
   }
