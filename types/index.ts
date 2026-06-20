@@ -124,17 +124,27 @@ export interface ChatListItem {
 /**
  * Minimal Supabase Database type for createClient<Database>() typing.
  * In production, replace with `supabase gen types typescript` output.
+ *
+ * IMPORTANT: every key below (Tables, Views, Functions, Enums,
+ * CompositeTypes) must be present, and every table needs a `Relationships`
+ * array (empty is fine), even if unused — @supabase/supabase-js's generic
+ * constraints pattern-match against this exact shape. Omitting any of
+ * these keys doesn't just fail loudly on the missing piece; it can make
+ * the query builder's type inference silently collapse to `never` on
+ * otherwise-unrelated `.select()` calls elsewhere in the codebase, which
+ * is exactly the bug this fixes.
  */
 export interface Database {
   public: {
     Tables: {
-      profiles: { Row: Profile; Insert: Partial<Profile>; Update: Partial<Profile> };
-      chats: { Row: Chat; Insert: Partial<Chat>; Update: Partial<Chat> };
-      chat_members: { Row: ChatMember; Insert: Partial<ChatMember>; Update: Partial<ChatMember> };
-      messages: { Row: EncryptedMessageRow; Insert: Partial<EncryptedMessageRow>; Update: Partial<EncryptedMessageRow> };
-      message_receipts: { Row: MessageReceipt; Insert: Partial<MessageReceipt>; Update: Partial<MessageReceipt> };
-      message_reactions: { Row: MessageReaction; Insert: Partial<MessageReaction>; Update: Partial<MessageReaction> };
+      profiles: { Row: Profile; Insert: Partial<Profile>; Update: Partial<Profile>; Relationships: [] };
+      chats: { Row: Chat; Insert: Partial<Chat>; Update: Partial<Chat>; Relationships: [] };
+      chat_members: { Row: ChatMember; Insert: Partial<ChatMember>; Update: Partial<ChatMember>; Relationships: [] };
+      messages: { Row: EncryptedMessageRow; Insert: Partial<EncryptedMessageRow>; Update: Partial<EncryptedMessageRow>; Relationships: [] };
+      message_receipts: { Row: MessageReceipt; Insert: Partial<MessageReceipt>; Update: Partial<MessageReceipt>; Relationships: [] };
+      message_reactions: { Row: MessageReaction; Insert: Partial<MessageReaction>; Update: Partial<MessageReaction>; Relationships: [] };
     };
+    Views: Record<string, never>;
     Functions: {
       create_direct_chat: { Args: { p_other_user_id: string }; Returns: string };
       send_message: {
@@ -150,5 +160,7 @@ export interface Database {
       };
       can_send_message: { Args: { p_limit?: number }; Returns: boolean };
     };
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }

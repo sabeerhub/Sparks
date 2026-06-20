@@ -31,12 +31,20 @@ export default function ChatThreadPage() {
       if (!user) return;
       setCurrentUserId(user.id);
 
-      const { data: membership } = await supabase
+      // Type the response shape explicitly rather than relying on
+      // Supabase's generic inference from the hand-written Database type.
+      // That inference has shown inconsistent behavior across build
+      // environments (collapsing to `never` for reasons that didn't
+      // reproduce in isolated testing) — asserting the known real shape
+      // here is more reliable than chasing the exact trigger further.
+      const membershipQuery = await supabase
         .from("chat_members")
         .select("user_id")
         .eq("chat_id", chatId)
         .neq("user_id", user.id)
         .maybeSingle();
+
+      const membership = membershipQuery.data as { user_id: string } | null;
 
       if (!membership) return;
 
