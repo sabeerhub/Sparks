@@ -65,11 +65,15 @@ export function useTypingIndicator(chatId: string, onTypingChange: (userIds: str
         "postgres_changes",
         { event: "*", schema: "public", table: "typing_status", filter: `chat_id=eq.${chatId}` },
         async () => {
-          const { data } = await supabase
-            .from("typing_status")
+          // Table-level any cast, consistent with the pattern used for
+          // every write call in this codebase — partial-column .select()
+          // calls have shown the same generic-inference inconsistency
+          // across build environments as insert/update/upsert did.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data } = await (supabase.from("typing_status") as any)
             .select("user_id")
             .eq("chat_id", chatId);
-          callbackRef.current((data ?? []).map((r) => r.user_id));
+          callbackRef.current(((data ?? []) as { user_id: string }[]).map((r) => r.user_id));
         }
       )
       .subscribe();

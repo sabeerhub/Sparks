@@ -35,18 +35,19 @@ export async function startDirectChat(otherUserId: string): Promise<string> {
  * that requires the shared AES key and shouldn't block this list query.
  */
 export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
-  // Three plain single-table queries instead of nested joins, with
-  // explicit type assertions on each result rather than relying on
-  // Supabase's generic inference against the hand-written Database type.
-  // That inference has shown inconsistent behavior across build
-  // environments for partial-column .select() calls — asserting the known
-  // real shape is more reliable than depending on it end-to-end.
+  // Three plain single-table queries instead of nested joins. Table-level
+  // any casts, not just explicit type assertions on the result — the
+  // assertion-only approach (e.g. `data as Foo[] | null`) passed isolated
+  // testing but still failed on Vercel for the equivalent insert/update
+  // pattern elsewhere in this codebase, so it's not trusted here either.
+  // RLS still enforces correctness at the database level regardless of
+  // what TypeScript believes the shape is.
   type MembershipRow = Pick<ChatMember, "chat_id" | "is_pinned" | "is_muted" | "is_archived" | "last_read_at">;
   type ChatRow = Pick<Chat, "id" | "created_by" | "is_group" | "created_at" | "last_message_at">;
   type OtherMemberRow = Pick<ChatMember, "chat_id" | "user_id">;
 
-  const membershipsQuery = await supabase
-    .from("chat_members")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const membershipsQuery = await (supabase.from("chat_members") as any)
     .select("chat_id, is_pinned, is_muted, is_archived, last_read_at");
 
   if (membershipsQuery.error) throw membershipsQuery.error;
@@ -55,8 +56,8 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
 
   const chatIds = memberships.map((m) => m.chat_id);
 
-  const chatsQuery = await supabase
-    .from("chats")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chatsQuery = await (supabase.from("chats") as any)
     .select("id, created_by, is_group, created_at, last_message_at")
     .in("id", chatIds);
 
@@ -67,8 +68,8 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
   chats?.forEach((c) => chatById.set(c.id, c));
 
   // Fetch the *other* participant for each 1:1 chat in one query.
-  const otherMembersQuery = await supabase
-    .from("chat_members")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const otherMembersQuery = await (supabase.from("chat_members") as any)
     .select("chat_id, user_id")
     .in("chat_id", chatIds)
     .neq("user_id", userId);

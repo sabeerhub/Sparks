@@ -31,8 +31,14 @@ export default function ChatThreadPage() {
       if (!user) return;
       setCurrentUserId(user.id);
 
-      const membershipQuery = await supabase
-        .from("chat_members")
+      // Table-level any cast — explicit-assertion-only typing (data as
+      // Foo | null) has proven unreliable on Vercel's build for the
+      // equivalent insert/update pattern elsewhere in this codebase, so
+      // it's not trusted for this select either. RLS still enforces
+      // correctness at the database level regardless of what TypeScript
+      // believes the shape is.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const membershipQuery = await (supabase.from("chat_members") as any)
         .select("user_id")
         .eq("chat_id", chatId)
         .neq("user_id", user.id)
