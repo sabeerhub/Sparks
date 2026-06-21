@@ -89,7 +89,8 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
   const otherUserIds = [...new Set(otherMembers?.map((r) => r.user_id) ?? [])];
 
   const profilesQuery = otherUserIds.length
-    ? await supabase.from("profiles").select("*").in("id", otherUserIds)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ? await (supabase.from("profiles") as any).select("*").in("id", otherUserIds)
     : { data: [] as Profile[], error: null };
 
   if (profilesQuery.error) throw profilesQuery.error;
@@ -197,8 +198,8 @@ export async function unblockUser(blockedId: string) {
 
 export async function searchUsers(query: string): Promise<Profile[]> {
   if (!query.trim()) return [];
-  const { data, error } = await supabase
-    .from("profiles")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from("profiles") as any)
     .select("*")
     .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
     .limit(20);

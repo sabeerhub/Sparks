@@ -48,8 +48,8 @@ export default function ChatThreadPage() {
 
       if (!membership) return;
 
-      const { data: profile } = await supabase
-        .from("profiles")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: profile } = await (supabase.from("profiles") as any)
         .select("*")
         .eq("id", membership.user_id)
         .maybeSingle();

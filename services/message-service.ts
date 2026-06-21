@@ -123,8 +123,14 @@ export async function fetchMessages(
   theirPublicKeyJwk: JsonWebKey,
   opts: { before?: string; limit?: number } = {}
 ): Promise<DecryptedMessage[]> {
-  let query = supabase
-    .from("messages")
+  // Table-level any cast — even a full select("*") chained with multiple
+  // query-builder methods (.eq/.order/.limit) has shown the same
+  // generic-inference collapse-to-never as partial-column selects and
+  // writes elsewhere in this codebase, so it's not "only partial columns
+  // are affected" as originally assumed. Casting the table reference
+  // sidesteps the whole chain's generic resolution at once.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase.from("messages") as any)
     .select("*")
     .eq("chat_id", chatId)
     .order("created_at", { ascending: false })
@@ -139,7 +145,8 @@ export async function fetchMessages(
   const sharedKey = await keyManager.getSharedKey(chatId, theirPublicKeyJwk);
 
   const decrypted = await Promise.all(
-    data.map(async (row): Promise<DecryptedMessage> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data.map(async (row: any): Promise<DecryptedMessage> => {
       if (row.deleted_at) {
         return {
           id: row.id,
