@@ -28,24 +28,31 @@ export default function LoginPage() {
       sessionStorage.setItem("sparks_pending_email", email);
       router.push("/otp");
     } catch (err) {
-      // Root cause of the earlier "{}" bug: JavaScript's built-in Error
-      // class (which Supabase's AuthError extends) defines `message`,
-      // `name`, and `stack` as non-enumerable properties. JSON.stringify
-      // only serializes enumerable own properties, so JSON.stringify on
-      // ANY Error-like object produces the literal string "{}" even when
-      // .message has real content — regardless of whether `instanceof
-      // Error` succeeds. The previous fallback's JSON.stringify branch was
-      // exactly hitting this. Reading .message directly (rather than via
-      // JSON.stringify) works regardless of enumerability or whether
-      // instanceof succeeds across this bundle's module boundaries.
-      let message = "Something went wrong. Please try again.";
-      if (err && typeof err === "object" && "message" in err) {
-        const m = (err as { message: unknown }).message;
-        if (typeof m === "string" && m) message = m;
-      } else if (typeof err === "string" && err) {
-        message = err;
+      // Two previous attempts at reading this error didn't surface
+      // anything useful (first showed "{}" via JSON.stringify dropping
+      // non-enumerable Error properties; second, reading .message
+      // directly, ALSO showed "{}" — meaning err may not even be an
+      // object with a "message" key at all, or "in" is failing in some
+      // unexpected way). This version uses String(err), which the JS spec
+      // guarantees works on literally anything (objects, primitives,
+      // null, undefined) and cannot itself throw, plus dumps typeof and
+      // own keys, so we get real signal instead of guessing a fourth time.
+      const parts: string[] = [];
+      parts.push(`typeof: ${typeof err}`);
+      parts.push(`String(err): ${String(err)}`);
+      if (err && typeof err === "object") {
+        try {
+          parts.push(`keys: ${Object.keys(err).join(", ") || "(none)"}`);
+        } catch {
+          parts.push("keys: (failed)");
+        }
+        try {
+          parts.push(`getOwnPropertyNames: ${Object.getOwnPropertyNames(err).join(", ") || "(none)"}`);
+        } catch {
+          parts.push("getOwnPropertyNames: (failed)");
+        }
       }
-      setError(message);
+      setError(parts.join(" | "));
     } finally {
       setLoading(false);
     }
@@ -119,3 +126,4 @@ function GoogleIcon() {
     </svg>
   );
 }
+
