@@ -28,7 +28,32 @@ export default function LoginPage() {
       sessionStorage.setItem("sparks_pending_email", email);
       router.push("/otp");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      // Defensive handling: Supabase's AuthError is an Error subclass, so
+      // err.message should normally be a string — but if something throws
+      // a plain object or a Supabase error shape without .message, JSX
+      // would otherwise render "{}" (an object's default stringification)
+      // instead of useful text. Cover every shape explicitly.
+      let message = "Something went wrong";
+      if (err instanceof Error && err.message) {
+        message = err.message;
+      } else if (typeof err === "string") {
+        message = err;
+      } else if (err && typeof err === "object") {
+        const maybeMessage = (err as Record<string, unknown>).message;
+        if (typeof maybeMessage === "string" && maybeMessage) {
+          message = maybeMessage;
+        } else {
+          // Last resort: show the actual shape so it's debuggable instead
+          // of a silent "{}" — this is a temporary diagnostic, not meant
+          // to be the permanent UX for unexpected errors.
+          try {
+            message = `Unexpected error: ${JSON.stringify(err)}`;
+          } catch {
+            message = "Unexpected error (could not be displayed)";
+          }
+        }
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }
