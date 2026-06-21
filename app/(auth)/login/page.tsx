@@ -28,30 +28,22 @@ export default function LoginPage() {
       sessionStorage.setItem("sparks_pending_email", email);
       router.push("/otp");
     } catch (err) {
-      // Defensive handling: Supabase's AuthError is an Error subclass, so
-      // err.message should normally be a string — but if something throws
-      // a plain object or a Supabase error shape without .message, JSX
-      // would otherwise render "{}" (an object's default stringification)
-      // instead of useful text. Cover every shape explicitly.
-      let message = "Something went wrong";
-      if (err instanceof Error && err.message) {
-        message = err.message;
-      } else if (typeof err === "string") {
+      // Root cause of the earlier "{}" bug: JavaScript's built-in Error
+      // class (which Supabase's AuthError extends) defines `message`,
+      // `name`, and `stack` as non-enumerable properties. JSON.stringify
+      // only serializes enumerable own properties, so JSON.stringify on
+      // ANY Error-like object produces the literal string "{}" even when
+      // .message has real content — regardless of whether `instanceof
+      // Error` succeeds. The previous fallback's JSON.stringify branch was
+      // exactly hitting this. Reading .message directly (rather than via
+      // JSON.stringify) works regardless of enumerability or whether
+      // instanceof succeeds across this bundle's module boundaries.
+      let message = "Something went wrong. Please try again.";
+      if (err && typeof err === "object" && "message" in err) {
+        const m = (err as { message: unknown }).message;
+        if (typeof m === "string" && m) message = m;
+      } else if (typeof err === "string" && err) {
         message = err;
-      } else if (err && typeof err === "object") {
-        const maybeMessage = (err as Record<string, unknown>).message;
-        if (typeof maybeMessage === "string" && maybeMessage) {
-          message = maybeMessage;
-        } else {
-          // Last resort: show the actual shape so it's debuggable instead
-          // of a silent "{}" — this is a temporary diagnostic, not meant
-          // to be the permanent UX for unexpected errors.
-          try {
-            message = `Unexpected error: ${JSON.stringify(err)}`;
-          } catch {
-            message = "Unexpected error (could not be displayed)";
-          }
-        }
       }
       setError(message);
     } finally {
