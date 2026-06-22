@@ -28,32 +28,7 @@ export default function LoginPage() {
       sessionStorage.setItem("sparks_pending_email", email);
       router.push("/otp");
     } catch (err) {
-      // Two previous attempts at reading this error didn't surface
-      // anything useful (first showed "{}" via JSON.stringify dropping
-      // non-enumerable Error properties; second, reading .message
-      // directly, ALSO showed "{}" — meaning err may not even be an
-      // object with a "message" key at all, or "in" is failing in some
-      // unexpected way). This version uses String(err), which the JS spec
-      // guarantees works on literally anything (objects, primitives,
-      // null, undefined) and cannot itself throw, plus dumps typeof and
-      // own keys, so we get real signal instead of guessing a fourth time.
-            parts.push(`typeof: ${typeof err}`);
-      parts.push(`String(err): ${String(err)}`);
-      if (err && typeof err === "object") {
-        try {
-          parts.push(`keys: ${Object.keys(err).join(", ") || "(none)"}`);
-        } catch {
-          parts.push("keys: (failed)");
-        }
-        try {
-          parts.push(`getOwnPropertyNames: ${Object.getOwnPropertyNames(err).join(", ") || "(none)"}`);
-        } catch {
-          parts.push("getOwnPropertyNames: (failed)");
-        }
-      }
-      setError(parts.join(" | "));
-
-const parts: string[] = [];
+      const parts: string[] = [];
       parts.push(`typeof: ${typeof err}`);
       parts.push(`String(err): ${String(err)}`);
       if (err && typeof err === "object") {
@@ -65,9 +40,7 @@ const parts: string[] = [];
         }
       }
       setError(parts.join(" | "));
-
-    
- finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -140,4 +113,3 @@ function GoogleIcon() {
     </svg>
   );
 }
-
