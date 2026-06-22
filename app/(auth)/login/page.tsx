@@ -37,8 +37,7 @@ export default function LoginPage() {
       // guarantees works on literally anything (objects, primitives,
       // null, undefined) and cannot itself throw, plus dumps typeof and
       // own keys, so we get real signal instead of guessing a fourth time.
-      const parts: string[] = [];
-      parts.push(`typeof: ${typeof err}`);
+            parts.push(`typeof: ${typeof err}`);
       parts.push(`String(err): ${String(err)}`);
       if (err && typeof err === "object") {
         try {
@@ -53,7 +52,22 @@ export default function LoginPage() {
         }
       }
       setError(parts.join(" | "));
-    } finally {
+
+const parts: string[] = [];
+      parts.push(`typeof: ${typeof err}`);
+      parts.push(`String(err): ${String(err)}`);
+      if (err && typeof err === "object") {
+        const obj = err as Record<string, unknown>;
+        for (const key of ["message", "name", "status", "code", "__isAuthError"]) {
+          if (key in obj) {
+            parts.push(`${key}: ${JSON.stringify(obj[key])}`);
+          }
+        }
+      }
+      setError(parts.join(" | "));
+
+    
+ finally {
       setLoading(false);
     }
   };
