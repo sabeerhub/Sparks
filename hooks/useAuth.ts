@@ -1,10 +1,15 @@
 /**
  * hooks/useAuth.ts
  * ─────────────────────────────────────────────────────────────────────────
- * Wraps Supabase Auth + the one-time key-pair setup that has to happen
- * exactly once per account: on first signup, generate an ECDH key pair,
- * publish the public half to profiles.public_key, and load the private
- * half into the in-memory KeyManager for the session.
+ * React state wrapper around services/auth-service.ts and
+ * services/session-service.ts. The business logic lives in those services;
+ * this hook adds session state tracking, key-pair lifecycle management, and
+ * the React-friendly ergonomics the UI layer expects.
+ *
+ * OTP/magic-link auth is REMOVED. Flow is now:
+ *   Signup  → email + password → email verification → login
+ *   Login   → email or username + password
+ *   Reset   → forgot-password email → reset link → new password → login
  */
 
 "use client";
@@ -12,11 +17,20 @@
 import { useEffect, useState, useCallback } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase";
-import { generateKeyPair, exportPublicKeyJwk, exportPrivateKeyJwk, importPrivateKeyJwk } from "@/lib/crypto";
+import { importPrivateKeyJwk } from "@/lib/crypto";
 import { keyManager } from "@/lib/encryption";
 import { chatCache } from "@/lib/storage";
+import {
+  signUp as authSignUp,
+  signInWithEmailOrUsername,
+  requestPasswordReset as authRequestReset,
+  confirmPasswordReset as authConfirmReset,
+  resendVerificationEmail as authResendVerification,
+  type SignUpInput,
+} from "@/services/auth-service";
+import { recordSession, revokeAllOtherSessions } from "@/services/session-service";
 
-const PRIVATE_KEY_SESSION_KEY = "sparks_wrapped_private_key";
+const PRIVATE_KEY_SESSION_KEY = "sparks_private_key_jwk";
 
 const supabase = createClient();
 
@@ -27,11 +41,11 @@ export function useAuth() {
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
       setUser(data.user ?? null);
-      if (data.user) await restoreKeysForSession();
+      if (data.user) await restorePrivateKey();
       setLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
       if (!session) {
         keyManager.clear();
@@ -43,132 +57,70 @@ export function useAuth() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  // ── Private key lifecycle ──────────────────────────────────────────────
+
   /**
-   * Re-hydrates the in-memory private key from sessionStorage on reload.
-   * sessionStorage (not IndexedDB, not localStorage) is the deliberate
-   * choice here: it survives a refresh within the same tab — matching the
-   * "key material never persists across a real app restart" boundary —
-   * while still letting hydrateChat() restore message history from
-   * IndexedDB without forcing a re-login on every reload.
+   * Re-loads the in-memory ECDH private key from sessionStorage after a
+   * same-tab refresh. sessionStorage survives a refresh within the same
+   * browser tab but not an app restart or new tab — matching the intended
+   * "keys only live as long as the browsing session" security posture.
    *
-   * NOTE: this is an MVP simplification. A production build should wrap
-   * the private key with a key derived from a user-supplied passphrase or
-   * device biometric before it ever touches sessionStorage, rather than
-   * storing the raw JWK. Flagging this explicitly rather than letting it
-   * pass as already production-hardened.
+   * MVP note: stores raw JWK in sessionStorage. Upgrade path is
+   * passphrase-based wrapping — see lib/encryption.ts.
    */
-  async function restoreKeysForSession() {
-    const wrapped = sessionStorage.getItem(PRIVATE_KEY_SESSION_KEY);
-    if (!wrapped) return;
+  async function restorePrivateKey() {
+    const stored = sessionStorage.getItem(PRIVATE_KEY_SESSION_KEY);
+    if (!stored) return;
     try {
-      const jwk = JSON.parse(wrapped) as JsonWebKey;
+      const jwk = JSON.parse(stored) as JsonWebKey;
+      await importPrivateKeyJwk(jwk); // validates the key shape
       await keyManager.setPrivateKey(jwk);
     } catch {
       sessionStorage.removeItem(PRIVATE_KEY_SESSION_KEY);
     }
   }
 
-  const sendOtp = useCallback(async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    if (error) throw error;
-  }, []);
-
-  const verifyOtp = useCallback(async (email: string, token: string) => {
-    const { data, error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
-    if (error) throw error;
-
-    const { data: existingProfile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", data.user!.id)
-      .maybeSingle();
-
-    if (!existingProfile) {
-      await provisionNewAccountKeys(data.user!.id);
-    } else {
-      await restoreKeysForSession();
-    }
-
-    return data.user;
-  }, []);
-
-  const signInWithGoogle = useCallback(async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (error) throw error;
-  }, []);
-
-  /** First-time setup for a brand new account: generate + publish key pair. */
-  async function provisionNewAccountKeys(userId: string) {
-    const keyPair = await generateKeyPair();
-    const publicJwk = await exportPublicKeyJwk(keyPair.publicKey);
-    const privateJwk = await exportPrivateKeyJwk(keyPair.privateKey);
-
-    sessionStorage.setItem(PRIVATE_KEY_SESSION_KEY, JSON.stringify(privateJwk));
-    await keyManager.setPrivateKey(privateJwk);
-
-    // profiles row itself is created by createProfile() during onboarding,
-    // once username/full_name are collected — public_key is attached there.
-    sessionStorage.setItem("sparks_pending_public_key", JSON.stringify(publicJwk));
+  function persistPrivateKey(jwk: JsonWebKey) {
+    sessionStorage.setItem(PRIVATE_KEY_SESSION_KEY, JSON.stringify(jwk));
   }
 
-  const createProfile = useCallback(
-    async (input: { username: string; fullName: string; bio?: string; avatarUrl?: string }) => {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) throw new Error("Not authenticated");
+  // ── Auth actions ───────────────────────────────────────────────────────
 
-      let publicKey = sessionStorage.getItem("sparks_pending_public_key");
+  /**
+   * Creates a new account. Stores the private key immediately so it
+   * survives until the person confirms their email and logs in for
+   * the first time — at which point restorePrivateKey() picks it up.
+   */
+  const signUp = useCallback(async (input: SignUpInput) => {
+    const { privateKeyJwk, emailConfirmationRequired } = await authSignUp(input);
+    persistPrivateKey(privateKeyJwk);
+    await keyManager.setPrivateKey(privateKeyJwk);
+    return { emailConfirmationRequired };
+  }, []);
 
-      // Covers the Google OAuth path: no OTP step means provisionNewAccountKeys()
-      // never ran, so there's no pending key yet. Generate one now instead.
-      if (!publicKey) {
-        const keyPair = await generateKeyPair();
-        const publicJwk = await exportPublicKeyJwk(keyPair.publicKey);
-        const privateJwk = await exportPrivateKeyJwk(keyPair.privateKey);
-        sessionStorage.setItem(PRIVATE_KEY_SESSION_KEY, JSON.stringify(privateJwk));
-        await keyManager.setPrivateKey(privateJwk);
-        publicKey = JSON.stringify(publicJwk);
-      }
+  /**
+   * Signs in with email-or-username + password. Records the device in
+   * the session registry (non-blocking) and restores the private key.
+   */
+  const signIn = useCallback(async (identifier: string, password: string) => {
+    const data = await signInWithEmailOrUsername(identifier, password);
+    setUser(data.user);
+    recordSession().catch(() => {});
+    await restorePrivateKey();
+    return data;
+  }, []);
 
-      // Typed explicitly rather than relying on Supabase's Insert generic
-      // inference against the hand-written Database type — that inference
-      // has shown inconsistent behavior across build environments for
-      // other queries in this codebase (see services/chat-service.ts and
-      // the chat thread page for the same pattern). Defining the literal
-      // here and casting once is more reliable than depending on it.
-      const newProfile: {
-        id: string;
-        username: string;
-        full_name: string;
-        bio: string | null;
-        avatar_url: string | null;
-        public_key: string;
-      } = {
-        id: authUser.id,
-        username: input.username,
-        full_name: input.fullName,
-        bio: input.bio ?? null,
-        avatar_url: input.avatarUrl ?? null,
-        public_key: publicKey,
-      };
+  const resendVerificationEmail = useCallback(async (email: string) => {
+    await authResendVerification(email);
+  }, []);
 
-      // Cast the table reference itself to bypass PostgREST's Insert
-      // generic constraint checking, rather than the argument — casting
-      // just the argument (Record<string, unknown>) has proven unreliable
-      // across build environments for this exact call, even though it
-      // verified clean in isolated testing. This is a broader bypass, but
-      // a working one; RLS still enforces correctness at the database
-      // level regardless of what TypeScript believes the shape is.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.from("profiles") as any).insert(newProfile);
+  const requestPasswordReset = useCallback(async (email: string) => {
+    await authRequestReset(email);
+  }, []);
 
-      if (error) throw error;
-      sessionStorage.removeItem("sparks_pending_public_key");
-    },
-    []
-  );
+  const confirmPasswordReset = useCallback(async (newPassword: string) => {
+    await authConfirmReset(newPassword);
+  }, []);
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
@@ -177,15 +129,13 @@ export function useAuth() {
     await chatCache.clearAll();
   }, []);
 
-  /** Revokes every other session via the user_sessions registry + a global signOut scope. */
+  /** Removes all other devices but keeps the current session active. */
   const logoutAllDevices = useCallback(async () => {
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (authUser) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from("user_sessions") as any)
-        .update({ revoked_at: new Date().toISOString() })
-        .eq("user_id", authUser.id);
-    }
+    await revokeAllOtherSessions();
+  }, []);
+
+  /** Signs out everywhere including the current device. */
+  const logoutEverywhere = useCallback(async () => {
     await supabase.auth.signOut({ scope: "global" });
     keyManager.clear();
     sessionStorage.removeItem(PRIVATE_KEY_SESSION_KEY);
@@ -195,11 +145,13 @@ export function useAuth() {
   return {
     user,
     loading,
-    sendOtp,
-    verifyOtp,
-    signInWithGoogle,
-    createProfile,
+    signUp,
+    signIn,
+    resendVerificationEmail,
+    requestPasswordReset,
+    confirmPasswordReset,
     logout,
     logoutAllDevices,
+    logoutEverywhere,
   };
 }

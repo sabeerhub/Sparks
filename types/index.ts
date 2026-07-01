@@ -13,7 +13,7 @@ export interface Profile {
   full_name: string;
   avatar_url: string | null;
   bio: string | null;
-  public_key: string; // JSON-stringified JWK
+  public_key: string;
   is_online: boolean;
   last_seen_at: string;
   created_at: string;
@@ -38,7 +38,6 @@ export interface ChatMember {
   last_read_at: string;
 }
 
-/** Row shape as stored/transmitted — ciphertext only. */
 export interface EncryptedMessageRow {
   id: string;
   chat_id: string;
@@ -55,13 +54,6 @@ export interface EncryptedMessageRow {
 
 export type MessageStatus = "pending" | "sent" | "delivered" | "read" | "failed";
 
-/**
- * Shape used in the UI after client-side decryption, and what's persisted
- * in the IndexedDB cache (lib/storage.ts). Uses snake_case to match the
- * server row shape 1:1 — this is the row that gets cached locally, so
- * keeping field names identical to EncryptedMessageRow (minus ciphertext,
- * plus `text`/`status`) avoids a remapping step on every cache write.
- */
 export interface DecryptedMessage {
   id: string;
   chat_id: string;
@@ -76,9 +68,8 @@ export interface DecryptedMessage {
   status: MessageStatus;
 }
 
-/** An item in the offline send queue — not yet confirmed by the server. */
 export interface QueuedMessage {
-  client_id: string;     // locally-generated uuid; reconciled with the real id on send
+  client_id: string;
   chat_id: string;
   plaintext: string;
   reply_to_id: string | null;
@@ -87,7 +78,6 @@ export interface QueuedMessage {
   status: "queued" | "sending" | "failed";
 }
 
-/** Tracks per-chat last-synced time, so reconnect sync only fetches deltas. */
 export interface CachedChatMeta {
   chat_id: string;
   last_synced_at: string;
@@ -112,7 +102,7 @@ export interface MessageReaction {
 export interface ChatListItem {
   chatId: string;
   otherUser: Profile;
-  lastMessagePreview: string; // decrypted client-side; "Encrypted message" while decrypting
+  lastMessagePreview: string;
   lastMessageAt: string;
   unreadCount: number;
   isPinned: boolean;
@@ -121,11 +111,6 @@ export interface ChatListItem {
   isOnline: boolean;
 }
 
-/**
- * App-level session registry, separate from what Supabase Auth tracks
- * internally — gives "log out of all devices" something deterministic to
- * revoke against. See supabase/migrations/0001_init_schema.sql.
- */
 export interface UserSession {
   id: string;
   user_id: string;
@@ -134,6 +119,17 @@ export interface UserSession {
   created_at: string;
   last_active_at: string;
   revoked_at: string | null;
+  browser: string | null;
+  os_name: string | null;
+  device_type: "mobile" | "tablet" | "desktop" | "unknown" | null;
+  ip_address: string | null;
+  location_city: string | null;
+  location_country: string | null;
+  user_agent: string | null;
+}
+
+export interface DeviceSessionItem extends UserSession {
+  isCurrent: boolean;
 }
 
 export interface BlockedUser {
@@ -148,19 +144,6 @@ export interface TypingStatus {
   started_at: string;
 }
 
-/**
- * Minimal Supabase Database type for createClient<Database>() typing.
- * In production, replace with `supabase gen types typescript` output.
- *
- * IMPORTANT: every key below (Tables, Views, Functions, Enums,
- * CompositeTypes) must be present, and every table needs a `Relationships`
- * array (empty is fine), even if unused — @supabase/supabase-js's generic
- * constraints pattern-match against this exact shape. Omitting any of
- * these keys doesn't just fail loudly on the missing piece; it can make
- * the query builder's type inference silently collapse to `never` on
- * otherwise-unrelated `.select()` calls elsewhere in the codebase, which
- * is exactly the bug this fixes.
- */
 export interface Database {
   public: {
     Tables: {
@@ -189,6 +172,9 @@ export interface Database {
         Returns: string;
       };
       can_send_message: { Args: { p_limit?: number }; Returns: boolean };
+      is_username_available: { Args: { p_username: string }; Returns: boolean };
+      cleanup_failed_signup: { Args: { p_email: string }; Returns: void };
+      email_for_username: { Args: { p_username: string }; Returns: string | null };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
