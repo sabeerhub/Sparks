@@ -94,13 +94,18 @@ export default function SignupPage() {
       } else {
         router.push("/chats");
       }
-    } catch (err) {
-      let message = "Something went wrong. Please try again.";
-      if (err && typeof err === "object" && "message" in err) {
-        const m = (err as { message: unknown }).message;
-        if (typeof m === "string" && m) message = m;
+
+} catch (err) {
+      const parts: string[] = [];
+      parts.push(`typeof: ${typeof err}`);
+      parts.push(`String: ${String(err)}`);
+      if (err && typeof err === "object") {
+        const obj = err as Record<string, unknown>;
+        for (const key of ["message", "name", "status", "code", "__isAuthError"]) {
+          if (key in obj) parts.push(`${key}: ${JSON.stringify(obj[key])}`);
+        }
       }
-      setError(message);
+      setError(parts.join(" | "));
     } finally {
       setLoading(false);
     }
