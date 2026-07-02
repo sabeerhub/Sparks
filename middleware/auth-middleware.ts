@@ -1,23 +1,25 @@
 /**
  * middleware/auth-middleware.ts
  * ─────────────────────────────────────────────────────────────────────────
- * Re-exported from the root middleware.ts (Next.js only recognizes a
- * middleware file at the project root or src/ root — this file holds the
- * actual logic so it's organized under /middleware per the required
- * project structure, and middleware.ts just imports and re-exports it).
- *
- * Responsibilities:
- *   1. Refresh the Supabase session cookie on every request (required for
- *      SSR auth state to stay correct — @supabase/ssr needs this called
- *      somewhere on the request path).
- *   2. Redirect unauthenticated users away from protected routes.
- *   3. Redirect authenticated users away from auth screens back into the app.
+ * Re-exported from the root middleware.ts. Handles:
+ *   1. Refreshing the Supabase session cookie on every request.
+ *   2. Redirecting unauthenticated users away from protected routes.
+ *   3. Redirecting authenticated users away from auth screens into the app.
  */
 
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
-const PUBLIC_ROUTES = ["/", "/login", "/otp", "/auth/callback"];
+const PUBLIC_ROUTES = [
+  "/",
+  "/login",
+  "/signup",
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
+  "/auth/callback",
+  "/onboarding",
+];
 
 export async function authMiddleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
@@ -42,7 +44,9 @@ export async function authMiddleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
-  const isPublicRoute = PUBLIC_ROUTES.some((r) => path === r || path.startsWith(r + "/"));
+  const isPublicRoute = PUBLIC_ROUTES.some(
+    (r) => path === r || path.startsWith(r + "/")
+  );
 
   if (!user && !isPublicRoute) {
     const redirectUrl = new URL("/login", request.url);
@@ -50,7 +54,13 @@ export async function authMiddleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (user && (path === "/login" || path === "/otp")) {
+  // Redirect logged-in users away from auth pages back into the app.
+  if (
+    user &&
+    ["/login", "/signup", "/verify-email", "/forgot-password", "/reset-password"].some(
+      (p) => path === p
+    )
+  ) {
     return NextResponse.redirect(new URL("/chats", request.url));
   }
 

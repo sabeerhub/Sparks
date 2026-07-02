@@ -2,44 +2,42 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
-import { StatusBar } from "@/components/layout/StatusBar";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
-import { isValidEmail } from "@/utils/helpers";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { sendOtp, signInWithGoogle } = useAuth();
-  const [email, setEmail] = useState("");
+  const { signIn } = useAuth();
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleContinue = async () => {
-    if (!isValidEmail(email)) {
-      setError("Enter a valid email address");
-      return;
-    }
+  const verified =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("verified") === "1";
+
+  const handleSignIn = async () => {
+    const trimmed = identifier.trim();
+    if (!trimmed) { setError("Enter your email or username."); return; }
+    if (!password) { setError("Enter your password."); return; }
     setError(null);
     setLoading(true);
     try {
-      await sendOtp(email);
-      sessionStorage.setItem("sparks_pending_email", email);
-      router.push("/otp");
+      await signIn(trimmed, password);
+      router.push("/chats");
     } catch (err) {
-      const parts: string[] = [];
-      parts.push(`typeof: ${typeof err}`);
-      parts.push(`String(err): ${String(err)}`);
-      if (err && typeof err === "object") {
-        const obj = err as Record<string, unknown>;
-        for (const key of ["message", "name", "status", "code", "__isAuthError"]) {
-          if (key in obj) {
-            parts.push(`${key}: ${JSON.stringify(obj[key])}`);
-          }
-        }
+      let message = "Invalid email/username or password.";
+      if (err && typeof err === "object" && "message" in err) {
+        const m = (err as { message: unknown }).message;
+        if (typeof m === "string" && m) message = m;
       }
-      setError(parts.join(" | "));
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -47,69 +45,79 @@ export default function LoginPage() {
 
   return (
     <ScreenContainer>
-      <StatusBar />
-      <div className="flex-1 flex flex-col px-6 pt-4">
-        <button onClick={() => router.push("/")} className="self-start mb-8" aria-label="Back">
-          <BackIcon />
-        </button>
-        <div className="flex-1 flex flex-col justify-center">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-8 mx-auto" style={{ background: "var(--color-blue)" }}>
+      <div className="flex-1 flex flex-col px-6 pt-10">
+        <div className="flex flex-col items-center mb-10">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "var(--color-blue)" }}>
             <BoltIcon />
           </div>
-          <h2 className="text-2xl font-bold text-center mb-2">Welcome Back</h2>
-          <p className="text-sm text-center mb-8" style={{ color: "var(--color-gray-1)" }}>
-            Log in to continue to Sparks
-          </p>
-
-          <div className="space-y-3">
-            <Input
-              type="email"
-              placeholder="Email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleContinue()}
-              error={error ?? undefined}
-            />
-            <Button fullWidth loading={loading} onClick={handleContinue}>
-              Continue
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px" style={{ background: "var(--color-gray-3)" }} />
-            <span className="text-xs" style={{ color: "var(--color-gray-1)" }}>or</span>
-            <div className="flex-1 h-px" style={{ background: "var(--color-gray-3)" }} />
-          </div>
-
-          <Button variant="secondary" fullWidth onClick={signInWithGoogle}>
-            <GoogleIcon />
-            Continue with Google
-          </Button>
-
-          <p className="text-xs text-center mt-6" style={{ color: "var(--color-gray-1)" }}>
-            By continuing, you agree to our{" "}
-            <span style={{ color: "var(--color-blue)" }}>Terms of Service</span> and{" "}
-            <span style={{ color: "var(--color-blue)" }}>Privacy Policy</span>
-          </p>
+          <h1 className="text-2xl font-bold">Welcome back</h1>
+          <p className="text-sm mt-1" style={{ color: "var(--color-gray-1)" }}>Log in to continue to Sparks</p>
         </div>
+
+        {verified && (
+          <div className="rounded-2xl px-4 py-3 mb-5 text-sm font-medium" style={{ background: "rgba(52,199,89,0.12)", color: "var(--color-green)" }}>
+            ✓ Email verified — you can now log in.
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <Input
+            placeholder="Email or username"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
+            autoCapitalize="none"
+            autoCorrect="off"
+            error={error ?? undefined}
+          />
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium"
+              style={{ color: "var(--color-blue)" }}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-4 mb-6">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 rounded"
+              style={{ accentColor: "var(--color-blue)" }}
+            />
+            <span style={{ color: "var(--color-gray-1)" }}>Remember me</span>
+          </label>
+          <Link href="/forgot-password" className="text-sm font-medium" style={{ color: "var(--color-blue)" }}>
+            Forgot password?
+          </Link>
+        </div>
+
+        <Button fullWidth loading={loading} onClick={handleSignIn}>Log In</Button>
+
+        <p className="text-sm text-center mt-6" style={{ color: "var(--color-gray-1)" }}>
+          Don&apos;t have an account?{" "}
+          <Link href="/signup" className="font-semibold" style={{ color: "var(--color-blue)" }}>
+            Create Account
+          </Link>
+        </p>
       </div>
     </ScreenContainer>
   );
 }
 
-function BackIcon() {
-  return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>;
-}
 function BoltIcon() {
   return <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>;
-}
-function GoogleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-      <path d="M5.84 14.09a7.07 7.07 0 010-4.18V7.07H2.18a11 11 0 000 9.86l3.66-2.84z" fill="#FBBC05" />
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-    </svg>
-  );
 }
