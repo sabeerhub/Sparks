@@ -96,6 +96,21 @@ export default function SignupPage() {
       }
 
 } catch (err) {
+      let message = "Something went wrong. Please try again.";
+      if (err && typeof err === "object" && "message" in err) {
+        const m = (err as { message: unknown }).message;
+        if (typeof m === "string" && m) message = m;
+      }
+      // AuthRetryableFetchError means Supabase couldn't send the email —
+      // most likely the SMTP provider rejected it. Show a clear message.
+      if (err && typeof err === "object" && "name" in err &&
+          (err as { name: unknown }).name === "AuthRetryableFetchError") {
+        message = "Could not connect to the server. Check your connection and try again.";
+      }
+      setError(message);
+    } finally {
+
+} catch (err) {
       const parts: string[] = [];
       parts.push(`typeof: ${typeof err}`);
       parts.push(`String: ${String(err)}`);
