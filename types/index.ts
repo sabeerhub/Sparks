@@ -1,10 +1,5 @@
 /**
  * types/index.ts
- * Application-level types. `Database` mirrors the Supabase schema for
- * typed query results; generate this automatically in real usage with:
- *   npx supabase gen types typescript --project-id <ref> > types/database.ts
- * The hand-written version below is kept in sync with the SQL migrations
- * for readability in this deliverable.
  */
 
 export interface Profile {
@@ -144,6 +139,27 @@ export interface TypingStatus {
   started_at: string;
 }
 
+// ─── Spark Requests ──────────────────────────────────────────────────────────
+
+export type SparkRequestStatus = "pending" | "accepted" | "declined";
+
+export interface SparkRequest {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  status: SparkRequestStatus;
+  message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SparkRequestWithProfile extends SparkRequest {
+  profile: Profile;
+  direction: "incoming" | "outgoing";
+}
+
+// ─── Database type ────────────────────────────────────────────────────────────
+
 export interface Database {
   public: {
     Tables: {
@@ -156,6 +172,7 @@ export interface Database {
       user_sessions: { Row: UserSession; Insert: Partial<UserSession>; Update: Partial<UserSession>; Relationships: [] };
       blocked_users: { Row: BlockedUser; Insert: Partial<BlockedUser>; Update: Partial<BlockedUser>; Relationships: [] };
       typing_status: { Row: TypingStatus; Insert: Partial<TypingStatus>; Update: Partial<TypingStatus>; Relationships: [] };
+      spark_requests: { Row: SparkRequest; Insert: Partial<SparkRequest>; Update: Partial<SparkRequest>; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: {
@@ -175,6 +192,9 @@ export interface Database {
       is_username_available: { Args: { p_username: string }; Returns: boolean };
       cleanup_failed_signup: { Args: { p_email: string }; Returns: void };
       email_for_username: { Args: { p_username: string }; Returns: string | null };
+      has_accepted_spark: { Args: { p_other_user_id: string }; Returns: boolean };
+      send_spark_request: { Args: { p_receiver_id: string; p_message?: string | null }; Returns: SparkRequest };
+      respond_to_spark_request: { Args: { p_request_id: string; p_accept: boolean }; Returns: string | null };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

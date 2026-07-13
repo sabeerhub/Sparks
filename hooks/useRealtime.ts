@@ -1,13 +1,3 @@
-/**
- * hooks/useRealtime.ts
- * ─────────────────────────────────────────────────────────────────────────
- * Thin wrapper around Supabase Realtime channels. Each subscription is
- * scoped to a single chat_id filter — combined with RLS on the underlying
- * tables, a client can't subscribe its way into another chat's stream even
- * if it guesses a chat_id, because Realtime still enforces the same RLS
- * policies on the change feed.
- */
-
 "use client";
 
 import { useEffect, useRef } from "react";
@@ -30,80 +20,52 @@ export function useRealtimeMessages({ chatId, onInsert, onUpdate }: UseRealtimeM
 
   useEffect(() => {
     if (!chatId) return;
-
     const channel = supabase
       .channel(`messages:${chatId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `chat_id=eq.${chatId}` },
-        (payload) => onInsertRef.current(payload)
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "messages", filter: `chat_id=eq.${chatId}` },
-        (payload) => onUpdateRef.current(payload)
-      )
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `chat_id=eq.${chatId}` }, (p) => onInsertRef.current(p))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter: `chat_id=eq.${chatId}` }, (p) => onUpdateRef.current(p))
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [chatId]);
 }
 
-/** Tracks who else is currently typing in a chat, via the typing_status table. */
 export function useTypingIndicator(chatId: string, onTypingChange: (userIds: string[]) => void) {
   const callbackRef = useRef(onTypingChange);
   callbackRef.current = onTypingChange;
 
   useEffect(() => {
     if (!chatId) return;
-
     const channel = supabase
       .channel(`typing:${chatId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "typing_status", filter: `chat_id=eq.${chatId}` },
+      .on("postgres_changes", { event: "*", schema: "public", table: "typing_status", filter: `chat_id=eq.${chatId}` },
         async () => {
-          // Table-level any cast, consistent with the pattern used for
-          // every write call in this codebase — partial-column .select()
-          // calls have shown the same generic-inference inconsistency
-          // across build environments as insert/update/upsert did.
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data } = await (supabase.from("typing_status") as any)
-            .select("user_id")
-            .eq("chat_id", chatId);
+          const { data } = await (supabase.from("typing_status") as any).select("user_id").eq("chat_id", chatId);
           callbackRef.current(((data ?? []) as { user_id: string }[]).map((r) => r.user_id));
         }
       )
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [chatId]);
 }
 
-/** Tracks a user's online/offline presence using Supabase's Presence feature. */
+/**
+ * Online Presence — uses Supabase Realtime Presence (websocket-based) as
+ * the primary mechanism plus visibilitychange for mobile reliability.
+ * beforeunload alone is not reliable on mobile Chrome.
+ */
 export function usePresence(userId: string | null) {
   useEffect(() => {
     if (!userId) return;
 
-    const channel = supabase.channel("online-users", {
+    const presenceChannel = supabase.channel("online-users", {
       config: { presence: { key: userId } },
     });
 
-    channel
-      .on("presence", { event: "sync" }, () => {
-        /* consumed via channel.presenceState() by callers that need the full list */
-      })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await channel.track({ online_at: new Date().toISOString() });
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (supabase.from("profiles") as any).update({ is_online: true }).eq("id", userId);
-        }
-      });
+    const markOnline = async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("profiles") as any).update({ is_online: true }).eq("id", userId);
+    };
 
     const markOffline = async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -112,35 +74,77 @@ export function usePresence(userId: string | null) {
         .eq("id", userId);
     };
 
-    window.addEventListener("beforeunload", markOffline);
+    presenceChannel
+      .on("presence", { event: "join" }, ({ key }) => { if (key === userId) markOnline(); })
+      .on("presence", { event: "leave" }, ({ key, leftPresences }) => {
+        if (key === userId && leftPresences.length === 0) markOffline();
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await presenceChannel.track({ online_at: new Date().toISOString() });
+          await markOnline();
+        }
+      });
+
+    const handleUnload = () => { markOffline(); };
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        markOffline();
+      } else {
+        presenceChannel.track({ online_at: new Date().toISOString() });
+        markOnline();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
       markOffline();
-      window.removeEventListener("beforeunload", markOffline);
-      supabase.removeChannel(channel);
+      presenceChannel.untrack();
+      supabase.removeChannel(presenceChannel);
+      window.removeEventListener("beforeunload", handleUnload);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [userId]);
 }
 
-/** Subscribes to read-receipt updates so senders see ticks turn blue live. */
+/**
+ * Subscribes to profile changes for a specific user so the chat header's
+ * online dot and "Last seen" text update in realtime.
+ */
+export function useProfilePresence(
+  userId: string | null,
+  onUpdate: (isOnline: boolean, lastSeen: string) => void
+) {
+  const callbackRef = useRef(onUpdate);
+  callbackRef.current = onUpdate;
+
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`profile-presence:${userId}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
+        (payload) => {
+          const row = payload.new as Record<string, unknown>;
+          callbackRef.current(row.is_online as boolean, row.last_seen_at as string);
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
+}
+
 export function useReceiptUpdates(chatId: string, onChange: () => void) {
   const callbackRef = useRef(onChange);
   callbackRef.current = onChange;
 
   useEffect(() => {
     if (!chatId) return;
-
     const channel = supabase
       .channel(`receipts:${chatId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "message_receipts" },
-        () => callbackRef.current()
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "message_receipts" }, () => callbackRef.current())
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [chatId]);
 }
