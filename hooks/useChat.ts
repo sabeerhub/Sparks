@@ -172,6 +172,10 @@ export function useChat(chatId: string, theirPublicKeyJwk: JsonWebKey | null) {
   const send = useCallback(
     async (plaintext: string, replyToId: string | null = null) => {
       if (!theirPublicKeyJwk) throw new Error("Missing recipient public key");
+
+      const keyReady = await waitForPrivateKey();
+      if (!keyReady) throw new Error("Encryption key not ready — please try again");
+
       const clientId = crypto.randomUUID();
       await sendMessageOptimistic({
         chatId,
@@ -180,7 +184,7 @@ export function useChat(chatId: string, theirPublicKeyJwk: JsonWebKey | null) {
         replyToId,
         clientId,
       });
-      await setTyping(chatId, false);
+      await setTyping(chatId, false).catch(() => {});
     },
     [chatId, theirPublicKeyJwk]
   );
