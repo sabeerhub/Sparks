@@ -47,10 +47,10 @@ export async function getIncomingRequests(): Promise<SparkRequestWithProfile[]> 
   (profiles ?? []).forEach((p: Profile) => profileMap.set(p.id, p));
 
   return (requests as SparkRequest[])
-    .map((r) => {
+    .map((r): SparkRequestWithProfile | null => {
       const profile = profileMap.get(r.sender_id);
       if (!profile) return null;
-      return { ...r, profile, direction: "incoming" as const };
+      return { ...r, profile, direction: "incoming" };
     })
     .filter((r): r is SparkRequestWithProfile => r !== null);
 }
@@ -79,10 +79,10 @@ export async function getOutgoingRequests(): Promise<SparkRequestWithProfile[]> 
   (profiles ?? []).forEach((p: Profile) => profileMap.set(p.id, p));
 
   return (requests as SparkRequest[])
-    .map((r) => {
+    .map((r): SparkRequestWithProfile | null => {
       const profile = profileMap.get(r.receiver_id);
       if (!profile) return null;
-      return { ...r, profile, direction: "outgoing" as const };
+      return { ...r, profile, direction: "outgoing" };
     })
     .filter((r): r is SparkRequestWithProfile => r !== null);
 }
