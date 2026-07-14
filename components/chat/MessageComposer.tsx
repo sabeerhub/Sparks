@@ -4,6 +4,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { Paperclip, Smile, Send, Mic, Trash2 } from "lucide-react";
 import { sendMediaMessage, MAX_MEDIA_BYTES } from "@/services/media-service";
 import { chatCache } from "@/lib/storage";
 
@@ -133,7 +134,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
     return (
       <div className="px-3 py-2 border-t flex items-center gap-3" style={{ borderColor: "var(--color-gray-2)" }}>
         <button onClick={cancelRecording} aria-label="Cancel recording">
-          <TrashIcon />
+          <Trash2 size={20} color="var(--color-red)" strokeWidth={1.8} />
         </button>
         <div className="flex-1 flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: "var(--color-red)" }} />
@@ -146,7 +147,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
           style={{ background: "var(--color-blue)" }}
           aria-label="Send voice note"
         >
-          <SendIcon />
+          <Send size={16} color="white" strokeWidth={2} />
         </button>
       </div>
     );
@@ -164,7 +165,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
           {uploading ? (
             <div className="w-[22px] h-[22px] rounded-full border-2 animate-spin" style={{ borderColor: "var(--color-gray-3)", borderTopColor: "var(--color-blue)" }} />
           ) : (
-            <AttachIcon />
+            <Paperclip size={22} color="var(--color-gray-1)" strokeWidth={1.8} />
           )}
         </button>
         <input
@@ -192,7 +193,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
             style={{ color: "var(--color-black)" }}
           />
           <button className="ml-2" aria-label="Emoji">
-            <EmojiIcon />
+            <Smile size={20} color="var(--color-gray-1)" strokeWidth={1.8} />
           </button>
         </div>
 
@@ -203,50 +204,14 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
             style={{ background: "var(--color-blue)" }}
             aria-label="Send"
           >
-            <SendIcon />
+            <Send size={16} color="white" strokeWidth={2} />
           </button>
         ) : (
           <button className="mb-1.5" aria-label="Record voice note" onClick={startRecording}>
-            <MicIcon />
+            <Mic size={22} color="var(--color-gray-1)" strokeWidth={1.8} />
           </button>
         )}
       </div>
     </div>
-  );
-}
-
-function AttachIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-gray-1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-    </svg>
-  );
-}
-function EmojiIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-gray-1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" /><path d="M8 13s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" />
-    </svg>
-  );
-}
-function SendIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
-    </svg>
-  );
-}
-function MicIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-gray-1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" />
-    </svg>
-  );
-}
-function TrashIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-red)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-    </svg>
   );
 }
