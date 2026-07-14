@@ -85,14 +85,14 @@ export default function ChatsPage() {
     if (!activeChat || !userId) return;
     const next = !activeChat.isPinned;
     updateLocal(activeChat.chatId, { isPinned: next });
-    await setChatPinned(activeChat.chatId, userId, next).catch(() => {});
+    await setChatPinned(activeChat.chatId, userId, next).catch((err) => alert("Pin error: " + err.message));
   };
 
   const handleToggleMute = async () => {
     if (!activeChat || !userId) return;
     const next = !activeChat.isMuted;
     updateLocal(activeChat.chatId, { isMuted: next });
-    await setChatMuted(activeChat.chatId, userId, next).catch(() => {});
+    await setChatMuted(activeChat.chatId, userId, next).catch((err) => alert("Mute error: " + err.message));
   };
 
   const handleMarkRead = async () => {
