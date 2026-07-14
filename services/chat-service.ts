@@ -20,11 +20,6 @@ const supabase = createClient();
  * the other person's row requires the security-definer function.
  */
 export async function startDirectChat(otherUserId: string): Promise<string> {
-  // Same generic-inference fragility as insert/update/select calls
-  // elsewhere in this codebase — casting supabase itself to any for this
-  // call bypasses postgrest-js's rpc() Functions constraint checking,
-  // which has shown the same unreliability on Vercel's build despite the
-  // Args shape matching the Database type exactly.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any).rpc("create_direct_chat", {
     p_other_user_id: otherUserId,
@@ -41,20 +36,21 @@ export async function startDirectChat(otherUserId: string): Promise<string> {
  * that requires the shared AES key and shouldn't block this list query.
  */
 export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
-  // Three plain single-table queries instead of nested joins. Table-level
-  // any casts, not just explicit type assertions on the result — the
-  // assertion-only approach (e.g. `data as Foo[] | null`) passed isolated
-  // testing but still failed on Vercel for the equivalent insert/update
-  // pattern elsewhere in this codebase, so it's not trusted here either.
-  // RLS still enforces correctness at the database level regardless of
-  // what TypeScript believes the shape is.
   type MembershipRow = Pick<ChatMember, "chat_id" | "is_pinned" | "is_muted" | "is_archived" | "last_read_at">;
   type ChatRow = Pick<Chat, "id" | "created_by" | "is_group" | "created_at" | "last_message_at">;
   type OtherMemberRow = Pick<ChatMember, "chat_id" | "user_id">;
 
+  // IMPORTANT: chat_members' SELECT RLS policy uses is_chat_member(chat_id),
+  // which permits reading ANY member row for a chat you belong to (needed
+  // for group chat membership lists elsewhere). Without this explicit
+  // .eq("user_id", userId) filter, this query would return every member's
+  // row for every chat you're in — e.g. 2 rows per 1:1 chat — causing each
+  // chat to render twice in the list. This filter is the actual
+  // "only my memberships" scope; RLS alone does not provide it here.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const membershipsQuery = await (supabase.from("chat_members") as any)
-    .select("chat_id, is_pinned, is_muted, is_archived, last_read_at");
+    .select("chat_id, is_pinned, is_muted, is_archived, last_read_at")
+    .eq("user_id", userId);
 
   if (membershipsQuery.error) throw membershipsQuery.error;
   const memberships = membershipsQuery.data as MembershipRow[] | null;
@@ -124,9 +120,6 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
     })
     .filter((c): c is ChatListItem => c !== null)
     .sort((a, b) => {
-      // Most recent activity first — restores the ordering the original
-      // .order("chats(last_message_at)") join clause provided, now done
-      // client-side since that field lives on the joined `chats` row.
       const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
       const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
       return bTime - aTime;
@@ -134,11 +127,6 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
 }
 
 export async function setChatPinned(chatId: string, userId: string, pinned: boolean) {
-  // Casting the table reference (not just the argument) to bypass
-  // PostgREST's Update generic constraint checking — argument-level casts
-  // (Record<string, unknown>) have proven unreliable for this exact
-  // pattern across build environments. RLS still enforces correctness at
-  // the database level regardless of what TypeScript believes the shape is.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from("chat_members") as any)
     .update({ is_pinned: pinned })
@@ -176,10 +164,6 @@ export async function deleteChatForSelf(chatId: string, userId: string) {
 }
 
 export async function blockUser(blockedId: string) {
-  // blocker_id must be set explicitly to satisfy the
-  // blocked_users_insert_own RLS policy's with-check (blocker_id =
-  // auth.uid()) — omitting it (as the previous version did) would fail
-  // the insert at the database level regardless of how it's typed.
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
