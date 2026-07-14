@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { BadgeCheck, Zap, MapPin, Send } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { Avatar } from "@/components/ui/Avatar";
@@ -20,14 +21,12 @@ export default function PublicProfilePage() {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [sparkCount, setSparkCount] = useState(0);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [connection, setConnection] = useState<ConnectionState>("loading");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    setCurrentUserId(user?.id ?? null);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase.from("profiles") as any)
@@ -111,13 +110,13 @@ export default function PublicProfilePage() {
 
             <div className="flex items-center gap-1.5 mt-3">
               <h2 className="text-xl font-bold text-center">{profile.full_name}</h2>
-              {profile.is_verified && <VerifiedBadge />}
+              {profile.is_verified && <BadgeCheck size={18} fill="var(--color-blue)" color="white" />}
             </div>
 
             <p className="text-sm mt-0.5" style={{ color: "var(--color-blue)" }}>@{profile.username}</p>
 
             <div className="mt-4 flex items-center gap-1.5">
-              <BoltIcon />
+              <Zap size={18} fill="var(--color-blue)" color="var(--color-blue)" />
               <span className="text-xl font-bold">{sparkCount}</span>
             </div>
             <p className="text-xs -mt-0.5" style={{ color: "var(--color-gray-1)" }}>Total Sparks</p>
@@ -130,11 +129,10 @@ export default function PublicProfilePage() {
 
             {profile.location && (
               <span className="flex items-center gap-1 mt-3 text-xs" style={{ color: "var(--color-gray-1)" }}>
-                <PinIcon /> {profile.location}
+                <MapPin size={12} strokeWidth={1.8} /> {profile.location}
               </span>
             )}
 
-            {/* Connection action */}
             <div className="mt-6 w-full max-w-xs">
               {connection === "connected" && (
                 <button
@@ -153,7 +151,7 @@ export default function PublicProfilePage() {
                   className="w-full py-3 rounded-2xl text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-1.5"
                   style={{ background: "var(--color-blue)" }}
                 >
-                  <BoltIconWhite /> {busy ? "Sending…" : "Send Spark Request"}
+                  <Send size={16} color="white" strokeWidth={2} /> {busy ? "Sending…" : "Send Spark Request"}
                 </button>
               )}
               {connection === "pending_sent" && (
@@ -172,22 +170,4 @@ export default function PublicProfilePage() {
       </div>
     </ScreenContainer>
   );
-}
-
-function VerifiedBadge() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--color-blue)" aria-label="Verified">
-      <path d="M12 2l2.4 2.2 3.2-.6.9 3.1 3 1.4-1 3.1 1 3.1-3 1.4-.9 3.1-3.2-.6L12 21l-2.4-2.2-3.2.6-.9-3.1-3-1.4 1-3.1-1-3.1 3-1.4.9-3.1 3.2.6z" />
-      <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function BoltIcon() {
-  return <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--color-blue)"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>;
-}
-function BoltIconWhite() {
-  return <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>;
-}
-function PinIcon() {
-  return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-gray-1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg>;
 }
