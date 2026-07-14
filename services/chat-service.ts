@@ -196,3 +196,38 @@ export async function updateOwnProfile(userId: string, patch: Partial<Profile>) 
   const { error } = await (supabase.from("profiles") as any).update(patch).eq("id", userId);
   if (error) throw error;
 }
+
+/**
+ * Uploads a new avatar image to the public `avatars` bucket under the
+ * user's own folder (required by the bucket's RLS policies), then updates
+ * profiles.avatar_url to point at it. Returns the new public URL.
+ */
+export async function uploadAvatar(userId: string, file: File): Promise<string> {
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `${userId}/avatar.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("avatars")
+    .upload(path, file, { upsert: true, cacheControl: "3600" });
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  const publicUrl = `${data.publicUrl}?t=${Date.now()}`; // cache-bust so the new photo shows immediately
+
+  await updateOwnProfile(userId, { avatar_url: publicUrl });
+
+  return publicUrl;
+}
+
+/** Counts how many accepted Spark connections a user has. */
+export async function getSparkCount(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("spark_requests")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "accepted")
+    .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
+
+  if (error) return 0;
+  return count ?? 0;
+}

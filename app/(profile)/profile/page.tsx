@@ -8,6 +8,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar } from "@/components/ui/Avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase";
+import { getSparkCount } from "@/services/chat-service";
 import type { Profile } from "@/types";
 
 const supabase = createClient();
@@ -55,6 +56,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const { logout } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [sparkCount, setSparkCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -67,6 +69,7 @@ export default function ProfilePage() {
         .eq("id", user.id)
         .maybeSingle();
       setProfile(data as Profile | null);
+      getSparkCount(user.id).then(setSparkCount);
       setLoading(false);
     })();
   }, [router]);
@@ -93,9 +96,15 @@ export default function ProfilePage() {
                   size={80}
                   online
                 />
-                <h2 className="text-xl font-bold mt-3 text-center">
-                  {profile?.full_name ?? "—"}
-                </h2>
+
+                <div className="flex items-center gap-1.5 mt-3">
+                  <h2 className="text-xl font-bold text-center">
+                    {profile?.full_name ?? "—"}
+                  </h2>
+                  {profile?.is_verified && <VerifiedBadge />}
+                  {profile?.is_premium && <PremiumBadge />}
+                </div>
+
                 {profile?.username && (
                   <p className="text-sm mt-0.5" style={{ color: "var(--color-blue)" }}>
                     @{profile.username}
@@ -109,13 +118,28 @@ export default function ProfilePage() {
                     {profile.bio}
                   </p>
                 )}
+
+                <button
+                  onClick={() => {}}
+                  className="mt-3 text-sm font-semibold"
+                  style={{ color: "var(--color-gray-1)" }}
+                >
+                  <span style={{ color: "var(--color-black)" }}>{sparkCount}</span> Sparks
+                </button>
+
+                {/* Action buttons: call / video / shared media */}
+                <div className="flex items-center gap-3 mt-5">
+                  <ActionButton icon="phone" label="Audio" onClick={() => alert("Voice calls are coming in a future update.")} />
+                  <ActionButton icon="video" label="Video" onClick={() => alert("Video calls are coming in a future update.")} />
+                  <ActionButton icon="media" label="Media" onClick={() => router.push("/profile/media")} />
+                </div>
               </div>
 
               {/* Menu rows */}
               <div className="px-4 pt-4 space-y-3 pb-6">
                 <div className="rounded-2xl overflow-hidden bg-white">
-                  <Row icon="edit" iconColor="var(--color-blue)" label="Edit Profile" onClick={() => {}} />
-                  <Row icon="star" iconColor="var(--color-orange)" label="Sparks Premium" badge="Active" onClick={() => {}} />
+                  <Row icon="edit" iconColor="var(--color-blue)" label="Edit Profile" onClick={() => router.push("/profile/edit")} />
+                  <Row icon="star" iconColor="var(--color-orange)" label="Sparks Premium" badge={profile?.is_premium ? "Active" : undefined} onClick={() => {}} last />
                 </div>
                 <div className="rounded-2xl overflow-hidden bg-white">
                   <Row icon="shield" iconColor="var(--color-green)" label="Security Center" onClick={() => router.push("/settings/security")} />
@@ -148,6 +172,52 @@ export default function ProfilePage() {
       </div>
     </ScreenContainer>
   );
+}
+
+function VerifiedBadge() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--color-blue)" aria-label="Verified">
+      <path d="M12 2l2.4 2.2 3.2-.6.9 3.1 3 1.4-1 3.1 1 3.1-3 1.4-.9 3.1-3.2-.6L12 21l-2.4-2.2-3.2.6-.9-3.1-3-1.4 1-3.1-1-3.1 3-1.4.9-3.1 3.2.6z" />
+      <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PremiumBadge() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--color-orange)" aria-label="Premium">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
+}
+
+interface ActionButtonProps {
+  icon: "phone" | "video" | "media";
+  label: string;
+  onClick: () => void;
+}
+
+function ActionButton({ icon, label, onClick }: ActionButtonProps) {
+  return (
+    <button onClick={onClick} className="flex flex-col items-center gap-1.5 active:opacity-60 transition-opacity">
+      <div
+        className="w-11 h-11 rounded-full flex items-center justify-center"
+        style={{ background: "var(--color-gray-2)" }}
+      >
+        <ActionIcon name={icon} />
+      </div>
+      <span className="text-xs font-medium" style={{ color: "var(--color-gray-1)" }}>{label}</span>
+    </button>
+  );
+}
+
+function ActionIcon({ name }: { name: ActionButtonProps["icon"] }) {
+  const c = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "var(--color-blue)", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  switch (name) {
+    case "phone": return <svg {...c}><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.07 9.8 19.79 19.79 0 01.18 2 2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z" /></svg>;
+    case "video": return <svg {...c}><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg>;
+    case "media": return <svg {...c}><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>;
+  }
 }
 
 interface RowProps {
