@@ -8,6 +8,7 @@ export interface Profile {
   full_name: string;
   avatar_url: string | null;
   bio: string | null;
+  location: string | null;
   is_premium: boolean;
   is_verified: boolean;
   public_key: string;

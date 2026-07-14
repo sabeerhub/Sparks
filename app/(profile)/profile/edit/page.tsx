@@ -22,6 +22,7 @@ export default function EditProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
+  const [location, setLocation] = useState("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -44,6 +45,7 @@ export default function EditProfilePage() {
       setProfile(p);
       setFullName(p?.full_name ?? "");
       setBio(p?.bio ?? "");
+      setLocation(p?.location ?? "");
       setAvatarPreview(p?.avatar_url ?? null);
       setLoading(false);
     })();
@@ -92,6 +94,7 @@ export default function EditProfilePage() {
       await updateOwnProfile(userId, {
         full_name: fullName.trim(),
         bio: bio.trim() || null,
+        location: location.trim() || null,
       });
       router.push("/profile");
     } catch {
@@ -201,6 +204,17 @@ export default function EditProfilePage() {
                 className="w-full text-sm outline-none bg-transparent resize-none"
               />
             </div>
+            </div>
+
+            <div className="rounded-2xl bg-white overflow-hidden p-4">
+              <label className="text-sm font-medium mb-2 block">Location</label>
+              <input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                maxLength={60}
+                placeholder="City, Country"
+                className="w-full text-sm outline-none bg-transparent"
+              />
           </div>
         </div>
       </div>
