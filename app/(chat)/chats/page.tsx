@@ -10,6 +10,7 @@ import { ChatActionSheet } from "@/components/chat/ChatActionSheet";
 import { useChatStore } from "@/store/chat-store";
 import { fetchChatList, setChatPinned, setChatMuted, markChatRead, deleteChatForSelf, blockUser } from "@/services/chat-service";
 import { createClient } from "@/lib/supabase";
+import { getUnreadCount } from "@/services/notification-service";
 import { chatCache } from "@/lib/storage";
 
 const supabase = createClient();
@@ -36,6 +37,7 @@ export default function ChatsPage() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +52,7 @@ export default function ChatsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || cancelled) return;
       setUserId(user.id);
+      getUnreadCount().then((n) => { if (!cancelled) setUnreadNotifs(n); });
 
       try {
         const fresh = await fetchChatList(user.id);
@@ -64,6 +67,16 @@ export default function ChatsPage() {
 
     return () => { cancelled = true; };
   }, [setChatList]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("notif-badge")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => {
+        getUnreadCount().then(setUnreadNotifs);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const filtered = chatList.filter((c) =>
     c.otherUser.full_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -85,14 +98,14 @@ export default function ChatsPage() {
     if (!activeChat || !userId) return;
     const next = !activeChat.isPinned;
     updateLocal(activeChat.chatId, { isPinned: next });
-    await setChatPinned(activeChat.chatId, userId, next).catch((err) => alert("Pin error: " + err.message));
+    await setChatPinned(activeChat.chatId, userId, next).catch(() => {});
   };
 
   const handleToggleMute = async () => {
     if (!activeChat || !userId) return;
     const next = !activeChat.isMuted;
     updateLocal(activeChat.chatId, { isMuted: next });
-    await setChatMuted(activeChat.chatId, userId, next).catch((err) => alert("Mute error: " + err.message));
+    await setChatMuted(activeChat.chatId, userId, next).catch(() => {});
   };
 
   const handleMarkRead = async () => {
@@ -127,8 +140,13 @@ export default function ChatsPage() {
               <button onClick={() => router.push("/search")} aria-label="Find people" className="active:opacity-60 transition-opacity">
                 <SearchIcon />
               </button>
-              <button onClick={() => router.push("/activity")} aria-label="Activity" className="active:opacity-60 transition-opacity">
+              <button onClick={() => router.push("/activity")} aria-label="Activity" className="active:opacity-60 transition-opacity relative">
                 <BellIcon />
+                {unreadNotifs > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: "var(--color-red)" }}>
+                    {unreadNotifs > 9 ? "9+" : unreadNotifs}
+                  </span>
+                )}
               </button>
             </div>
           </div>
