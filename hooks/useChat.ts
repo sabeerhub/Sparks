@@ -3,14 +3,14 @@
  * ─────────────────────────────────────────────────────────────────────────
  * The single hook the Chat Screen component talks to. Wires together:
  *   - IndexedDB cache (lib/storage.ts) for instant render + offline history
- *   - message-service.ts for encrypt/send/decrypt
+ *   - message-service.ts for send/fetch
  *   - useRealtimeMessages for live updates from the other participant
  *   - registerReconnectSync so queued offline sends flush automatically
  *
- * Key guard: all decrypt operations check keyManager.hasPrivateKey() before
- * attempting ECDH derivation. If the private key isn't loaded yet (e.g.
- * realtime event fires before restorePrivateKey() completes on mount), the
- * operation is retried after a short delay rather than silently failing.
+ * V1: plain-text messages (see message-service.ts header for why E2E
+ * client-side encryption was removed). No key-loading, no waiting, no
+ * "Encryption key not ready" — messages are available immediately after
+ * login, on any device, every time.
  */
 
 "use client";
@@ -21,26 +21,11 @@ import { chatCache, registerReconnectSync } from "@/lib/storage";
 import { fetchMessages, sendMessageOptimistic, editMessage, deleteMessage, markRead, setTyping } from "@/services/message-service";
 import { sendMessage as rawSendMessage } from "@/services/message-service";
 import { useRealtimeMessages, useTypingIndicator } from "@/hooks/useRealtime";
-import { decryptMessage } from "@/lib/crypto";
-import { keyManager } from "@/lib/encryption";
 import type { DecryptedMessage } from "@/types";
 
 const supabase = createClient();
 
-/** Waits up to 5 seconds for the private key to be loaded into memory. */
-async function waitForPrivateKey(maxWaitMs = 5000): Promise<boolean> {
-  if (keyManager.hasPrivateKey()) return true;
-  const interval = 200;
-  let waited = 0;
-  while (waited < maxWaitMs) {
-    await new Promise((r) => setTimeout(r, interval));
-    if (keyManager.hasPrivateKey()) return true;
-    waited += interval;
-  }
-  return false;
-}
-
-export function useChat(chatId: string, theirPublicKeyJwk: JsonWebKey | null) {
+export function useChat(chatId: string) {
   const [messages, setMessages] = useState<DecryptedMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
@@ -48,7 +33,7 @@ export function useChat(chatId: string, theirPublicKeyJwk: JsonWebKey | null) {
 
   // ─── Initial load: hydrate from cache instantly, then reconcile with server ──
   useEffect(() => {
-    if (!chatId || !theirPublicKeyJwk) return;
+    if (!chatId) return;
     let cancelled = false;
 
     (async () => {
@@ -58,12 +43,8 @@ export function useChat(chatId: string, theirPublicKeyJwk: JsonWebKey | null) {
         setLoading(false);
       }
 
-      // Wait for private key before attempting decryption
-      const keyReady = await waitForPrivateKey();
-      if (!keyReady || cancelled) return;
-
       try {
-        const fresh = await fetchMessages(chatId, theirPublicKeyJwk);
+        const fresh = await fetchMessages(chatId);
         if (!cancelled) {
           await chatCache.setMessages(chatId, fresh);
           setMessages(fresh);
@@ -81,88 +62,56 @@ export function useChat(chatId: string, theirPublicKeyJwk: JsonWebKey | null) {
       cancelled = true;
       unsubscribe();
     };
-  }, [chatId, theirPublicKeyJwk]);
+  }, [chatId]);
 
   // ─── Reconnect sync for the offline outbox ─────────────────────────────
   useEffect(() => {
-    if (!chatId || !theirPublicKeyJwk) return;
+    if (!chatId) return;
     return registerReconnectSync(chatId, (queued) =>
       rawSendMessage({
         chatId: queued.chat_id,
         plaintext: queued.plaintext,
-        theirPublicKeyJwk,
         replyToId: queued.reply_to_id,
       })
     );
-  }, [chatId, theirPublicKeyJwk]);
+  }, [chatId]);
 
   // ─── Live updates from the other participant ───────────────────────────
   useRealtimeMessages({
     chatId,
     onInsert: async (payload) => {
       const row = payload.new as Record<string, unknown>;
-      if (!theirPublicKeyJwk) return;
 
       const { data: { user } } = await supabase.auth.getUser();
       if (row.sender_id === user?.id) return;
 
-      // Wait for private key — realtime can fire before restorePrivateKey()
-      // completes on mount, causing silent decryption failures.
-      const keyReady = await waitForPrivateKey();
-      if (!keyReady) return;
+      const decrypted: DecryptedMessage = {
+        id: row.id as string,
+        chat_id: row.chat_id as string,
+        sender_id: row.sender_id as string,
+        text: row.deleted_at ? "" : ((row.content as string) ?? ""),
+        content_type: row.content_type as DecryptedMessage["content_type"],
+        media_url: (row.media_path as string) ?? undefined,
+        reply_to_id: row.reply_to_id as string | null,
+        edited_at: row.edited_at as string | null,
+        deleted_at: row.deleted_at as string | null,
+        created_at: row.created_at as string,
+        status: "delivered",
+      };
 
-      try {
-        const sharedKey = await keyManager.getSharedKey(chatId, theirPublicKeyJwk);
-        const text = row.deleted_at ? "" : await decryptMessage(
-          { ciphertext: row.ciphertext as string, iv: row.iv as string },
-          sharedKey
-        );
-
-        const decrypted: DecryptedMessage = {
-          id: row.id as string,
-          chat_id: row.chat_id as string,
-          sender_id: row.sender_id as string,
-          text,
-          content_type: row.content_type as DecryptedMessage["content_type"],
-          media_url: (row.media_path as string) ?? undefined,
-          reply_to_id: row.reply_to_id as string | null,
-          edited_at: row.edited_at as string | null,
-          deleted_at: row.deleted_at as string | null,
-          created_at: row.created_at as string,
-          status: "delivered",
-        };
-
-        await chatCache.upsertMessage(chatId, decrypted);
-        markRead([decrypted.id]).catch(() => {});
-      } catch {
-        // Decryption failed silently — key mismatch or corrupted ciphertext.
-      }
+      await chatCache.upsertMessage(chatId, decrypted);
+      markRead([decrypted.id]).catch(() => {});
     },
     onUpdate: async (payload) => {
       const row = payload.new as Record<string, unknown>;
-      if (!theirPublicKeyJwk) return;
-
-      const keyReady = await waitForPrivateKey();
-      if (!keyReady) return;
-
-      try {
-        const sharedKey = await keyManager.getSharedKey(chatId, theirPublicKeyJwk);
-        const text = row.deleted_at ? "" : await decryptMessage(
-          { ciphertext: row.ciphertext as string, iv: row.iv as string },
-          sharedKey
-        );
-
-        const existing = chatCache.getMessages(chatId).find((m) => m.id === row.id);
-        await chatCache.upsertMessage(chatId, {
-          ...(existing as DecryptedMessage),
-          id: row.id as string,
-          text,
-          edited_at: row.edited_at as string | null,
-          deleted_at: row.deleted_at as string | null,
-        });
-      } catch {
-        // Silent failure.
-      }
+      const existing = chatCache.getMessages(chatId).find((m) => m.id === row.id);
+      await chatCache.upsertMessage(chatId, {
+        ...(existing as DecryptedMessage),
+        id: row.id as string,
+        text: row.deleted_at ? "" : ((row.content as string) ?? ""),
+        edited_at: row.edited_at as string | null,
+        deleted_at: row.deleted_at as string | null,
+      });
     },
   });
 
@@ -171,28 +120,21 @@ export function useChat(chatId: string, theirPublicKeyJwk: JsonWebKey | null) {
   // ─── Actions exposed to the component ──────────────────────────────────
   const send = useCallback(
     async (plaintext: string, replyToId: string | null = null) => {
-      if (!theirPublicKeyJwk) throw new Error("Missing recipient public key");
-
-      const keyReady = await waitForPrivateKey();
-      if (!keyReady) throw new Error("Encryption key not ready — please try again");
-
       const clientId = crypto.randomUUID();
       await sendMessageOptimistic({
         chatId,
         plaintext,
-        theirPublicKeyJwk,
         replyToId,
         clientId,
       });
       await setTyping(chatId, false).catch(() => {});
     },
-    [chatId, theirPublicKeyJwk]
+    [chatId]
   );
 
   const edit = useCallback(
     async (messageId: string, newText: string) => {
-      if (!theirPublicKeyJwk) return;
-      await editMessage(messageId, chatId, newText, theirPublicKeyJwk);
+      await editMessage(messageId, newText);
       const existing = chatCache.getMessages(chatId).find((m) => m.id === messageId);
       if (existing) {
         await chatCache.upsertMessage(chatId, {
@@ -202,7 +144,7 @@ export function useChat(chatId: string, theirPublicKeyJwk: JsonWebKey | null) {
         });
       }
     },
-    [chatId, theirPublicKeyJwk]
+    [chatId]
   );
 
   const remove = useCallback(

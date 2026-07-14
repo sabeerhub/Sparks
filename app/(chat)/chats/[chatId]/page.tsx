@@ -79,8 +79,7 @@ export default function ChatThreadPage() {
     })();
   }, [chatId]);
 
-  const theirPublicKeyJwk = otherUser ? (JSON.parse(otherUser.public_key) as JsonWebKey) : null;
-  const { messages, loading, typingUserIds, send, edit, remove, notifyTyping } = useChat(chatId, theirPublicKeyJwk);
+  const { messages, loading, typingUserIds, send, edit, remove, notifyTyping } = useChat(chatId);
 
   usePresence(currentUserId);
 

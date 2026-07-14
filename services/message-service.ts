@@ -1,15 +1,15 @@
 /**
  * services/message-service.ts
  * ─────────────────────────────────────────────────────────────────────────
- * The only place in the app that should call encryptMessage/decryptMessage
- * around a Supabase read or write. Keeping that pairing centralized here —
- * rather than letting components encrypt/decrypt inline — means there's
- * exactly one place to audit for "does plaintext ever leave the device."
+ * V1: plain-text messages, secured by Supabase Auth + RLS + HTTPS +
+ * Supabase's server-side encryption at rest. Client-side E2E encryption
+ * (private key wrapped by a password-derived key, with all the
+ * "sessionStorage clears the key" fragility that came with it) has been
+ * removed for V1 reliability. True E2E with a proper recovery-key flow is
+ * planned for a future version (V4/V5) without changing this auth model.
  */
 
 import { createClient } from "@/lib/supabase";
-import { encryptMessage, decryptMessage } from "@/lib/crypto";
-import { keyManager } from "@/lib/encryption";
 import { canSendMessage, msUntilNextMessageSlot, RateLimitError } from "@/lib/rateLimit";
 import { chatCache } from "@/lib/storage";
 import type { DecryptedMessage, QueuedMessage } from "@/types";
@@ -19,37 +19,28 @@ const supabase = createClient();
 interface SendParams {
   chatId: string;
   plaintext: string;
-  theirPublicKeyJwk: JsonWebKey;
   replyToId?: string | null;
 }
 
 /**
- * Full send path: client-side rate check -> encrypt -> RPC insert (which
- * re-checks the rate limit server-side) -> return the row the UI should
- * render. Throws RateLimitError if the client-side throttle trips, so the
- * caller can show "slow down" without a round trip.
+ * Full send path: client-side rate check -> RPC insert (which re-checks
+ * the rate limit server-side) -> return the row the UI should render.
+ * Throws RateLimitError if the client-side throttle trips, so the caller
+ * can show "slow down" without a round trip.
  */
 export async function sendMessage({
   chatId,
   plaintext,
-  theirPublicKeyJwk,
   replyToId = null,
 }: SendParams): Promise<DecryptedMessage> {
   if (!canSendMessage(chatId)) {
     throw new RateLimitError(msUntilNextMessageSlot(chatId));
   }
 
-  const sharedKey = await keyManager.getSharedKey(chatId, theirPublicKeyJwk);
-  const { ciphertext, iv } = await encryptMessage(plaintext, sharedKey);
-
-  // Same generic-inference fragility as insert/update/select calls
-  // elsewhere in this codebase — see startDirectChat() in chat-service.ts
-  // for the full explanation.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any).rpc("send_message", {
     p_chat_id: chatId,
-    p_ciphertext: ciphertext,
-    p_iv: iv,
+    p_content: plaintext,
     p_content_type: "text",
     p_reply_to_id: replyToId,
   });
@@ -115,20 +106,13 @@ export async function sendMessageOptimistic(params: SendParams & { clientId: str
 }
 
 /**
- * Fetches and decrypts a page of message history for a chat. Pass `before`
- * (an ISO timestamp) to paginate backwards for infinite scroll.
+ * Fetches a page of message history for a chat. Pass `before` (an ISO
+ * timestamp) to paginate backwards for infinite scroll.
  */
 export async function fetchMessages(
   chatId: string,
-  theirPublicKeyJwk: JsonWebKey,
   opts: { before?: string; limit?: number } = {}
 ): Promise<DecryptedMessage[]> {
-  // Table-level any cast — even a full select("*") chained with multiple
-  // query-builder methods (.eq/.order/.limit) has shown the same
-  // generic-inference collapse-to-never as partial-column selects and
-  // writes elsewhere in this codebase, so it's not "only partial columns
-  // are affected" as originally assumed. Casting the table reference
-  // sidesteps the whole chain's generic resolution at once.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase.from("messages") as any)
     .select("*")
@@ -142,75 +126,45 @@ export async function fetchMessages(
   if (error) throw error;
   if (!data?.length) return [];
 
-  const sharedKey = await keyManager.getSharedKey(chatId, theirPublicKeyJwk);
-
-  const decrypted = await Promise.all(
+  const messages: DecryptedMessage[] = data.map(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data.map(async (row: any): Promise<DecryptedMessage> => {
-      if (row.deleted_at) {
-        return {
-          id: row.id,
-          chat_id: row.chat_id,
-          sender_id: row.sender_id,
-          text: "",
-          content_type: row.content_type,
-          reply_to_id: row.reply_to_id,
-          edited_at: row.edited_at,
-          deleted_at: row.deleted_at,
-          created_at: row.created_at,
-          status: "sent",
-        };
-      }
-      const text = await decryptMessage({ ciphertext: row.ciphertext, iv: row.iv }, sharedKey);
-      return {
-        id: row.id,
-        chat_id: row.chat_id,
-        sender_id: row.sender_id,
-        text,
-        content_type: row.content_type,
-        media_url: row.media_path ?? undefined,
-        reply_to_id: row.reply_to_id,
-        edited_at: row.edited_at,
-        deleted_at: row.deleted_at,
-        created_at: row.created_at,
-        status: "sent",
-      };
+    (row: any): DecryptedMessage => ({
+      id: row.id,
+      chat_id: row.chat_id,
+      sender_id: row.sender_id,
+      text: row.deleted_at ? "" : (row.content ?? ""),
+      content_type: row.content_type,
+      media_url: row.media_path ?? undefined,
+      reply_to_id: row.reply_to_id,
+      edited_at: row.edited_at,
+      deleted_at: row.deleted_at,
+      created_at: row.created_at,
+      status: "sent",
     })
   );
 
-  return decrypted.reverse(); // oldest first for rendering top-to-bottom
+  return messages.reverse(); // oldest first for rendering top-to-bottom
 }
 
-export async function editMessage(messageId: string, chatId: string, newPlaintext: string, theirPublicKeyJwk: JsonWebKey) {
-  const sharedKey = await keyManager.getSharedKey(chatId, theirPublicKeyJwk);
-  const { ciphertext, iv } = await encryptMessage(newPlaintext, sharedKey);
-
-  // Casting the table reference (not just the argument) bypasses
-  // PostgREST's Update/Insert generic constraint checking more reliably
-  // than an argument-level Record<string, unknown> cast, which has shown
-  // inconsistent behavior across build environments for this codebase.
-  // RLS still enforces correctness at the database level regardless.
+export async function editMessage(messageId: string, newPlaintext: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from("messages") as any)
-    .update({ ciphertext, iv, edited_at: new Date().toISOString() })
+    .update({ content: newPlaintext, edited_at: new Date().toISOString() })
     .eq("id", messageId);
 
   if (error) throw error;
 }
 
-/** Soft-delete: wipes ciphertext, keeps the row as a tombstone for "message deleted" UI. */
+/** Soft-delete: wipes content, keeps the row as a tombstone for "message deleted" UI. */
 export async function deleteMessage(messageId: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from("messages") as any)
-    .update({ ciphertext: "", iv: "", deleted_at: new Date().toISOString() })
+    .update({ content: "", deleted_at: new Date().toISOString() })
     .eq("id", messageId);
   if (error) throw error;
 }
 
 export async function reactToMessage(messageId: string, emoji: string) {
-  // user_id must be set explicitly to satisfy the reactions_insert_self_only
-  // RLS policy's with-check (user_id = auth.uid()) — same missing-field
-  // bug pattern as the original blockUser(), fixed the same way.
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
@@ -229,8 +183,6 @@ export async function removeReaction(messageId: string) {
 
 export async function markDelivered(messageIds: string[]) {
   if (!messageIds.length) return;
-  // user_id required by receipts_insert_self_only's with-check (user_id =
-  // auth.uid()) — same missing-field pattern fixed elsewhere in this file.
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
   const rows = messageIds.map((id) => ({ message_id: id, user_id: user.id, status: "delivered" as const }));
