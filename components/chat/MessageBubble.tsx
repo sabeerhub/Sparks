@@ -7,6 +7,7 @@ import { useState } from "react";
 import type { DecryptedMessage } from "@/types";
 import { formatMessageTime } from "@/utils/helpers";
 import { MessageContextMenu } from "./MessageContextMenu";
+import { MediaContent } from "./MediaContent";
 
 interface MessageBubbleProps {
   message: DecryptedMessage;
@@ -34,26 +35,40 @@ export function MessageBubble({ message, isMine, onEdit, onDelete, onReact, onRe
     );
   }
 
+  const isMedia = message.content_type !== "text" && !!message.media_url;
+
   return (
     <div className={`flex ${isMine ? "justify-end" : "justify-start"} mb-1 relative`}>
       <div className="max-w-xs">
-        <button
+        <div
           onContextMenu={(e) => {
             e.preventDefault();
             setMenuOpen(true);
           }}
           onDoubleClick={() => setMenuOpen(true)}
-          className="rounded-3xl px-4 py-2.5 text-sm text-left w-full"
-          style={{
-            background: isMine ? "var(--color-blue)" : "var(--color-gray-2)",
-            color: isMine ? "#fff" : "var(--color-black)",
-            borderBottomRightRadius: isMine ? 4 : 24,
-            borderBottomLeftRadius: isMine ? 24 : 4,
-            opacity: message.status === "pending" ? 0.6 : 1,
-          }}
         >
-          {message.text}
-        </button>
+          {isMedia ? (
+            <MediaContent
+              contentType={message.content_type as "image" | "file" | "voice"}
+              mediaPath={message.media_url as string}
+              fileName={message.text || "File"}
+              isMine={isMine}
+            />
+          ) : (
+            <button
+              className="rounded-3xl px-4 py-2.5 text-sm text-left w-full"
+              style={{
+                background: isMine ? "var(--color-blue)" : "var(--color-gray-2)",
+                color: isMine ? "#fff" : "var(--color-black)",
+                borderBottomRightRadius: isMine ? 4 : 24,
+                borderBottomLeftRadius: isMine ? 24 : 4,
+                opacity: message.status === "pending" ? 0.6 : 1,
+              }}
+            >
+              {message.text}
+            </button>
+          )}
+        </div>
 
         {reaction && <div className="text-base mt-0.5 ml-1">{reaction}</div>}
 

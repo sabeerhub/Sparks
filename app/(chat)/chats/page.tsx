@@ -6,8 +6,9 @@ import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { ChatListItem } from "@/components/chat/ChatListItem";
+import { ChatActionSheet } from "@/components/chat/ChatActionSheet";
 import { useChatStore } from "@/store/chat-store";
-import { fetchChatList } from "@/services/chat-service";
+import { fetchChatList, setChatPinned, setChatMuted, markChatRead, deleteChatForSelf, blockUser } from "@/services/chat-service";
 import { createClient } from "@/lib/supabase";
 import { chatCache } from "@/lib/storage";
 
@@ -33,6 +34,8 @@ export default function ChatsPage() {
   const { chatList, setChatList } = useChatStore();
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,6 +49,7 @@ export default function ChatsPage() {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || cancelled) return;
+      setUserId(user.id);
 
       try {
         const fresh = await fetchChatList(user.id);
@@ -67,6 +71,49 @@ export default function ChatsPage() {
   );
 
   const showSkeletons = loading && chatList.length === 0;
+  const activeChat = chatList.find((c) => c.chatId === activeChatId) ?? null;
+
+  const updateLocal = (chatId: string, patch: Partial<(typeof chatList)[number]>) => {
+    setChatList(chatList.map((c) => (c.chatId === chatId ? { ...c, ...patch } : c)));
+  };
+
+  const removeLocal = (chatId: string) => {
+    setChatList(chatList.filter((c) => c.chatId !== chatId));
+  };
+
+  const handleTogglePin = async () => {
+    if (!activeChat || !userId) return;
+    const next = !activeChat.isPinned;
+    updateLocal(activeChat.chatId, { isPinned: next });
+    await setChatPinned(activeChat.chatId, userId, next).catch(() => {});
+  };
+
+  const handleToggleMute = async () => {
+    if (!activeChat || !userId) return;
+    const next = !activeChat.isMuted;
+    updateLocal(activeChat.chatId, { isMuted: next });
+    await setChatMuted(activeChat.chatId, userId, next).catch(() => {});
+  };
+
+  const handleMarkRead = async () => {
+    if (!activeChat || !userId) return;
+    updateLocal(activeChat.chatId, { unreadCount: 0 });
+    await markChatRead(activeChat.chatId, userId).catch(() => {});
+  };
+
+  const handleDelete = async () => {
+    if (!activeChat || !userId) return;
+    if (!window.confirm(`Delete chat with ${activeChat.otherUser.full_name}? This only removes it from your side.`)) return;
+    removeLocal(activeChat.chatId);
+    await deleteChatForSelf(activeChat.chatId, userId).catch(() => {});
+  };
+
+  const handleBlock = async () => {
+    if (!activeChat) return;
+    if (!window.confirm(`Block ${activeChat.otherUser.full_name}? They won't be able to message you.`)) return;
+    removeLocal(activeChat.chatId);
+    await blockUser(activeChat.otherUser.id).catch(() => {});
+  };
 
   return (
     <ScreenContainer>
@@ -131,7 +178,12 @@ export default function ChatsPage() {
           )}
 
           {filtered.map((item) => (
-            <ChatListItem key={item.chatId} item={item} onClick={() => router.push(`/chats/${item.chatId}`)} />
+            <ChatListItem
+              key={item.chatId}
+              item={item}
+              onClick={() => router.push(`/chats/${item.chatId}`)}
+              onLongPress={() => setActiveChatId(item.chatId)}
+            />
           ))}
 
           <div className="h-4" />
@@ -139,6 +191,18 @@ export default function ChatsPage() {
 
         <BottomNav />
       </div>
+
+      <ChatActionSheet
+        open={!!activeChat}
+        onClose={() => setActiveChatId(null)}
+        isPinned={activeChat?.isPinned ?? false}
+        isMuted={activeChat?.isMuted ?? false}
+        onTogglePin={handleTogglePin}
+        onToggleMute={handleToggleMute}
+        onMarkRead={handleMarkRead}
+        onDelete={handleDelete}
+        onBlock={handleBlock}
+      />
     </ScreenContainer>
   );
 }

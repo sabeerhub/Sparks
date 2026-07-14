@@ -198,6 +198,7 @@ export default function ChatThreadPage() {
       )}
 
       <MessageComposer
+        chatId={chatId}
         onSend={(text) => { send(text, replyTo); setReplyTo(null); }}
         onTyping={notifyTyping}
       />

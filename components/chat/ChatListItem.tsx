@@ -3,6 +3,7 @@
  */
 "use client";
 
+import { useRef } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { formatChatListTime, truncatePreview } from "@/utils/helpers";
 import type { ChatListItem as ChatListItemType } from "@/types";
@@ -10,12 +11,40 @@ import type { ChatListItem as ChatListItemType } from "@/types";
 interface ChatListItemProps {
   item: ChatListItemType;
   onClick: () => void;
+  onLongPress: () => void;
 }
 
-export function ChatListItem({ item, onClick }: ChatListItemProps) {
+export function ChatListItem({ item, onClick, onLongPress }: ChatListItemProps) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const firedRef = useRef(false);
+
+  const startPress = () => {
+    firedRef.current = false;
+    timerRef.current = setTimeout(() => {
+      firedRef.current = true;
+      onLongPress();
+    }, 450);
+  };
+
+  const endPress = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  };
+
+  const handleClick = () => {
+    if (firedRef.current) return; // long-press already handled this interaction
+    onClick();
+  };
+
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
+      onTouchStart={startPress}
+      onTouchEnd={endPress}
+      onTouchMove={endPress}
+      onMouseDown={startPress}
+      onMouseUp={endPress}
+      onMouseLeave={endPress}
+      onContextMenu={(e) => { e.preventDefault(); onLongPress(); }}
       className="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-gray-50 active:bg-gray-100 transition-colors"
     >
       <Avatar name={item.otherUser.full_name} src={item.otherUser.avatar_url} size={48} online={item.isOnline} badge={item.unreadCount || null} />

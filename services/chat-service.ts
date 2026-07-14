@@ -231,3 +231,19 @@ export async function getSparkCount(userId: string): Promise<number> {
   if (error) return 0;
   return count ?? 0;
 }
+
+/** Marks every unread message from the other participant in a chat as read. */
+export async function markChatRead(chatId: string, userId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase.from("messages") as any)
+    .select("id")
+    .eq("chat_id", chatId)
+    .neq("sender_id", userId);
+
+  const messageIds = (data ?? []).map((m: { id: string }) => m.id);
+  if (!messageIds.length) return;
+
+  const rows = messageIds.map((id: string) => ({ message_id: id, user_id: userId, status: "read" as const }));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase.from("message_receipts") as any).upsert(rows, { onConflict: "message_id,user_id" });
+}
