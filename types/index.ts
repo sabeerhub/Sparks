@@ -203,3 +203,19 @@ export interface Database {
     CompositeTypes: Record<string, never>;
   };
 }
+
+// ─── Notifications ────────────────────────────────────────────────────────
+
+export type NotificationType = "message" | "spark_request" | "spark_accepted" | "mention";
+
+export interface AppNotification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  related_chat_id: string | null;
+  related_user_id: string | null;
+  is_read: boolean;
+  created_at: string;
+}
