@@ -219,3 +219,13 @@ export interface AppNotification {
   is_read: boolean;
   created_at: string;
 }
+
+// ─── Contact Nicknames ────────────────────────────────────────────────────
+
+export interface ContactNickname {
+  owner_id: string;
+  contact_id: string;
+  nickname: string;
+  created_at: string;
+  updated_at: string;
+}

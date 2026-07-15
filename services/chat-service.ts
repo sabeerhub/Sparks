@@ -247,3 +247,51 @@ export async function markChatRead(chatId: string, userId: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase.from("message_receipts") as any).upsert(rows, { onConflict: "message_id,user_id" });
 }
+
+/** Returns the current user's private nickname for a contact, or null if unset. */
+export async function getNickname(contactId: string): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase.from("contact_nicknames") as any)
+    .select("nickname")
+    .eq("owner_id", user.id)
+    .eq("contact_id", contactId)
+    .maybeSingle();
+  return data?.nickname ?? null;
+}
+
+/** Sets (or clears, if nickname is empty) a private nickname for a contact. */
+export async function setNickname(contactId: string, nickname: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const trimmed = nickname.trim();
+
+  if (!trimmed) {
+    await supabase.from("contact_nicknames").delete().eq("owner_id", user.id).eq("contact_id", contactId);
+    return;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase.from("contact_nicknames") as any).upsert(
+    { owner_id: user.id, contact_id: contactId, nickname: trimmed, updated_at: new Date().toISOString() },
+    { onConflict: "owner_id,contact_id" }
+  );
+}
+
+/** Bulk-fetches nicknames for a list of contact ids, e.g. for search results. */
+export async function getNicknamesMap(contactIds: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (!contactIds.length) return map;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return map;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase.from("contact_nicknames") as any)
+    .select("contact_id, nickname")
+    .eq("owner_id", user.id)
+    .in("contact_id", contactIds);
+
+  (data ?? []).forEach((row: { contact_id: string; nickname: string }) => map.set(row.contact_id, row.nickname));
+  return map;
+}
