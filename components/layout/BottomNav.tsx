@@ -3,19 +3,43 @@
  */
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { MessageCircle, Search, Bell, User, Plus } from "lucide-react";
+import { createClient } from "@/lib/supabase";
+import { getUnreadCount } from "@/services/notification-service";
+
+const supabase = createClient();
 
 const TABS = [
-  { href: "/chats", icon: "chat", label: "Chats" },
-  { href: "/search", icon: "search", label: "Search" },
-  { href: "/chats/new", icon: "plus", label: null, fab: true },
-  { href: "/activity", icon: "activity", label: "Activity" },
-  { href: "/profile", icon: "user", label: "Profile" },
+  { href: "/chats", icon: MessageCircle, label: "Chats" },
+  { href: "/search", icon: Search, label: "Search" },
+  { href: "/chats/new", icon: Plus, label: null, fab: true },
+  { href: "/activity", icon: Bell, label: "Activity", badge: true },
+  { href: "/profile", icon: User, label: "Profile" },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    getUnreadCount().then((n) => { if (!cancelled) setUnread(n); });
+
+    const channel = supabase
+      .channel("bottomnav-notif-badge")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => {
+        getUnreadCount().then((n) => { if (!cancelled) setUnread(n); });
+      })
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <nav
@@ -30,11 +54,20 @@ export function BottomNav() {
             className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95"
             style={{ background: "var(--color-blue)" }}
           >
-            <PlusIcon color="#fff" />
+            <Plus size={22} color="white" strokeWidth={2} />
           </Link>
         ) : (
-          <Link key={tab.href} href={tab.href} className="flex flex-col items-center gap-0.5 py-1 min-w-12">
-            <TabIcon name={tab.icon} active={pathname === tab.href} />
+          <Link key={tab.href} href={tab.href} className="relative flex flex-col items-center gap-0.5 py-1 min-w-12">
+            <tab.icon
+              size={22}
+              color={pathname === tab.href ? "var(--color-blue)" : "var(--color-gray-1)"}
+              strokeWidth={1.8}
+            />
+            {tab.badge && unread > 0 && (
+              <span className="absolute top-0 right-2 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold text-white" style={{ background: "var(--color-red)" }}>
+                {unread > 9 ? "9+" : unread}
+              </span>
+            )}
             <span className="text-xs font-medium" style={{ color: pathname === tab.href ? "var(--color-blue)" : "var(--color-gray-1)" }}>
               {tab.label}
             </span>
@@ -42,31 +75,5 @@ export function BottomNav() {
         )
       )}
     </nav>
-  );
-}
-
-function TabIcon({ name, active }: { name: string; active: boolean }) {
-  const color = active ? "var(--color-blue)" : "var(--color-gray-1)";
-  const common = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-
-  switch (name) {
-    case "chat":
-      return <svg {...common}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>;
-    case "search":
-      return <svg {...common}><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>;
-    case "activity":
-      return <svg {...common}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>;
-    case "user":
-      return <svg {...common}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
-    default:
-      return null;
-  }
-}
-
-function PlusIcon({ color }: { color: string }) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
   );
 }
