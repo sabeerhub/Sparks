@@ -69,7 +69,7 @@ export default function ProfilePage() {
     <div className="h-full w-full flex flex-col" style={{ background: "var(--color-gray-2)" }}>
       <StatusBar />
       <div className="flex-1 overflow-y-auto">
-        <div className="w-full max-w-2xl mx-auto bg-white min-h-full">
+        <div className="w-full max-w-4xl mx-auto bg-white min-h-full">
           {loading || !profile ? (
             <ProfileSkeleton />
           ) : (
