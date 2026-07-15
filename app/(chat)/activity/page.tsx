@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { MessageCircle, Zap, BadgeCheck, AtSign, Trash2, X } from "lucide-react";
-import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar } from "@/components/ui/Avatar";
@@ -209,7 +208,7 @@ export default function ActivityPage() {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
-    <ScreenContainer>
+    <div className="h-full w-full bg-white">
       <div className="flex flex-col h-full">
         <StatusBar />
         <div className="px-5 pt-4 pb-3">
@@ -281,6 +280,6 @@ export default function ActivityPage() {
 
         <BottomNav />
       </div>
-    </ScreenContainer>
+    </div>
   );
 }
