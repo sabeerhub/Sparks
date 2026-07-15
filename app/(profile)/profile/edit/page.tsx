@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { Avatar } from "@/components/ui/Avatar";
 import { createClient } from "@/lib/supabase";
@@ -106,17 +105,17 @@ export default function EditProfilePage() {
 
   if (loading) {
     return (
-      <ScreenContainer>
+      <div className="h-full w-full bg-white">
         <StatusBar />
         <div className="flex items-center justify-center h-full">
           <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: "var(--color-gray-3)", borderTopColor: "var(--color-blue)" }} />
         </div>
-      </ScreenContainer>
+      </div>
     );
   }
 
   return (
-    <ScreenContainer>
+    <div className="h-full w-full bg-white">
       <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
         <StatusBar />
 
@@ -218,7 +217,7 @@ export default function EditProfilePage() {
           </div>
         </div>
       </div>
-    </ScreenContainer>
+    </div>
   );
 }
 

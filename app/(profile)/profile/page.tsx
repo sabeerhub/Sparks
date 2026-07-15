@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BadgeCheck, Zap, Calendar, MapPin, Pencil, QrCode, Share2, Star, ShieldCheck, Pin, Settings, LogOut, ChevronRight } from "lucide-react";
-import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar } from "@/components/ui/Avatar";
@@ -95,7 +94,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <ScreenContainer>
+    <div className="h-full w-full bg-white">
       <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
         <StatusBar />
         <div className="flex-1 overflow-y-auto">
@@ -231,7 +230,7 @@ export default function ProfilePage() {
           username={profile.username}
         />
       )}
-    </ScreenContainer>
+    </div>
   );
 }
 
