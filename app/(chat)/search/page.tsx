@@ -123,7 +123,7 @@ export default function SearchPage() {
           <div className="h-4" />
         </div>
 
-        <BottomNav />
+        <div className="md:hidden"><BottomNav /></div>
       </div>
     </div>
   );
