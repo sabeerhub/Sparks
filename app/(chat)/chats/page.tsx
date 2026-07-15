@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { MessageCircleMore, Bell, Search as SearchIconLucide } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -9,8 +10,8 @@ import { ChatListItem } from "@/components/chat/ChatListItem";
 import { ChatActionSheet } from "@/components/chat/ChatActionSheet";
 import { useChatStore } from "@/store/chat-store";
 import { fetchChatList, setChatPinned, setChatMuted, markChatRead, deleteChatForSelf, blockUser } from "@/services/chat-service";
-import { createClient } from "@/lib/supabase";
 import { getUnreadCount } from "@/services/notification-service";
+import { createClient } from "@/lib/supabase";
 import { chatCache } from "@/lib/storage";
 
 const supabase = createClient();
@@ -89,7 +90,6 @@ export default function ChatsPage() {
   const updateLocal = (chatId: string, patch: Partial<(typeof chatList)[number]>) => {
     setChatList(chatList.map((c) => (c.chatId === chatId ? { ...c, ...patch } : c)));
   };
-
   const removeLocal = (chatId: string) => {
     setChatList(chatList.filter((c) => c.chatId !== chatId));
   };
@@ -100,27 +100,23 @@ export default function ChatsPage() {
     updateLocal(activeChat.chatId, { isPinned: next });
     await setChatPinned(activeChat.chatId, userId, next).catch(() => {});
   };
-
   const handleToggleMute = async () => {
     if (!activeChat || !userId) return;
     const next = !activeChat.isMuted;
     updateLocal(activeChat.chatId, { isMuted: next });
     await setChatMuted(activeChat.chatId, userId, next).catch(() => {});
   };
-
   const handleMarkRead = async () => {
     if (!activeChat || !userId) return;
     updateLocal(activeChat.chatId, { unreadCount: 0 });
     await markChatRead(activeChat.chatId, userId).catch(() => {});
   };
-
   const handleDelete = async () => {
     if (!activeChat || !userId) return;
     if (!window.confirm(`Delete chat with ${activeChat.otherUser.full_name}? This only removes it from your side.`)) return;
     removeLocal(activeChat.chatId);
     await deleteChatForSelf(activeChat.chatId, userId).catch(() => {});
   };
-
   const handleBlock = async () => {
     if (!activeChat) return;
     if (!window.confirm(`Block ${activeChat.otherUser.full_name}? They won't be able to message you.`)) return;
@@ -129,85 +125,103 @@ export default function ChatsPage() {
   };
 
   return (
-    <ScreenContainer>
-      <div className="flex flex-col h-full">
-        <StatusBar />
+    <>
+      {/* Mobile: full chat list. Hidden on desktop — the persistent sidebar in layout.tsx replaces it. */}
+      <div className="md:hidden h-full">
+        <ScreenContainer>
+          <div className="flex flex-col h-full">
+            <StatusBar />
 
-        <div className="px-5 pt-4 pb-3">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold">Sparks</h1>
-            <div className="flex items-center gap-3">
-              <button onClick={() => router.push("/search")} aria-label="Find people" className="active:opacity-60 transition-opacity">
-                <SearchIcon />
-              </button>
-              <button onClick={() => router.push("/activity")} aria-label="Activity" className="active:opacity-60 transition-opacity relative">
-                <BellIcon />
-                {unreadNotifs > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: "var(--color-red)" }}>
-                    {unreadNotifs > 9 ? "9+" : unreadNotifs}
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 rounded-2xl px-4 py-2.5" style={{ background: "var(--color-gray-2)" }}>
-            <SearchIcon small />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search chats or users"
-              className="flex-1 outline-none text-sm bg-transparent"
-            />
-            {search && (
-              <button onClick={() => setSearch("")} className="text-xs font-medium" style={{ color: "var(--color-blue)" }}>
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {showSkeletons && (
-            <>{[1,2,3,4,5].map((i) => <ChatRowSkeleton key={i} />)}</>
-          )}
-
-          {!showSkeletons && filtered.length === 0 && (
-            <div className="flex flex-col items-center justify-center pt-20 px-8 text-center">
-              <div className="w-16 h-16 rounded-3xl flex items-center justify-center mb-4" style={{ background: "rgba(0,122,255,0.1)" }}>
-                <span className="text-2xl">⚡</span>
+            <div className="px-5 pt-4 pb-3">
+              <div className="flex items-center justify-between mb-4">
+                <h1 className="text-2xl font-bold">Sparks</h1>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => router.push("/search")} aria-label="Find people" className="active:opacity-60 transition-opacity">
+                    <SearchIconLucide size={22} color="var(--color-black)" strokeWidth={1.8} />
+                  </button>
+                  <button onClick={() => router.push("/activity")} aria-label="Activity" className="active:opacity-60 transition-opacity relative">
+                    <Bell size={22} color="var(--color-black)" strokeWidth={1.8} />
+                    {unreadNotifs > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: "var(--color-red)" }}>
+                        {unreadNotifs > 9 ? "9+" : unreadNotifs}
+                      </span>
+                    )}
+                  </button>
+                </div>
               </div>
-              <p className="font-semibold mb-1">
-                {search ? `No chats matching "${search}"` : "No chats yet"}
-              </p>
-              <p className="text-sm mb-5" style={{ color: "var(--color-gray-1)" }}>
-                {search ? "Try a different search" : "Search for people and send a Spark Request to connect"}
-              </p>
-              {!search && (
-                <button
-                  onClick={() => router.push("/search")}
-                  className="px-5 py-2.5 rounded-2xl text-sm font-semibold text-white"
-                  style={{ background: "var(--color-blue)" }}
-                >
-                  Find People
-                </button>
-              )}
+
+              <div className="flex items-center gap-2 rounded-2xl px-4 py-2.5" style={{ background: "var(--color-gray-2)" }}>
+                <SearchIconLucide size={14} color="var(--color-gray-1)" strokeWidth={1.8} />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search chats or users"
+                  className="flex-1 outline-none text-sm bg-transparent"
+                />
+                {search && (
+                  <button onClick={() => setSearch("")} className="text-xs font-medium" style={{ color: "var(--color-blue)" }}>
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
-          )}
 
-          {filtered.map((item) => (
-            <ChatListItem
-              key={item.chatId}
-              item={item}
-              onClick={() => router.push(`/chats/${item.chatId}`)}
-              onLongPress={() => setActiveChatId(item.chatId)}
-            />
-          ))}
+            <div className="flex-1 overflow-y-auto">
+              {showSkeletons && (
+                <>{[1,2,3,4,5].map((i) => <ChatRowSkeleton key={i} />)}</>
+              )}
 
-          <div className="h-4" />
+              {!showSkeletons && filtered.length === 0 && (
+                <div className="flex flex-col items-center justify-center pt-20 px-8 text-center">
+                  <div className="w-16 h-16 rounded-3xl flex items-center justify-center mb-4" style={{ background: "rgba(0,122,255,0.1)" }}>
+                    <span className="text-2xl">⚡</span>
+                  </div>
+                  <p className="font-semibold mb-1">
+                    {search ? `No chats matching "${search}"` : "No chats yet"}
+                  </p>
+                  <p className="text-sm mb-5" style={{ color: "var(--color-gray-1)" }}>
+                    {search ? "Try a different search" : "Search for people and send a Spark Request to connect"}
+                  </p>
+                  {!search && (
+                    <button
+                      onClick={() => router.push("/search")}
+                      className="px-5 py-2.5 rounded-2xl text-sm font-semibold text-white"
+                      style={{ background: "var(--color-blue)" }}
+                    >
+                      Find People
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {filtered.map((item) => (
+                <ChatListItem
+                  key={item.chatId}
+                  item={item}
+                  onClick={() => router.push(`/chats/${item.chatId}`)}
+                  onLongPress={() => setActiveChatId(item.chatId)}
+                />
+              ))}
+
+              <div className="h-4" />
+            </div>
+
+            <BottomNav />
+          </div>
+        </ScreenContainer>
+      </div>
+
+      {/* Desktop: sidebar already shows the list, so this panel is just an empty state until a chat is picked. */}
+      <div className="hidden md:flex md:flex-1 md:items-center md:justify-center h-full">
+        <div className="flex flex-col items-center text-center px-8">
+          <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5" style={{ background: "rgba(0,122,255,0.08)" }}>
+            <MessageCircleMore size={36} color="var(--color-blue)" strokeWidth={1.5} />
+          </div>
+          <p className="text-lg font-semibold mb-1">Select a chat</p>
+          <p className="text-sm max-w-xs" style={{ color: "var(--color-gray-1)" }}>
+            Choose a conversation from the sidebar, or start a new one to begin messaging.
+          </p>
         </div>
-
-        <BottomNav />
       </div>
 
       <ChatActionSheet
@@ -221,25 +235,6 @@ export default function ChatsPage() {
         onDelete={handleDelete}
         onBlock={handleBlock}
       />
-    </ScreenContainer>
-  );
-}
-
-function SearchIcon({ small }: { small?: boolean }) {
-  const size = small ? 14 : 22;
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={small ? "var(--color-gray-1)" : "var(--color-black)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" />
-      <path d="M21 21l-4.35-4.35" />
-    </svg>
-  );
-}
-
-function BellIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-black)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 01-3.46 0" />
-    </svg>
+    </>
   );
 }
