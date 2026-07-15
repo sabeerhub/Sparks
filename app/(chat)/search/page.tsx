@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { Search as SearchIcon } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar } from "@/components/ui/Avatar";
 import { SparkRequestButton } from "@/components/spark/SparkRequestButton";
-import { searchUsers } from "@/services/chat-service";
+import { searchUsers, getNicknamesMap } from "@/services/chat-service";
 import { createClient } from "@/lib/supabase";
 import type { Profile } from "@/types";
 
@@ -29,6 +30,7 @@ export default function SearchPage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Profile[]>([]);
+  const [nicknames, setNicknames] = useState<Map<string, string>>(new Map());
   const [searching, setSearching] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
@@ -42,7 +44,9 @@ export default function SearchPage() {
     setSearching(true);
     try {
       const found = await searchUsers(q);
-      setResults(found.filter((u) => u.id !== currentUserId));
+      const filtered = found.filter((u) => u.id !== currentUserId);
+      setResults(filtered);
+      getNicknamesMap(filtered.map((u) => u.id)).then(setNicknames);
     } catch {
       setResults([]);
     } finally {
@@ -64,7 +68,7 @@ export default function SearchPage() {
         <div className="px-5 pt-4 pb-3">
           <h1 className="text-2xl font-bold mb-4">Find People</h1>
           <div className="flex items-center gap-2 rounded-2xl px-4 py-2.5" style={{ background: "var(--color-gray-2)" }}>
-            <SearchGlyph />
+            <SearchIcon size={14} color="var(--color-gray-1)" strokeWidth={1.8} />
             <input
               value={query}
               onChange={(e) => handleQueryChange(e.target.value)}
@@ -86,7 +90,7 @@ export default function SearchPage() {
           {!query.trim() && (
             <div className="flex flex-col items-center justify-center pt-16 px-8 text-center">
               <div className="w-16 h-16 rounded-3xl flex items-center justify-center mb-4" style={{ background: "rgba(0,122,255,0.1)" }}>
-                <SearchGlyph large />
+                <SearchIcon size={28} color="var(--color-blue)" strokeWidth={1.8} />
               </div>
               <p className="font-semibold mb-1">Search for people</p>
               <p className="text-sm" style={{ color: "var(--color-gray-1)" }}>
@@ -104,37 +108,32 @@ export default function SearchPage() {
             </div>
           )}
 
-          {!searching && results.map((user) => (
-            <div key={user.id} className="flex items-center gap-3 px-5 py-3">
-              <button onClick={() => router.push(`/profile/${user.id}`)} className="flex-shrink-0">
-                <Avatar name={user.full_name} src={user.avatar_url} size={44} online={user.is_online} />
-              </button>
-              <button onClick={() => router.push(`/profile/${user.id}`)} className="flex-1 min-w-0 text-left">
-                <div className="font-semibold text-sm truncate">{user.full_name}</div>
-                <div className="text-xs truncate" style={{ color: "var(--color-gray-1)" }}>@{user.username}</div>
-              </button>
-              {currentUserId && (
-                <div className="flex-shrink-0">
-                  <SparkRequestButton targetUserId={user.id} currentUserId={currentUserId} compact />
-                </div>
-              )}
-            </div>
-          ))}
+          {!searching && results.map((user) => {
+            const nickname = nicknames.get(user.id);
+            return (
+              <div key={user.id} className="flex items-center gap-3 px-5 py-3">
+                <button onClick={() => router.push(`/profile/${user.id}`)} className="flex-shrink-0">
+                  <Avatar name={user.full_name} src={user.avatar_url} size={44} online={user.is_online} />
+                </button>
+                <button onClick={() => router.push(`/profile/${user.id}`)} className="flex-1 min-w-0 text-left">
+                  <div className="font-semibold text-sm truncate">{nickname || user.full_name}</div>
+                  <div className="text-xs truncate" style={{ color: "var(--color-gray-1)" }}>
+                    @{user.username}{nickname && <span> · {user.full_name}</span>}
+                  </div>
+                </button>
+                {currentUserId && (
+                  <div className="flex-shrink-0">
+                    <SparkRequestButton targetUserId={user.id} currentUserId={currentUserId} compact />
+                  </div>
+                )}
+              </div>
+            );
+          })}
           <div className="h-4" />
         </div>
 
         <div className="md:hidden"><BottomNav /></div>
       </div>
     </div>
-  );
-}
-
-function SearchGlyph({ large }: { large?: boolean }) {
-  const size = large ? 28 : 14;
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={large ? "var(--color-blue)" : "var(--color-gray-1)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" />
-      <path d="M21 21l-4.35-4.35" />
-    </svg>
   );
 }
