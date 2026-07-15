@@ -2,30 +2,36 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { BadgeCheck, Zap, MapPin, Send } from "lucide-react";
+import { BadgeCheck, MapPin, Share2, Pencil } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { Avatar } from "@/components/ui/Avatar";
+import { ShareProfileSheet } from "@/components/profile/ShareProfileSheet";
+import { SparkRequestButton } from "@/components/spark/SparkRequestButton";
 import { createClient } from "@/lib/supabase";
-import { getSparkCount, startDirectChat } from "@/services/chat-service";
-import { getSparkStatus, sendSparkRequest, hasAcceptedSpark } from "@/services/spark-service";
-import type { Profile, SparkRequest } from "@/types";
+import { getSparkCount, getNickname, setNickname } from "@/services/chat-service";
+import type { Profile } from "@/types";
 
 const supabase = createClient();
 
-type ConnectionState = "loading" | "self" | "none" | "pending_sent" | "pending_received" | "connected";
+function formatJoinDate(createdAt: string | undefined): string {
+  if (!createdAt) return "—";
+  return new Date(createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
 
 export default function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
   const router = useRouter();
 
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [nickname, setNicknameState] = useState<string | null>(null);
   const [sparkCount, setSparkCount] = useState(0);
-  const [connection, setConnection] = useState<ConnectionState>("loading");
-  const [busy, setBusy] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
+    setCurrentUserId(user?.id ?? null);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase.from("profiles") as any)
@@ -35,138 +41,119 @@ export default function PublicProfilePage() {
 
     setProfile(data as Profile | null);
     getSparkCount(userId).then(setSparkCount);
-
-    if (user?.id === userId) {
-      setConnection("self");
-    } else {
-      const connected = await hasAcceptedSpark(userId);
-      if (connected) {
-        setConnection("connected");
-      } else {
-        const status = await getSparkStatus(userId) as SparkRequest | null;
-        if (!status) setConnection("none");
-        else if (status.status === "pending" && status.sender_id === user?.id) setConnection("pending_sent");
-        else if (status.status === "pending") setConnection("pending_received");
-        else setConnection("none");
-      }
+    if (user && user.id !== userId) {
+      getNickname(userId).then(setNicknameState);
     }
     setLoading(false);
   }, [userId]);
 
   useEffect(() => { load(); }, [load]);
 
-  const handleSendSpark = async () => {
-    setBusy(true);
-    try {
-      await sendSparkRequest(userId);
-      setConnection("pending_sent");
-    } catch {
-      // Silently keep current state — a toast/error UI can be added later.
-    } finally {
-      setBusy(false);
-    }
-  };
+  const isSelf = currentUserId === userId;
 
-  const handleStartChat = async () => {
-    setBusy(true);
-    try {
-      const chatId = await startDirectChat(userId);
-      router.push(`/chats/${chatId}`);
-    } finally {
-      setBusy(false);
-    }
+  const handleEditNickname = async () => {
+    const next = window.prompt("Set a private nickname for this contact (only you will see it):", nickname ?? "");
+    if (next === null) return; // cancelled
+    await setNickname(userId, next);
+    setNicknameState(next.trim() || null);
   };
 
   if (loading || !profile) {
     return (
-      <div className="h-full w-full bg-white">
+      <div className="h-full w-full flex items-center justify-center bg-white">
         <StatusBar />
-        <div className="flex items-center justify-center h-full">
-          <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: "var(--color-gray-3)", borderTopColor: "var(--color-blue)" }} />
-        </div>
+        <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: "var(--color-gray-3)", borderTopColor: "var(--color-blue)" }} />
       </div>
     );
   }
 
   return (
-    <div className="h-full w-full bg-white">
-      <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
-        <StatusBar />
-        <div className="flex items-center px-4 py-3 bg-white border-b" style={{ borderColor: "var(--color-gray-2)" }}>
-          <button onClick={() => router.back()} className="text-sm font-medium" style={{ color: "var(--color-blue)" }}>
-            Back
-          </button>
-        </div>
+    <div className="h-full w-full flex flex-col" style={{ background: "var(--color-gray-2)" }}>
+      <StatusBar />
+      <div className="flex-1 overflow-y-auto">
+        <div className="w-full max-w-4xl mx-auto bg-white min-h-full">
+          <div className="flex items-center px-4 py-3 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
+            <button onClick={() => router.back()} className="text-sm font-medium" style={{ color: "var(--color-blue)" }}>
+              Back
+            </button>
+          </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="flex flex-col items-center py-8 px-5 bg-white">
-            <div
-              className="rounded-full p-1"
-              style={profile.is_premium ? { background: "linear-gradient(135deg, var(--color-orange), var(--color-blue))" } : undefined}
-            >
-              <Avatar name={profile.full_name ?? "?"} src={profile.avatar_url} size={92} online={profile.is_online} />
+          {/* Banner + avatar */}
+          <div className="relative">
+            <div className="h-32 w-full" style={{ background: "linear-gradient(120deg, var(--color-blue), var(--color-orange))" }} />
+            <div className="absolute left-5 bottom-0 translate-y-1/2">
+              <div
+                className="rounded-full p-1 bg-white"
+                style={profile.is_premium ? { background: "linear-gradient(135deg, var(--color-orange), var(--color-blue))" } : undefined}
+              >
+                <div className="rounded-full ring-4 ring-white">
+                  <Avatar name={profile.full_name ?? "?"} src={profile.avatar_url} size={88} online={profile.is_online} />
+                </div>
+              </div>
             </div>
+          </div>
 
-            <div className="flex items-center gap-1.5 mt-3">
-              <h2 className="text-xl font-bold text-center">{profile.full_name}</h2>
+          {/* Identity block */}
+          <div className="px-5 pt-14">
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-xl font-bold">{nickname || profile.full_name}</h2>
               {profile.is_verified && <BadgeCheck size={18} fill="var(--color-blue)" color="white" />}
+              {!isSelf && (
+                <button onClick={handleEditNickname} aria-label="Edit nickname" className="ml-0.5 active:opacity-60">
+                  <Pencil size={15} color="var(--color-gray-1)" strokeWidth={1.8} />
+                </button>
+              )}
             </div>
-
-            <p className="text-sm mt-0.5" style={{ color: "var(--color-blue)" }}>@{profile.username}</p>
-
-            <div className="mt-4 flex items-center gap-1.5">
-              <Zap size={18} fill="var(--color-blue)" color="var(--color-blue)" />
-              <span className="text-xl font-bold">{sparkCount}</span>
-            </div>
-            <p className="text-xs -mt-0.5" style={{ color: "var(--color-gray-1)" }}>Total Sparks</p>
+            {nickname && (
+              <p className="text-xs mt-0.5" style={{ color: "var(--color-gray-1)" }}>{profile.full_name}</p>
+            )}
+            <p className="text-sm" style={{ color: "var(--color-gray-1)" }}>@{profile.username}</p>
 
             {profile.bio && (
-              <p className="text-sm mt-3 text-center max-w-xs" style={{ color: "var(--color-gray-1)" }}>
-                {profile.bio}
-              </p>
+              <p className="text-sm mt-3" style={{ color: "var(--color-black)" }}>{profile.bio}</p>
             )}
 
-            {profile.location && (
-              <span className="flex items-center gap-1 mt-3 text-xs" style={{ color: "var(--color-gray-1)" }}>
-                <MapPin size={12} strokeWidth={1.8} /> {profile.location}
+            <div className="flex items-center gap-4 mt-3 text-sm" style={{ color: "var(--color-gray-1)" }}>
+              {profile.location && (
+                <span className="flex items-center gap-1">
+                  <MapPin size={14} strokeWidth={1.8} /> {profile.location}
+                </span>
+              )}
+              <span>Joined {formatJoinDate(profile.created_at)}</span>
+            </div>
+
+            <div className="mt-4">
+              <span className="text-sm">
+                <span className="font-bold">{sparkCount.toLocaleString()}</span>{" "}
+                <span style={{ color: "var(--color-gray-1)" }}>Total Sparks</span>
               </span>
-            )}
+            </div>
 
-            <div className="mt-6 w-full max-w-xs">
-              {connection === "connected" && (
-                <button
-                  onClick={handleStartChat}
-                  disabled={busy}
-                  className="w-full py-3 rounded-2xl text-sm font-semibold text-white disabled:opacity-50"
-                  style={{ background: "var(--color-blue)" }}
-                >
-                  {busy ? "Opening…" : "Message"}
-                </button>
+            {/* Action row: connection button (Send Spark / Pending / Accept-Decline / Message) + Share */}
+            <div className="flex gap-2 mt-4 pb-6">
+              {currentUserId && !isSelf && (
+                <div className="flex-1">
+                  <SparkRequestButton targetUserId={userId} currentUserId={currentUserId} />
+                </div>
               )}
-              {connection === "none" && (
-                <button
-                  onClick={handleSendSpark}
-                  disabled={busy}
-                  className="w-full py-3 rounded-2xl text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-1.5"
-                  style={{ background: "var(--color-blue)" }}
-                >
-                  <Send size={16} color="white" strokeWidth={2} /> {busy ? "Sending…" : "Send Spark Request"}
-                </button>
-              )}
-              {connection === "pending_sent" && (
-                <button disabled className="w-full py-3 rounded-2xl text-sm font-semibold" style={{ background: "var(--color-gray-2)", color: "var(--color-gray-1)" }}>
-                  Spark Request Sent
-                </button>
-              )}
-              {connection === "pending_received" && (
-                <button onClick={() => router.push("/activity")} className="w-full py-3 rounded-2xl text-sm font-semibold text-white" style={{ background: "var(--color-blue)" }}>
-                  Respond to Spark Request
-                </button>
-              )}
+              <button
+                onClick={() => setShareOpen(true)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-sm font-medium border"
+                style={{ borderColor: "var(--color-gray-3)" }}
+              >
+                <Share2 size={16} color="var(--color-blue)" strokeWidth={1.8} /> Share
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      <ShareProfileSheet
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        userId={profile.id}
+        username={profile.username}
+      />
     </div>
   );
 }
