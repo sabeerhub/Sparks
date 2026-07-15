@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar } from "@/components/ui/Avatar";
@@ -59,7 +58,7 @@ export default function SearchPage() {
   };
 
   return (
-    <ScreenContainer>
+    <div className="h-full w-full bg-white">
       <div className="flex flex-col h-full">
         <StatusBar />
         <div className="px-5 pt-4 pb-3">
@@ -126,7 +125,7 @@ export default function SearchPage() {
 
         <BottomNav />
       </div>
-    </ScreenContainer>
+    </div>
   );
 }
 
