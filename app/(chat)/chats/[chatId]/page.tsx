@@ -13,6 +13,7 @@ import { usePresence, useProfilePresence, useReceiptUpdates } from "@/hooks/useR
 import { markRead } from "@/services/message-service";
 import { createClient } from "@/lib/supabase";
 import { formatLastSeen } from "@/utils/helpers";
+import { useCallActions } from "@/components/call/CallProvider";
 import type { Profile, DecryptedMessage } from "@/types";
 
 const supabase = createClient();
@@ -80,6 +81,7 @@ export default function ChatThreadPage() {
   }, [chatId]);
 
   const { messages, loading, typingUserIds, send, edit, remove, notifyTyping } = useChat(chatId);
+  const { placeCall } = useCallActions();
 
   usePresence(currentUserId);
 
@@ -158,8 +160,8 @@ export default function ChatThreadPage() {
           </button>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
-          <button aria-label="Call"><Phone size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
-          <button aria-label="Video call"><Video size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
+          <button aria-label="Call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "voice")}><Phone size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
+          <button aria-label="Video call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "video")}><Video size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
         </div>
       </div>
 
