@@ -170,6 +170,7 @@ export interface SignalingHandlers {
   onAnswer?: (sdp: RTCSessionDescriptionInit) => void;
   onIceCandidate?: (candidate: RTCIceCandidateInit) => void;
   onHangup?: () => void;
+  onReady?: () => void;
 }
 
 export function subscribeToCallSignaling(callId: string, handlers: SignalingHandlers): RealtimeChannel {
@@ -185,6 +186,9 @@ export function subscribeToCallSignaling(callId: string, handlers: SignalingHand
   }
   if (handlers.onIceCandidate) {
     channel.on("broadcast", { event: "ice-candidate" }, ({ payload }) => handlers.onIceCandidate!(payload.candidate));
+  }
+  if (handlers.onReady) {
+    channel.on("broadcast", { event: "ready" }, () => handlers.onReady!());
   }
   if (handlers.onHangup) {
     channel.on("broadcast", { event: "hangup" }, () => handlers.onHangup!());
@@ -203,6 +207,10 @@ export function sendAnswer(channel: RealtimeChannel, sdp: RTCSessionDescriptionI
 export function sendIceCandidate(channel: RealtimeChannel, candidate: RTCIceCandidateInit) {
   channel.send({ type: "broadcast", event: "ice-candidate", payload: { candidate } });
 }
+export function sendReady(channel: RealtimeChannel) {
+  channel.send({ type: "broadcast", event: "ready", payload: {} });
+}
+
 export function sendHangupSignal(channel: RealtimeChannel) {
   channel.send({ type: "broadcast", event: "hangup", payload: {} });
 }
