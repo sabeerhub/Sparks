@@ -9,7 +9,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { ShareProfileSheet } from "@/components/profile/ShareProfileSheet";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase";
-import { getSparkCount } from "@/services/chat-service";
+import { getSparkConnectionsCount } from "@/services/chat-service";
 import type { Profile } from "@/types";
 
 const supabase = createClient();
@@ -55,7 +55,7 @@ export default function ProfilePage() {
         .eq("id", user.id)
         .maybeSingle();
       setProfile(data as Profile | null);
-      getSparkCount(user.id).then(setSparkCount);
+      getSparkConnectionsCount(user.id).then(setSparkCount);
       setLoading(false);
     })();
   }, [router]);

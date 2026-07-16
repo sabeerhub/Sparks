@@ -8,7 +8,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { ShareProfileSheet } from "@/components/profile/ShareProfileSheet";
 import { SparkRequestButton } from "@/components/spark/SparkRequestButton";
 import { createClient } from "@/lib/supabase";
-import { getSparkCount, getNickname, setNickname } from "@/services/chat-service";
+import { getSparkConnectionsCount, getNickname, setNickname } from "@/services/chat-service";
 import { hasAcceptedSpark } from "@/services/spark-service";
 import { useCallActions } from "@/components/call/CallProvider";
 import type { Profile } from "@/types";
@@ -44,7 +44,7 @@ export default function PublicProfilePage() {
       .maybeSingle();
 
     setProfile(data as Profile | null);
-    getSparkCount(userId).then(setSparkCount);
+    getSparkConnectionsCount(userId).then(setSparkCount);
     hasAcceptedSpark(userId).then(setCanCall);
     if (user && user.id !== userId) {
       getNickname(userId).then(setNicknameState);

@@ -221,7 +221,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
 }
 
 /** Counts how many accepted Spark connections a user has. */
-export async function getSparkCount(userId: string): Promise<number> {
+export async function getSparkConnectionsCount(userId: string): Promise<number> {
   const { count, error } = await supabase
     .from("spark_requests")
     .select("*", { count: "exact", head: true })

@@ -12,6 +12,7 @@ export interface Profile {
   is_premium: boolean;
   is_verified: boolean;
   public_key: string;
+  spark_count: number;
   is_online: boolean;
   last_seen_at: string;
   created_at: string;
