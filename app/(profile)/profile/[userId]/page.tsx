@@ -2,13 +2,15 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { BadgeCheck, MapPin, Share2, Pencil } from "lucide-react";
+import { BadgeCheck, MapPin, Share2, Pencil, Phone, Video } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { Avatar } from "@/components/ui/Avatar";
 import { ShareProfileSheet } from "@/components/profile/ShareProfileSheet";
 import { SparkRequestButton } from "@/components/spark/SparkRequestButton";
 import { createClient } from "@/lib/supabase";
 import { getSparkCount, getNickname, setNickname } from "@/services/chat-service";
+import { hasAcceptedSpark } from "@/services/spark-service";
+import { useCallActions } from "@/components/call/CallProvider";
 import type { Profile } from "@/types";
 
 const supabase = createClient();
@@ -28,6 +30,8 @@ export default function PublicProfilePage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [canCall, setCanCall] = useState(false);
+  const { placeCall } = useCallActions();
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -41,6 +45,7 @@ export default function PublicProfilePage() {
 
     setProfile(data as Profile | null);
     getSparkCount(userId).then(setSparkCount);
+    hasAcceptedSpark(userId).then(setCanCall);
     if (user && user.id !== userId) {
       getNickname(userId).then(setNicknameState);
     }
@@ -135,6 +140,16 @@ export default function PublicProfilePage() {
                 <div className="flex-1">
                   <SparkRequestButton targetUserId={userId} currentUserId={currentUserId} />
                 </div>
+              )}
+              {canCall && (
+                <>
+                  <button onClick={() => placeCall(userId, nickname || profile.full_name, profile.avatar_url, "voice")} className="w-11 h-11 flex items-center justify-center rounded-2xl border flex-shrink-0" style={{ borderColor: "var(--color-gray-3)" }} aria-label="Call">
+                    <Phone size={18} color="var(--color-blue)" strokeWidth={1.8} />
+                  </button>
+                  <button onClick={() => placeCall(userId, nickname || profile.full_name, profile.avatar_url, "video")} className="w-11 h-11 flex items-center justify-center rounded-2xl border flex-shrink-0" style={{ borderColor: "var(--color-gray-3)" }} aria-label="Video call">
+                    <Video size={18} color="var(--color-blue)" strokeWidth={1.8} />
+                  </button>
+                </>
               )}
               <button
                 onClick={() => setShareOpen(true)}
