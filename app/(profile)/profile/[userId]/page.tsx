@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { BadgeCheck, MapPin, Share2, Pencil, Phone, Video } from "lucide-react";
+import { BadgeCheck, MapPin, Share2, Pencil, Phone, Video, Zap, Users } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { Avatar } from "@/components/ui/Avatar";
 import { ShareProfileSheet } from "@/components/profile/ShareProfileSheet";
@@ -26,7 +26,7 @@ export default function PublicProfilePage() {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [nickname, setNicknameState] = useState<string | null>(null);
-  const [sparkCount, setSparkCount] = useState(0);
+  const [sparkConnections, setSparkConnections] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -44,7 +44,7 @@ export default function PublicProfilePage() {
       .maybeSingle();
 
     setProfile(data as Profile | null);
-    getSparkConnectionsCount(userId).then(setSparkCount);
+    getSparkConnectionsCount(userId).then(setSparkConnections);
     hasAcceptedSpark(userId).then(setCanCall);
     if (user && user.id !== userId) {
       getNickname(userId).then(setNicknameState);
@@ -127,10 +127,16 @@ export default function PublicProfilePage() {
               <span>Joined {formatJoinDate(profile.created_at)}</span>
             </div>
 
-            <div className="mt-4">
-              <span className="text-sm">
-                <span className="font-bold">{sparkCount.toLocaleString()}</span>{" "}
+            <div className="flex items-center gap-4 mt-4 text-sm">
+              <span className="flex items-center gap-1">
+                <Zap size={15} fill="var(--color-blue)" color="var(--color-blue)" />
+                <span className="font-bold">{profile.spark_count?.toLocaleString() ?? 0}</span>
                 <span style={{ color: "var(--color-gray-1)" }}>Total Sparks</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <Users size={14} strokeWidth={1.8} color="var(--color-gray-1)" />
+                <span className="font-bold">{sparkConnections.toLocaleString()}</span>
+                <span style={{ color: "var(--color-gray-1)" }}>Spark Connections</span>
               </span>
             </div>
 
