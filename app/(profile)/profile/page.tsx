@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BadgeCheck, Zap, Calendar, MapPin, QrCode, Share2, Star, ShieldCheck, Pin, Settings, LogOut, ChevronRight, Image as ImageIcon } from "lucide-react";
+import { BadgeCheck, Zap, Calendar, MapPin, QrCode, Share2, Star, ShieldCheck, Pin, Settings, LogOut, ChevronRight, Image as ImageIcon, Users } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar } from "@/components/ui/Avatar";
@@ -41,7 +41,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const { logout } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [sparkCount, setSparkCount] = useState(0);
+  const [sparkConnections, setSparkConnections] = useState(0);
   const [loading, setLoading] = useState(true);
   const [shareOpen, setShareOpen] = useState(false);
 
@@ -55,7 +55,7 @@ export default function ProfilePage() {
         .eq("id", user.id)
         .maybeSingle();
       setProfile(data as Profile | null);
-      getSparkConnectionsCount(user.id).then(setSparkCount);
+      getSparkConnectionsCount(user.id).then(setSparkConnections);
       setLoading(false);
     })();
   }, [router]);
@@ -126,8 +126,13 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-4 mt-3">
                   <span className="flex items-center gap-1 text-sm">
                     <Zap size={15} fill="var(--color-blue)" color="var(--color-blue)" />
-                    <span className="font-bold">{sparkCount.toLocaleString()}</span>
+                    <span className="font-bold">{(profile.spark_count ?? 0).toLocaleString()}</span>
                     <span style={{ color: "var(--color-gray-1)" }}>Total Sparks</span>
+                  </span>
+                  <span className="flex items-center gap-1 text-sm">
+                    <Users size={14} strokeWidth={1.8} color="var(--color-gray-1)" />
+                    <span className="font-bold">{sparkConnections.toLocaleString()}</span>
+                    <span style={{ color: "var(--color-gray-1)" }}>Spark Connections</span>
                   </span>
                   <span className="flex items-center gap-1 text-sm">
                     <Calendar size={14} strokeWidth={1.8} color="var(--color-gray-1)" />
