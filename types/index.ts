@@ -21,6 +21,9 @@ export interface Profile {
   notify_voice_calls: boolean;
   notify_video_calls: boolean;
   notify_groups: boolean;
+  theme_preference: "light" | "dark";
+  font_size: "small" | "medium" | "large";
+  bubble_size: "compact" | "standard" | "large";
   is_premium: boolean;
   is_verified: boolean;
   public_key: string;
