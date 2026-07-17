@@ -15,6 +15,12 @@ export interface Profile {
   typing_indicator_enabled: boolean;
   profile_visibility: "everyone" | "sparks_only" | "nobody";
   who_can_spark: "everyone" | "nobody";
+  notify_messages: boolean;
+  notify_spark_requests: boolean;
+  notify_spark_accepted: boolean;
+  notify_voice_calls: boolean;
+  notify_video_calls: boolean;
+  notify_groups: boolean;
   is_premium: boolean;
   is_verified: boolean;
   public_key: string;
