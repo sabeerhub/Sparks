@@ -295,3 +295,24 @@ export async function getNicknamesMap(contactIds: string[]): Promise<Map<string,
   (data ?? []).forEach((row: { contact_id: string; nickname: string }) => map.set(row.contact_id, row.nickname));
   return map;
 }
+
+/** Lists profiles the current user has blocked. */
+export async function getBlockedUsers(): Promise<Profile[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: blocks } = await (supabase.from("blocked_users") as any)
+    .select("blocked_id")
+    .eq("blocker_id", user.id);
+
+  const blockedIds = (blocks ?? []).map((b: { blocked_id: string }) => b.blocked_id);
+  if (!blockedIds.length) return [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: profiles } = await (supabase.from("profiles") as any)
+    .select("*")
+    .in("id", blockedIds);
+
+  return (profiles ?? []) as Profile[];
+}
