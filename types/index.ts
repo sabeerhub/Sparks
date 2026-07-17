@@ -9,6 +9,12 @@ export interface Profile {
   avatar_url: string | null;
   bio: string | null;
   location: string | null;
+  last_seen_visible: boolean;
+  online_status_visible: boolean;
+  read_receipts_enabled: boolean;
+  typing_indicator_enabled: boolean;
+  profile_visibility: "everyone" | "sparks_only" | "nobody";
+  who_can_spark: "everyone" | "nobody";
   is_premium: boolean;
   is_verified: boolean;
   public_key: string;
