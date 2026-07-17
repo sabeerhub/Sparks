@@ -58,3 +58,23 @@ html, body {
 .animate-typing-dot {
   animation: typing-bounce 1.2s infinite ease-in-out;
 }
+
+/* ─── Appearance preferences (Settings → Appearance) ────────────────────── */
+:root {
+  --font-scale: 1;
+  --bubble-pad-x: 16px;
+  --bubble-pad-y: 10px;
+  --bubble-radius: 24px;
+}
+
+html {
+  font-size: calc(16px * var(--font-scale));
+}
+
+html[data-font-size="small"] { --font-scale: 0.92; }
+html[data-font-size="medium"] { --font-scale: 1; }
+html[data-font-size="large"] { --font-scale: 1.15; }
+
+html[data-bubble-size="compact"] { --bubble-pad-x: 12px; --bubble-pad-y: 7px; --bubble-radius: 18px; }
+html[data-bubble-size="standard"] { --bubble-pad-x: 16px; --bubble-pad-y: 10px; --bubble-radius: 24px; }
+html[data-bubble-size="large"] { --bubble-pad-x: 20px; --bubble-pad-y: 14px; --bubble-radius: 28px; }
