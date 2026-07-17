@@ -56,12 +56,17 @@ export function MessageBubble({ message, isMine, onEdit, onDelete, onReact, onRe
             />
           ) : (
             <button
-              className="rounded-3xl px-4 py-2.5 text-sm text-left w-full"
+              className="text-sm text-left w-full"
               style={{
                 background: isMine ? "var(--color-blue)" : "var(--color-gray-2)",
                 color: isMine ? "#fff" : "var(--color-black)",
-                borderBottomRightRadius: isMine ? 4 : 24,
-                borderBottomLeftRadius: isMine ? 24 : 4,
+                paddingLeft: "var(--bubble-pad-x)",
+                paddingRight: "var(--bubble-pad-x)",
+                paddingTop: "var(--bubble-pad-y)",
+                paddingBottom: "var(--bubble-pad-y)",
+                borderRadius: "var(--bubble-radius)",
+                borderBottomRightRadius: isMine ? 4 : "var(--bubble-radius)",
+                borderBottomLeftRadius: isMine ? "var(--bubble-radius)" : 4,
                 opacity: message.status === "pending" ? 0.6 : 1,
               }}
             >
