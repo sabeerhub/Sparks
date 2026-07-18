@@ -66,6 +66,18 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
   if (chatsQuery.error) throw chatsQuery.error;
   const chats = chatsQuery.data as ChatRow[] | null;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const lastMessagesQuery = await (supabase.from("messages") as any)
+    .select("chat_id, content, content_type, deleted_at, created_at")
+    .in("chat_id", chatIds)
+    .order("created_at", { ascending: false });
+
+  const lastMessageByChatId = new Map<string, { content: string; content_type: string; deleted_at: string | null }>();
+  (lastMessagesQuery.data ?? []).forEach((row: { chat_id: string; content: string; content_type: string; deleted_at: string | null }) => {
+    if (!lastMessageByChatId.has(row.chat_id)) lastMessageByChatId.set(row.chat_id, row);
+  });
+
+
   const chatById = new Map<string, ChatRow>();
   chats?.forEach((c) => chatById.set(c.id, c));
 
@@ -109,7 +121,15 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
       return {
         chatId: m.chat_id,
         otherUser,
-        lastMessagePreview: "", // filled in by the caller after decryption
+        lastMessagePreview: (() => {
+          const lm = lastMessageByChatId.get(m.chat_id);
+          if (!lm) return "";
+          if (lm.deleted_at) return "This message was deleted";
+          if (lm.content_type === "image") return "\ud83d\udcf7 Photo";
+          if (lm.content_type === "voice") return "\ud83c\udfa4 Voice message";
+          if (lm.content_type === "file") return "\ud83d\udcce File";
+          return lm.content ?? "";
+        })(),
         lastMessageAt: chat.last_message_at,
         unreadCount: 0, // computed by the caller from message_receipts
         isPinned: m.is_pinned,
