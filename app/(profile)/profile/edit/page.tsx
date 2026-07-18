@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { Avatar } from "@/components/ui/Avatar";
 import { createClient } from "@/lib/supabase";
+import { AvatarCropper } from "@/components/profile/AvatarCropper";
 import { uploadAvatar } from "@/services/chat-service";
 import { updateOwnProfile } from "@/services/chat-service";
 import type { Profile } from "@/types";
@@ -23,6 +24,7 @@ export default function EditProfilePage() {
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -52,8 +54,9 @@ export default function EditProfilePage() {
 
   const handlePickPhoto = () => fileInputRef.current?.click();
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file || !userId) return;
 
     if (!file.type.startsWith("image/")) {
@@ -66,12 +69,17 @@ export default function EditProfilePage() {
     }
 
     setError("");
+    setCropSrc(URL.createObjectURL(file));
+  };
+
+  const handleCropped = async (blob: Blob) => {
+    if (!userId) return;
+    setCropSrc(null);
     setUploading(true);
-    // Instant local preview while the real upload happens in the background.
-    setAvatarPreview(URL.createObjectURL(file));
+    setAvatarPreview(URL.createObjectURL(blob));
 
     try {
-      const url = await uploadAvatar(userId, file);
+      const url = await uploadAvatar(userId, blob);
       setAvatarPreview(url);
     } catch {
       setError("Couldn't upload photo. Please try again.");
@@ -79,6 +87,11 @@ export default function EditProfilePage() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleCropCancel = () => {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
   };
 
   const handleSave = async () => {
@@ -115,6 +128,7 @@ export default function EditProfilePage() {
   }
 
   return (
+    <>
     <div className="h-full w-full bg-white">
       <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
         <StatusBar />
@@ -218,6 +232,14 @@ export default function EditProfilePage() {
         </div>
       </div>
     </div>
+      {cropSrc && (
+        <AvatarCropper
+          imageSrc={cropSrc}
+          onCropped={handleCropped}
+          onCancel={handleCropCancel}
+        />
+      )}
+    </>
   );
 }
 
