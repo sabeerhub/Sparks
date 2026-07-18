@@ -179,6 +179,7 @@ export default function ChatThreadPage() {
                 key={m.id}
                 message={{ ...m, status: effectiveStatus ?? m.status }}
                 isMine={isMine}
+                senderName={isMine ? "You" : otherUser.full_name}
                 reaction={reactions[m.id]}
                 onEdit={(text) => edit(m.id, text)}
                 onDelete={() => remove(m.id)}

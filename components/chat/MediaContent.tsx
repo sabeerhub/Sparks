@@ -1,17 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FileText } from "lucide-react";
 import { getMediaUrl } from "@/services/media-service";
+import { VoiceMessagePlayer } from "@/components/chat/VoiceMessagePlayer";
+import { ImageViewer } from "@/components/chat/ImageViewer";
+import { formatMessageTime } from "@/utils/helpers";
 
 interface MediaContentProps {
   contentType: "image" | "file" | "voice";
   mediaPath: string;
   fileName: string;
   isMine: boolean;
+  senderName: string;
+  timestamp: string;
 }
 
-export function MediaContent({ contentType, mediaPath, fileName, isMine }: MediaContentProps) {
+export function MediaContent({ contentType, mediaPath, fileName, isMine, senderName, timestamp }: MediaContentProps) {
   const [url, setUrl] = useState<string | null>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [pressed, setPressed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -22,32 +31,57 @@ export function MediaContent({ contentType, mediaPath, fileName, isMine }: Media
   if (!url) {
     return (
       <div
-        className="rounded-2xl px-4 py-6 flex items-center justify-center"
-        style={{ background: isMine ? "rgba(255,255,255,0.15)" : "var(--color-gray-3)", minWidth: 160 }}
+        className="rounded-[22px] flex items-center justify-center animate-pulse"
+        style={{ background: isMine ? "rgba(255,255,255,0.15)" : "var(--color-gray-3)", width: 200, height: contentType === "image" ? 200 : 60 }}
       >
-        <div className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: "rgba(0,0,0,0.15)", borderTopColor: isMine ? "white" : "var(--color-blue)" }} />
+        <div className="w-5 h-5 rounded-full border-2 animate-spin" style={{ borderColor: "rgba(0,0,0,0.1)", borderTopColor: isMine ? "white" : "var(--color-blue)" }} />
       </div>
     );
   }
 
   if (contentType === "image") {
     return (
-      <a href={url} target="_blank" rel="noopener noreferrer" className="block rounded-2xl overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt={fileName} className="max-w-[220px] max-h-[280px] object-cover" />
-      </a>
+      <>
+        <button
+          onClick={() => setViewerOpen(true)}
+          onTouchStart={() => setPressed(true)}
+          onTouchEnd={() => setPressed(false)}
+          className="block rounded-[22px] overflow-hidden relative"
+          style={{
+            boxShadow: "0 2px 10px rgba(0,0,0,0.12)",
+            transform: pressed ? "scale(0.97)" : "scale(1)",
+            transition: "transform 120ms ease-out",
+          }}
+        >
+          {!imageLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center" style={{ background: "var(--color-gray-3)", width: 220, height: 220 }}>
+              <div className="w-5 h-5 rounded-full border-2 animate-spin" style={{ borderColor: "rgba(0,0,0,0.1)", borderTopColor: "var(--color-blue)" }} />
+            </div>
+          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={url}
+            alt={fileName}
+            loading="lazy"
+            onLoad={() => setImageLoaded(true)}
+            className="max-w-[240px] max-h-[300px] object-cover"
+            style={{ opacity: imageLoaded ? 1 : 0, transition: "opacity 250ms ease-out" }}
+          />
+        </button>
+        {viewerOpen && (
+          <ImageViewer
+            url={url}
+            senderName={senderName}
+            timestamp={timestamp}
+            onClose={() => setViewerOpen(false)}
+          />
+        )}
+      </>
     );
   }
 
   if (contentType === "voice") {
-    return (
-      <div
-        className="rounded-3xl px-3 py-2"
-        style={{ background: isMine ? "var(--color-blue)" : "var(--color-gray-2)", minWidth: 220 }}
-      >
-        <audio controls src={url} className="w-full h-8" style={{ filter: isMine ? "invert(0)" : "none" }} />
-      </div>
-    );
+    return <VoiceMessagePlayer url={url} isMine={isMine} />;
   }
 
   // "file" — PDF, DOCX, ZIP, etc.
@@ -56,14 +90,14 @@ export function MediaContent({ contentType, mediaPath, fileName, isMine }: Media
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-3 rounded-2xl px-4 py-3"
-      style={{ background: isMine ? "var(--color-blue)" : "var(--color-gray-2)", minWidth: 200 }}
+      className="flex items-center gap-3 rounded-[22px] px-4 py-3 active:scale-[0.98] transition-transform"
+      style={{ background: isMine ? "var(--color-blue)" : "var(--color-gray-2)", minWidth: 200, boxShadow: "0 2px 10px rgba(0,0,0,0.08)" }}
     >
       <div
         className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
         style={{ background: isMine ? "rgba(255,255,255,0.2)" : "rgba(0,122,255,0.15)" }}
       >
-        <FileIcon color={isMine ? "white" : "var(--color-blue)"} />
+        <FileText size={18} color={isMine ? "white" : "var(--color-blue)"} strokeWidth={1.8} />
       </div>
       <span
         className="text-sm font-medium truncate"
@@ -72,14 +106,5 @@ export function MediaContent({ contentType, mediaPath, fileName, isMine }: Media
         {fileName}
       </span>
     </a>
-  );
-}
-
-function FileIcon({ color }: { color: string }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-    </svg>
   );
 }

@@ -10,6 +10,7 @@ import { MessageContextMenu } from "./MessageContextMenu";
 import { MediaContent } from "./MediaContent";
 
 interface MessageBubbleProps {
+  senderName: string;
   message: DecryptedMessage;
   isMine: boolean;
   onEdit: (newText: string) => void;
@@ -19,7 +20,7 @@ interface MessageBubbleProps {
   reaction?: string;
 }
 
-export function MessageBubble({ message, isMine, onEdit, onDelete, onReact, onReply, reaction }: MessageBubbleProps) {
+export function MessageBubble({ message, isMine, senderName, onEdit, onDelete, onReact, onReply, reaction }: MessageBubbleProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   if (message.deleted_at) {
@@ -53,6 +54,8 @@ export function MessageBubble({ message, isMine, onEdit, onDelete, onReact, onRe
               mediaPath={message.media_url as string}
               fileName={message.text || "File"}
               isMine={isMine}
+              senderName={senderName}
+              timestamp={formatMessageTime(message.created_at)}
             />
           ) : (
             <button
