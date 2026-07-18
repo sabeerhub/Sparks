@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 const SLIDES = [
   {
     title: "Your Privacy\nComes First",
-    desc: "All messages are end-to-end encrypted. Only you and the person you're talking to can read them.",
+    desc: "Your data is protected with encryption at rest, row-level security, and secure HTTPS connections.",
     bg: "var(--color-blue-light)",
     iconBg: "var(--color-blue)",
     icon: "shield",
