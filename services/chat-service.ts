@@ -222,8 +222,8 @@ export async function updateOwnProfile(userId: string, patch: Partial<Profile>) 
  * user's own folder (required by the bucket's RLS policies), then updates
  * profiles.avatar_url to point at it. Returns the new public URL.
  */
-export async function uploadAvatar(userId: string, file: File): Promise<string> {
-  const ext = file.name.split(".").pop() ?? "jpg";
+export async function uploadAvatar(userId: string, file: File | Blob): Promise<string> {
+  const ext = "jpg";
   const path = `${userId}/avatar.${ext}`;
 
   const { error: uploadError } = await supabase.storage
