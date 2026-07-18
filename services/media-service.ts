@@ -104,10 +104,14 @@ export async function getMediaUrl(path: string): Promise<string | null> {
  * Used for the profile's Media preview grid.
  */
 export async function getRecentMediaThumbnails(limit = 4): Promise<{ id: string; mediaPath: string }[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from("messages") as any)
     .select("id, media_path")
     .eq("content_type", "image")
+    .eq("sender_id", user.id)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
