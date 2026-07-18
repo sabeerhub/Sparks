@@ -97,3 +97,21 @@ export async function getMediaUrl(path: string): Promise<string | null> {
   if (error) return null;
   return data.signedUrl;
 }
+
+/**
+ * Recent images shared across the current user's chats (RLS already scopes
+ * this to chats they're a member of — no extra filtering needed here).
+ * Used for the profile's Media preview grid.
+ */
+export async function getRecentMediaThumbnails(limit = 4): Promise<{ id: string; mediaPath: string }[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from("messages") as any)
+    .select("id, media_path")
+    .eq("content_type", "image")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data.map((row: { id: string; media_path: string }) => ({ id: row.id, mediaPath: row.media_path }));
+}
