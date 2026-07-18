@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BadgeCheck, Zap, Calendar, MapPin, QrCode, Share2, Star, ShieldCheck, Pin, Settings, LogOut, ChevronRight, Image as ImageIcon, Users } from "lucide-react";
+import { BadgeCheck, Zap, Calendar, MapPin, MoreHorizontal, ImageIcon, Star, ShieldCheck, Bookmark, Settings, ChevronRight } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar } from "@/components/ui/Avatar";
@@ -16,20 +16,12 @@ const supabase = createClient();
 
 function ProfileSkeleton() {
   return (
-    <div className="animate-pulse">
-      <div className="h-32 w-full" style={{ background: "var(--color-gray-3)" }} />
-      <div className="px-5 pt-14">
-        <div className="h-5 w-36 rounded-full mb-2" style={{ background: "var(--color-gray-3)" }} />
-        <div className="h-4 w-24 rounded-full" style={{ background: "var(--color-gray-3)" }} />
-      </div>
+    <div className="animate-pulse flex flex-col items-center pt-10">
+      <div className="w-24 h-24 rounded-full mb-4" style={{ background: "#F5F5F7" }} />
+      <div className="h-5 w-36 rounded-full mb-2" style={{ background: "#F5F5F7" }} />
+      <div className="h-4 w-24 rounded-full" style={{ background: "#F5F5F7" }} />
     </div>
   );
-}
-
-function daysActive(createdAt: string | undefined): number {
-  if (!createdAt) return 0;
-  const created = new Date(createdAt).getTime();
-  return Math.max(1, Math.floor((Date.now() - created) / (1000 * 60 * 60 * 24)));
 }
 
 function formatJoinDate(createdAt: string | undefined): string {
@@ -66,136 +58,129 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col" style={{ background: "var(--color-gray-2)" }}>
+    <div className="h-full w-full flex flex-col bg-white">
       <StatusBar />
+
+      {/* Minimal nav */}
+      <div className="flex items-center justify-between px-5 pt-4 pb-2 flex-shrink-0">
+        <div className="w-9" />
+        <span className="text-[15px] font-semibold" style={{ color: "#1D1D1F" }}>Profile</span>
+        <button
+          onClick={() => setShareOpen(true)}
+          className="w-9 h-9 rounded-full flex items-center justify-center"
+          style={{ background: "#F5F5F7" }}
+          aria-label="More"
+        >
+          <MoreHorizontal size={18} color="#1D1D1F" strokeWidth={1.8} />
+        </button>
+      </div>
+
       <div className="flex-1 overflow-y-auto">
-        <div className="w-full max-w-4xl mx-auto bg-white min-h-full">
-          {loading || !profile ? (
-            <ProfileSkeleton />
-          ) : (
-            <>
-              {/* Banner + avatar */}
-              <div className="relative">
-                <div className="h-32 w-full" style={{ background: "linear-gradient(120deg, var(--color-blue), var(--color-orange))" }} />
-                <div className="absolute left-5 bottom-0 translate-y-1/2">
-                  <div
-                    className="rounded-full p-1 bg-white"
-                    style={profile.is_premium ? { background: "linear-gradient(135deg, var(--color-orange), var(--color-blue))" } : undefined}
-                  >
-                    <div className="rounded-full ring-4 ring-white">
-                      <Avatar name={profile.full_name ?? "?"} src={profile.avatar_url} size={88} />
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute right-4 bottom-0 translate-y-1/2">
-                  <button
-                    onClick={() => router.push("/profile/edit")}
-                    className="px-4 py-2 rounded-full text-sm font-semibold border bg-white"
-                    style={{ borderColor: "var(--color-gray-3)" }}
-                  >
-                    Edit Profile
-                  </button>
-                </div>
+        {loading || !profile ? (
+          <ProfileSkeleton />
+        ) : (
+          <div className="w-full max-w-md mx-auto px-6">
+            {/* Identity */}
+            <div className="flex flex-col items-center pt-6 pb-8 text-center">
+              <Avatar name={profile.full_name ?? "?"} src={profile.avatar_url} size={100} />
+
+              <div className="flex items-center gap-1.5 mt-5">
+                <h1 className="text-[22px] font-semibold" style={{ color: "#1D1D1F" }}>{profile.full_name ?? "—"}</h1>
+                {profile.is_verified && <BadgeCheck size={17} fill="#007AFF" color="white" />}
               </div>
 
-              {/* Identity block */}
-              <div className="px-5 pt-14">
-                <div className="flex items-center gap-1.5">
-                  <h2 className="text-xl font-bold">{profile.full_name ?? "—"}</h2>
-                  {profile.is_verified && <BadgeCheck size={18} fill="var(--color-blue)" color="white" />}
-                </div>
-                {profile.username && (
-                  <p className="text-sm" style={{ color: "var(--color-gray-1)" }}>@{profile.username}</p>
-                )}
+              <p className="text-[15px] mt-0.5" style={{ color: "#007AFF" }}>
+                @{profile.username}{profile.is_premium && " 💎"}
+              </p>
 
-                {profile.bio && (
-                  <p className="text-sm mt-3" style={{ color: "var(--color-black)" }}>{profile.bio}</p>
-                )}
+              {profile.bio && (
+                <p className="text-[14px] mt-3 max-w-xs leading-relaxed" style={{ color: "#1D1D1F" }}>{profile.bio}</p>
+              )}
 
-                <div className="flex items-center gap-4 mt-3 text-sm" style={{ color: "var(--color-gray-1)" }}>
-                  {profile.location && (
-                    <span className="flex items-center gap-1">
-                      <MapPin size={14} strokeWidth={1.8} /> {profile.location}
-                    </span>
-                  )}
+              <div className="flex items-center gap-2.5 mt-4 text-[13px]" style={{ color: "#6E6E73" }}>
+                {profile.location && (
                   <span className="flex items-center gap-1">
-                    <Calendar size={14} strokeWidth={1.8} /> Joined {formatJoinDate(profile.created_at)}
+                    <MapPin size={12} strokeWidth={1.8} /> {profile.location}
                   </span>
-                </div>
-
-                <div className="flex items-center gap-4 mt-3">
-                  <span className="flex items-center gap-1 text-sm">
-                    <Zap size={15} fill="var(--color-blue)" color="var(--color-blue)" />
-                    <span className="font-bold">{(profile.spark_count ?? 0).toLocaleString()}</span>
-                    <span style={{ color: "var(--color-gray-1)" }}>Total Sparks</span>
-                  </span>
-                  <span className="flex items-center gap-1 text-sm">
-                    <Users size={14} strokeWidth={1.8} color="var(--color-gray-1)" />
-                    <span className="font-bold">{sparkConnections.toLocaleString()}</span>
-                    <span style={{ color: "var(--color-gray-1)" }}>Spark Connections</span>
-                  </span>
-                  <span className="flex items-center gap-1 text-sm">
-                    <Calendar size={14} strokeWidth={1.8} color="var(--color-gray-1)" />
-                    <span className="font-bold">{daysActive(profile.created_at).toLocaleString()}</span>
-                    <span style={{ color: "var(--color-gray-1)" }}>Days Active</span>
-                  </span>
-                </div>
-
-                <div className="flex gap-2 mt-4 pb-4">
-                  <button
-                    onClick={() => setShareOpen(true)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-sm font-medium border"
-                    style={{ borderColor: "var(--color-gray-3)" }}
-                  >
-                    <QrCode size={16} color="var(--color-blue)" strokeWidth={1.8} /> QR Code
-                  </button>
-                  <button
-                    onClick={() => setShareOpen(true)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-sm font-medium border"
-                    style={{ borderColor: "var(--color-gray-3)" }}
-                  >
-                    <Share2 size={16} color="var(--color-blue)" strokeWidth={1.8} /> Share
-                  </button>
-                </div>
+                )}
+                {profile.location && <span style={{ color: "#E5E5EA" }}>|</span>}
+                <span className="flex items-center gap-1">
+                  <Calendar size={12} strokeWidth={1.8} /> Joined {formatJoinDate(profile.created_at)}
+                </span>
               </div>
+            </div>
 
-              {/* Tab bar */}
-              <div className="flex border-t border-b" style={{ borderColor: "var(--color-gray-2)" }}>
-                <div className="flex-1 flex items-center justify-center gap-1.5 py-3 border-b-2" style={{ borderColor: "var(--color-blue)" }}>
-                  <ImageIcon size={16} color="var(--color-blue)" strokeWidth={1.8} />
-                  <span className="text-sm font-semibold" style={{ color: "var(--color-blue)" }}>Media</span>
-                </div>
+            {/* Stats */}
+            <div className="flex items-stretch justify-around py-5" style={{ borderTop: "1px solid #F5F5F7", borderBottom: "1px solid #F5F5F7" }}>
+              <div className="flex flex-col items-center gap-1 flex-1">
+                <Zap size={16} color="#007AFF" fill="#007AFF" />
+                <span className="text-[19px] font-semibold" style={{ color: "#1D1D1F" }}>{(profile.spark_count ?? 0).toLocaleString()}</span>
+                <span className="text-[12px]" style={{ color: "#6E6E73" }}>Total Sparks</span>
               </div>
-
-              {/* Media tab content */}
-              <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
-                <ImageIcon size={36} color="var(--color-gray-3)" strokeWidth={1.5} />
-                <p className="font-semibold mt-4 mb-1">No media yet</p>
-                <p className="text-sm" style={{ color: "var(--color-gray-1)" }}>
-                  Photos and files shared in your chats will appear here.
-                </p>
+              <div style={{ width: 1, background: "#E5E5EA" }} />
+              <div className="flex flex-col items-center gap-1 flex-1">
+                <span className="text-[16px]">👥</span>
+                <span className="text-[19px] font-semibold" style={{ color: "#1D1D1F" }}>{sparkConnections.toLocaleString()}</span>
+                <span className="text-[12px]" style={{ color: "#6E6E73" }}>Spark Connections</span>
               </div>
+              <div style={{ width: 1, background: "#E5E5EA" }} />
+              <div className="flex flex-col items-center gap-1 flex-1">
+                <Calendar size={16} color="#007AFF" strokeWidth={1.8} />
+                <span className="text-[19px] font-semibold" style={{ color: "#1D1D1F" }}>{formatJoinDate(profile.created_at).split(" ")[0]}</span>
+                <span className="text-[12px]" style={{ color: "#6E6E73" }}>Joined</span>
+              </div>
+            </div>
 
-              {/* Account menu */}
-              <div className="px-5 pb-8">
-                <Row icon={Star} iconColor="var(--color-orange)" filled label="Sparks Premium" badge={profile.is_premium ? "Active" : undefined} onClick={() => {}} />
-                <Row icon={ShieldCheck} iconColor="var(--color-green)" label="Security Center" onClick={() => router.push("/settings/security")} />
-                <Row icon={Pin} iconColor="var(--color-blue)" label="Saved Messages" onClick={() => {}} />
-                <Row icon={Settings} iconColor="var(--color-gray-1)" label="Settings" onClick={() => router.push("/settings")} />
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 py-3.5 active:opacity-70 transition-opacity"
-                >
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,59,48,0.12)" }}>
-                    <LogOut size={18} color="var(--color-red)" strokeWidth={1.8} />
-                  </div>
-                  <span className="text-sm font-medium" style={{ color: "var(--color-red)" }}>Log Out</span>
+            {/* Primary actions */}
+            <div className="flex gap-3 py-5">
+              <button
+                onClick={() => router.push("/profile/edit")}
+                className="flex-1 py-3 rounded-full text-[15px] font-medium border transition-transform active:scale-[0.98]"
+                style={{ borderColor: "#E5E5EA", color: "#1D1D1F" }}
+              >
+                Edit Profile
+              </button>
+              <button
+                onClick={() => setShareOpen(true)}
+                className="flex-1 py-3 rounded-full text-[15px] font-semibold text-white transition-transform active:scale-[0.98]"
+                style={{ background: "#007AFF" }}
+              >
+                Share Profile
+              </button>
+            </div>
+
+            {/* Media */}
+            <div className="py-5" style={{ borderTop: "1px solid #F5F5F7" }}>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[15px] font-semibold" style={{ color: "#1D1D1F" }}>Media</span>
+                <button onClick={() => router.push("/profile/media")} className="text-[13px]" style={{ color: "#6E6E73" }}>
+                  View all
                 </button>
               </div>
-            </>
-          )}
-        </div>
+              <div className="flex flex-col items-center py-8 text-center">
+                <ImageIcon size={26} color="#E5E5EA" strokeWidth={1.5} />
+                <p className="text-[13px] mt-2" style={{ color: "#6E6E73" }}>No shared media yet</p>
+              </div>
+            </div>
+
+            {/* Settings list */}
+            <div className="py-2" style={{ borderTop: "1px solid #F5F5F7" }}>
+              <SettingsRow icon={Star} label="Spark Premium" onClick={() => {}} />
+              <SettingsRow icon={Bookmark} label="Saved Messages" onClick={() => {}} />
+              <SettingsRow icon={ShieldCheck} label="Security Center" onClick={() => router.push("/settings/security")} />
+              <SettingsRow icon={Settings} label="Settings" onClick={() => router.push("/settings")} last />
+            </div>
+
+            {/* Logout */}
+            <div className="flex justify-center py-8">
+              <button onClick={handleLogout} className="text-[14px] font-medium" style={{ color: "#FF3B30" }}>
+                Log Out
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
       <div className="md:hidden">
         <BottomNav />
       </div>
@@ -212,32 +197,20 @@ export default function ProfilePage() {
   );
 }
 
-interface RowProps {
-  icon: import("lucide-react").LucideIcon;
-  iconColor: string;
-  label: string;
-  badge?: string;
-  onClick: () => void;
-  filled?: boolean;
-}
-
-function Row({ icon: Icon, iconColor, label, badge, onClick, filled }: RowProps) {
+function SettingsRow({
+  icon: Icon, label, onClick, last,
+}: {
+  icon: import("lucide-react").LucideIcon; label: string; onClick: () => void; last?: boolean;
+}) {
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 py-3.5 border-b active:opacity-70 transition-opacity"
-      style={{ borderColor: "var(--color-gray-2)" }}
+      className="w-full flex items-center gap-3 py-3.5"
+      style={{ borderBottom: last ? "none" : "1px solid #F5F5F7" }}
     >
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${iconColor}20` }}>
-        <Icon size={18} color={iconColor} fill={filled ? iconColor : "none"} strokeWidth={1.8} />
-      </div>
-      <span className="flex-1 text-sm font-medium text-left">{label}</span>
-      {badge && (
-        <span className="text-xs font-semibold px-2 py-0.5 rounded-full mr-1" style={{ background: "rgba(52,199,89,0.15)", color: "var(--color-green)" }}>
-          {badge}
-        </span>
-      )}
-      <ChevronRight size={16} color="var(--color-gray-1)" strokeWidth={1.8} />
+      <Icon size={18} color="#6E6E73" strokeWidth={1.6} />
+      <span className="flex-1 text-[15px] text-left" style={{ color: "#1D1D1F" }}>{label}</span>
+      <ChevronRight size={16} color="#C7C7CC" strokeWidth={1.8} />
     </button>
   );
 }
