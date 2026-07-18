@@ -39,6 +39,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
   const lockedRef = useRef(false);
+  const cancelledRef = useRef(false);
   const recordingRef = useRef(false);
   const dragXRef = useRef(0);
 
@@ -128,6 +129,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
       chunksRef.current = [];
+      cancelledRef.current = false;
 
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
@@ -147,7 +149,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
         dragXRef.current = 0;
         setDragY(0);
 
-        if (blob.size === 0) return;
+        if (cancelledRef.current) return;
 
         setUploading(true);
         try {
@@ -183,7 +185,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
 
   const cancelRecording = () => {
     if (mediaRecorderRef.current) {
-      chunksRef.current = [];
+      cancelledRef.current = true;
       mediaRecorderRef.current.stop();
     }
   };
