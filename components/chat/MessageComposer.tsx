@@ -3,7 +3,7 @@
  */
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Paperclip, Smile, Send, Mic, Trash2, Lock, ChevronLeft } from "lucide-react";
 import { sendMediaMessage, MAX_MEDIA_BYTES } from "@/services/media-service";
 import { chatCache } from "@/lib/storage";
@@ -39,6 +39,8 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
   const lockedRef = useRef(false);
+  const recordingRef = useRef(false);
+  const dragXRef = useRef(0);
 
   const handleSend = () => {
     const trimmed = text.trim();
@@ -137,10 +139,12 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
         if (timerRef.current) clearInterval(timerRef.current);
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         setRecording(false);
+        recordingRef.current = false;
         setLocked(false);
         lockedRef.current = false;
         setRecordSeconds(0);
         setDragX(0);
+        dragXRef.current = 0;
         setDragY(0);
 
         if (blob.size === 0) return;
@@ -166,6 +170,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
       recorder.start();
       startLiveWaveform(stream);
       setRecording(true);
+      recordingRef.current = true;
       setRecordSeconds(0);
       timerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
     } catch {
@@ -188,31 +193,51 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
     startRecording();
   };
 
-  const handleMicPointerMove = (e: React.PointerEvent) => {
-    if (!recording || lockedRef.current) return;
-    const dx = Math.min(0, e.clientX - pointerStartRef.current.x);
-    const dy = Math.min(0, e.clientY - pointerStartRef.current.y);
-    setDragX(dx);
-    setDragY(dy);
+  // Tracked on `window`, not the mic button — the button unmounts the
+  // instant `recording` becomes true (replaced by the floating recording
+  // bar), so listeners attached to it stop receiving events mid-gesture.
+  // Window-level listeners keep tracking the same physical pointer
+  // regardless of what re-renders underneath it.
+  useEffect(() => {
+    if (!recording) return;
 
-    if (dy <= -LOCK_THRESHOLD) {
-      lockedRef.current = true;
-      setLocked(true);
+    const onMove = (e: PointerEvent) => {
+      if (lockedRef.current) return;
+      const dx = Math.min(0, e.clientX - pointerStartRef.current.x);
+      const dy = Math.min(0, e.clientY - pointerStartRef.current.y);
+      dragXRef.current = dx;
+      setDragX(dx);
+      setDragY(dy);
+
+      if (dy <= -LOCK_THRESHOLD) {
+        lockedRef.current = true;
+        setLocked(true);
+        setDragX(0);
+        dragXRef.current = 0;
+        setDragY(0);
+      }
+    };
+
+    const onUp = () => {
+      if (lockedRef.current) return; // locked: stays recording until Send/Delete tapped
+      if (dragXRef.current <= -CANCEL_THRESHOLD) {
+        cancelRecording();
+      } else {
+        stopRecording();
+      }
       setDragX(0);
+      dragXRef.current = 0;
       setDragY(0);
-    }
-  };
+    };
 
-  const handleMicPointerUp = () => {
-    if (!recording || lockedRef.current) return;
-    if (dragX <= -CANCEL_THRESHOLD) {
-      cancelRecording();
-    } else {
-      stopRecording();
-    }
-    setDragX(0);
-    setDragY(0);
-  };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recording]);
 
   const formatDuration = (s: number) => {
     const m = Math.floor(s / 60);
@@ -226,7 +251,6 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
   if (recording) {
     return (
       <div className="relative px-3 py-2 border-t" style={{ borderColor: "var(--color-gray-2)" }}>
-        {/* Lock indicator — slides up as the user drags up, before locking */}
         {!locked && (
           <div
             className="absolute right-6 flex flex-col items-center gap-1"
@@ -343,8 +367,6 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
             className="mb-1.5 active:scale-110 transition-transform touch-none"
             aria-label="Record voice note"
             onPointerDown={handleMicPointerDown}
-            onPointerMove={handleMicPointerMove}
-            onPointerUp={handleMicPointerUp}
           >
             <Mic size={22} color="var(--color-gray-1)" strokeWidth={1.8} />
           </button>
