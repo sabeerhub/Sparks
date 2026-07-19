@@ -81,13 +81,13 @@ export default function ProfilePage() {
 
       {/* Top gradient strip + curved white hill overlapping it */}
       <div
-        className="absolute top-0 left-0 right-0 h-56 pointer-events-none"
+        className="absolute top-0 left-0 right-0 h-80 pointer-events-none"
         style={{ background: "linear-gradient(180deg, #CFE4FF 0%, #E8F2FF 60%, #F5FAFF 100%)" }}
       />
       <div
         className="absolute pointer-events-none"
         style={{
-          top: 190,
+          top: 300,
           left: "-25%",
           width: "150%",
           height: 600,
