@@ -73,10 +73,21 @@ export default function ProfilePage() {
     <div className="h-full w-full flex flex-col bg-white overflow-hidden relative">
       <StatusBar />
 
-      {/* Top gradient */}
+      {/* Top gradient strip + curved white hill overlapping it */}
       <div
-        className="absolute top-0 left-0 right-0 h-72 pointer-events-none"
-        style={{ background: "linear-gradient(180deg, #DCEBFF 0%, #EEF5FF 40%, #FFFFFF 100%)" }}
+        className="absolute top-0 left-0 right-0 h-56 pointer-events-none"
+        style={{ background: "linear-gradient(180deg, #CFE4FF 0%, #E8F2FF 60%, #F5FAFF 100%)" }}
+      />
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: 190,
+          left: "-25%",
+          width: "150%",
+          height: 600,
+          background: "#FFFFFF",
+          borderRadius: "50% 50% 0 0 / 90px 90px 0 0",
+        }}
       />
 
       <div className="flex items-center justify-between px-5 pt-4 relative z-10 flex-shrink-0">
