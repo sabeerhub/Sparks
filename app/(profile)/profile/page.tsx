@@ -2,16 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BadgeCheck, Zap, Calendar, MapPin, MoreHorizontal, QrCode, Share2, MessageCircle, Quote, Image as ImageIcon, ShieldCheck, Bookmark, ChevronRight } from "lucide-react";
+import { ChevronLeft, BadgeCheck, Zap, Calendar, MapPin, QrCode, Share2, MessageCircle, Users, Quote, Image as ImageIcon, ShieldCheck, Bookmark, Settings, ChevronRight, MoreHorizontal } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar } from "@/components/ui/Avatar";
 import { ShareProfileSheet } from "@/components/profile/ShareProfileSheet";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase";
-import { getSparkConnectionsCount } from "@/services/chat-service";
+import { getSparkConnectionsCount, openSavedMessages } from "@/services/chat-service";
 import { getRecentMediaThumbnails, getMediaUrl } from "@/services/media-service";
-import { openSavedMessages } from "@/services/chat-service";
 import type { Profile } from "@/types";
 
 const supabase = createClient();
@@ -60,6 +59,11 @@ export default function ProfilePage() {
     })();
   }, [router]);
 
+  const handleMessageSelf = async () => {
+    const chatId = await openSavedMessages();
+    router.push(`/chats/${chatId}`);
+  };
+
   const handleLogout = async () => {
     await logout();
     router.push("/");
@@ -69,29 +73,39 @@ export default function ProfilePage() {
     <div className="h-full w-full flex flex-col bg-white overflow-hidden relative">
       <StatusBar />
 
-      {/* Soft gradient backdrop behind avatar */}
+      {/* Top gradient */}
       <div
-        className="absolute top-0 left-0 right-0 h-64 pointer-events-none"
-        style={{ background: "radial-gradient(120% 100% at 20% 0%, rgba(0,122,255,0.12), rgba(255,255,255,0) 70%)" }}
+        className="absolute top-0 left-0 right-0 h-72 pointer-events-none"
+        style={{ background: "linear-gradient(180deg, #DCEBFF 0%, #EEF5FF 40%, #FFFFFF 100%)" }}
       />
 
-      <div className="flex items-center justify-end gap-2.5 px-5 pt-4 relative z-10 flex-shrink-0">
+      <div className="flex items-center justify-between px-5 pt-4 relative z-10 flex-shrink-0">
         <button
-          onClick={() => setShareOpen(true)}
+          onClick={() => router.back()}
           className="w-10 h-10 rounded-full flex items-center justify-center bg-white"
           style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
-          aria-label="QR Code"
+          aria-label="Back"
         >
-          <QrCode size={17} color="#1D1D1F" strokeWidth={1.8} />
+          <ChevronLeft size={20} color="#1D1D1F" strokeWidth={2} />
         </button>
-        <button
-          onClick={() => router.push("/settings")}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-white"
-          style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
-          aria-label="More"
-        >
-          <MoreHorizontal size={18} color="#1D1D1F" strokeWidth={1.8} />
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setShareOpen(true)}
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-white"
+            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
+            aria-label="QR Code"
+          >
+            <QrCode size={17} color="#1D1D1F" strokeWidth={1.8} />
+          </button>
+          <button
+            onClick={() => router.push("/profile/edit")}
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-white"
+            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
+            aria-label="More"
+          >
+            <MoreHorizontal size={18} color="#1D1D1F" strokeWidth={1.8} />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto relative z-10">
@@ -110,6 +124,10 @@ export default function ProfilePage() {
               </div>
 
               <p className="text-[14px] mt-0.5" style={{ color: "#6E6E73" }}>@{profile.username}</p>
+
+              {profile.bio && (
+                <p className="text-[15px] mt-3" style={{ color: "#1D1D1F" }}>{profile.bio}</p>
+              )}
 
               <div className="flex items-center gap-2.5 mt-3 text-[13px]" style={{ color: "#6E6E73" }}>
                 {profile.location && (
@@ -136,7 +154,7 @@ export default function ProfilePage() {
               </div>
               <div style={{ width: 1, background: "#E5E5EA" }} />
               <div className="flex flex-col items-center gap-1 flex-1">
-                <span className="text-[16px]">👥</span>
+                <Users size={17} color="#007AFF" strokeWidth={1.8} />
                 <span className="text-[19px] font-bold" style={{ color: "#1D1D1F" }}>{sparkConnections.toLocaleString()}</span>
                 <span className="text-[12px]" style={{ color: "#6E6E73" }}>Spark Connections</span>
               </div>
@@ -151,18 +169,18 @@ export default function ProfilePage() {
             {/* Primary actions */}
             <div className="flex gap-3 mb-4">
               <button
-                onClick={() => router.push("/profile/edit")}
+                onClick={handleMessageSelf}
                 className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-full text-[15px] font-medium border bg-white transition-transform active:scale-[0.98]"
                 style={{ borderColor: "#E5E5EA", color: "#1D1D1F" }}
               >
-                <MessageCircle size={16} strokeWidth={1.8} /> Edit Profile
+                <MessageCircle size={16} strokeWidth={1.8} /> Message
               </button>
               <button
                 onClick={() => setShareOpen(true)}
                 className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-full text-[15px] font-semibold text-white transition-transform active:scale-[0.98]"
                 style={{ background: "#007AFF" }}
               >
-                <Share2 size={16} strokeWidth={2} /> Share Profile
+                <Share2 size={16} strokeWidth={2} /> Get Spark
               </button>
             </div>
 
@@ -201,7 +219,8 @@ export default function ProfilePage() {
             {/* Settings list */}
             <div className="rounded-2xl bg-white overflow-hidden mb-6" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
               <SettingsRow icon={ShieldCheck} label="Security Center" desc="Manage your account security" onClick={() => router.push("/settings/security")} />
-              <SettingsRow icon={Bookmark} label="Saved Messages" desc="Messages you saved" onClick={async () => { const chatId = await openSavedMessages(); router.push(`/chats/${chatId}`); }} last />
+              <SettingsRow icon={Bookmark} label="Saved Messages" desc="Messages you saved" onClick={handleMessageSelf} />
+              <SettingsRow icon={Settings} label="Settings" desc="Account, privacy, notifications" onClick={() => router.push("/settings")} last />
             </div>
 
             {/* Logout */}
