@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase";
 import { getSparkConnectionsCount } from "@/services/chat-service";
 import { getRecentMediaThumbnails, getMediaUrl } from "@/services/media-service";
+import { openSavedMessages } from "@/services/chat-service";
 import type { Profile } from "@/types";
 
 const supabase = createClient();
@@ -200,7 +201,7 @@ export default function ProfilePage() {
             {/* Settings list */}
             <div className="rounded-2xl bg-white overflow-hidden mb-6" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
               <SettingsRow icon={ShieldCheck} label="Security Center" desc="Manage your account security" onClick={() => router.push("/settings/security")} />
-              <SettingsRow icon={Bookmark} label="Saved Messages" desc="Messages you saved" onClick={() => {}} last />
+              <SettingsRow icon={Bookmark} label="Saved Messages" desc="Messages you saved" onClick={async () => { const chatId = await openSavedMessages(); router.push(`/chats/${chatId}`); }} last />
             </div>
 
             {/* Logout */}
