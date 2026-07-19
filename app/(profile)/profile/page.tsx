@@ -205,7 +205,7 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-4 gap-2">
                   {mediaThumbs.map((url, i) => (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img key={i} src={url} alt="" loading="lazy" className="w-full aspect-square object-cover rounded-xl" />
+                    <img key={url} src={url} alt="" loading="lazy" className="w-full aspect-square object-cover rounded-xl" onError={() => setMediaThumbs((prev) => prev.filter((u) => u !== url))} />
                   ))}
                 </div>
               ) : (
