@@ -38,6 +38,7 @@ export interface Chat {
   id: string;
   created_by: string;
   is_group: boolean;
+  is_self_chat: boolean;
   created_at: string;
   last_message_at: string;
 }

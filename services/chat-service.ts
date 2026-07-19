@@ -37,7 +37,7 @@ export async function startDirectChat(otherUserId: string): Promise<string> {
  */
 export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
   type MembershipRow = Pick<ChatMember, "chat_id" | "is_pinned" | "is_muted" | "is_archived" | "last_read_at">;
-  type ChatRow = Pick<Chat, "id" | "created_by" | "is_group" | "created_at" | "last_message_at">;
+  type ChatRow = Pick<Chat, "id" | "created_by" | "is_group" | "is_self_chat" | "created_at" | "last_message_at">;
   type OtherMemberRow = Pick<ChatMember, "chat_id" | "user_id">;
 
   // IMPORTANT: chat_members' SELECT RLS policy uses is_chat_member(chat_id),
@@ -60,7 +60,7 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chatsQuery = await (supabase.from("chats") as any)
-    .select("id, created_by, is_group, created_at, last_message_at")
+    .select("id, created_by, is_group, is_self_chat, created_at, last_message_at")
     .in("id", chatIds);
 
   if (chatsQuery.error) throw chatsQuery.error;
@@ -94,7 +94,7 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
   const otherUserIdByChatId = new Map<string, string>();
   otherMembers?.forEach((row) => otherUserIdByChatId.set(row.chat_id, row.user_id));
 
-  const otherUserIds = [...new Set(otherMembers?.map((r) => r.user_id) ?? [])];
+  const otherUserIds = [...new Set([...(otherMembers?.map((r) => r.user_id) ?? []), userId])];
 
   const profilesQuery = otherUserIds.length
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,7 +115,8 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
 
   return memberships
     .map((m) => {
-      const otherUser = otherByChatId.get(m.chat_id);
+      const chatForSelf = chatById.get(m.chat_id);
+      const otherUser = chatForSelf?.is_self_chat ? profileById.get(userId) : otherByChatId.get(m.chat_id);
       const chat = chatById.get(m.chat_id);
       if (!otherUser || !chat) return null;
       return {
