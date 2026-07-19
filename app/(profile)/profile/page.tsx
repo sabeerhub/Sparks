@@ -142,9 +142,6 @@ export default function ProfilePage() {
 
               <p className="text-[14px] mt-0.5" style={{ color: "#6E6E73" }}>@{profile.username}</p>
 
-              {profile.bio && (
-                <p className="text-[15px] mt-3" style={{ color: "#1D1D1F" }}>{profile.bio}</p>
-              )}
 
               <div className="flex items-center gap-2.5 mt-3 text-[13px]" style={{ color: "#6E6E73" }}>
                 {profile.location && (
