@@ -63,12 +63,12 @@ export default function ChatThreadPage() {
         .maybeSingle();
 
       const membership = membershipQuery.data as { user_id: string } | null;
-      if (!membership) return;
+      const otherUserId = membership?.user_id ?? user.id; // no other member = self-chat (Saved Messages)
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: profile } = await (supabase.from("profiles") as any)
         .select("*")
-        .eq("id", membership.user_id)
+        .eq("id", otherUserId)
         .maybeSingle();
 
       if (profile) {
@@ -123,6 +123,7 @@ export default function ChatThreadPage() {
   }, [messages]);
 
   const isOtherTyping = otherUser ? typingUserIds.includes(otherUser.id) : false;
+  const isSelfChat = otherUser && currentUserId ? otherUser.id === currentUserId : false;
 
   if (!otherUser) {
     return (
@@ -149,22 +150,26 @@ export default function ChatThreadPage() {
           <button onClick={() => router.push("/chats")} aria-label="Back" className="flex-shrink-0 md:hidden">
             <ArrowLeft size={22} color="var(--color-blue)" strokeWidth={2} />
           </button>
-          <button onClick={() => router.push(`/profile/${otherUser.id}`)} className="flex items-center gap-2 min-w-0">
-            <Avatar name={otherUser.full_name} src={otherUser.avatar_url} size={34} online={otherUserOnline} />
+          <button onClick={() => isSelfChat ? router.push("/profile") : router.push(`/profile/${otherUser.id}`)} className="flex items-center gap-2 min-w-0">
+            <Avatar name={otherUser.full_name} src={otherUser.avatar_url} size={34} online={!isSelfChat && otherUserOnline} />
             <div className="min-w-0 text-left">
-              <div className="text-sm font-semibold truncate">{otherUser.full_name}</div>
-              <div className="text-xs truncate" style={{ color: otherUserOnline ? "var(--color-green)" : "var(--color-gray-1)" }}>
-                {otherUserOnline ? "Online" : `Last seen ${formatLastSeen(otherUserLastSeen)}`}
-              </div>
+              <div className="text-sm font-semibold truncate">{isSelfChat ? "Saved Messages" : otherUser.full_name}</div>
+              {!isSelfChat && (
+                <div className="text-xs truncate" style={{ color: otherUserOnline ? "var(--color-green)" : "var(--color-gray-1)" }}>
+                  {otherUserOnline ? "Online" : `Last seen ${formatLastSeen(otherUserLastSeen)}`}
+                </div>
+              )}
             </div>
           </button>
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <button aria-label="Call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "voice")}><Phone size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
-          <button aria-label="Video call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "video")}><Video size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
-        </div>
-      </div>
+        {!isSelfChat && (
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <button aria-label="Call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "voice")}><Phone size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
+            <button aria-label="Video call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "video")}><Video size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
+          </div>
+        )}
 
+      </div>
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {loading && messages.length === 0 ? (
           <MessageSkeleton />
