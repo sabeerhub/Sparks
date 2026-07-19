@@ -337,3 +337,11 @@ export async function getBlockedUsers(): Promise<Profile[]> {
 
   return (profiles ?? []) as Profile[];
 }
+
+/** Opens (creating if needed) the user's private "Saved Messages" self-chat. */
+export async function openSavedMessages(): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).rpc("get_or_create_self_chat");
+  if (error) throw error;
+  return data as string;
+}
