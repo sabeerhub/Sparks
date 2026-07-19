@@ -25,6 +25,12 @@ function ProfileSkeleton() {
   );
 }
 
+function daysActive(createdAt: string | undefined): number {
+  if (!createdAt) return 0;
+  const created = new Date(createdAt).getTime();
+  return Math.max(1, Math.floor((Date.now() - created) / (1000 * 60 * 60 * 24)));
+}
+
 function formatJoinDate(createdAt: string | undefined): string {
   if (!createdAt) return "—";
   return new Date(createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" });
@@ -172,8 +178,8 @@ export default function ProfilePage() {
               <div style={{ width: 1, background: "#E5E5EA" }} />
               <div className="flex flex-col items-center gap-1 flex-1">
                 <Calendar size={17} color="#007AFF" strokeWidth={1.8} />
-                <span className="text-[19px] font-bold" style={{ color: "#1D1D1F" }}>{formatJoinDate(profile.created_at).split(" ")[0]}</span>
-                <span className="text-[12px]" style={{ color: "#6E6E73" }}>Joined</span>
+                <span className="text-[19px] font-bold" style={{ color: "#1D1D1F" }}>{daysActive(profile.created_at)}</span>
+                <span className="text-[12px]" style={{ color: "#6E6E73" }}>Days Active</span>
               </div>
             </div>
 
