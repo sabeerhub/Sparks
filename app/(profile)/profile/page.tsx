@@ -222,7 +222,7 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-4 gap-2">
                   {mediaThumbs.map((url, i) => (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img key={url} src={url} alt="" loading="lazy" className="w-full aspect-square object-cover rounded-xl" onError={() => setMediaThumbs((prev) => prev.filter((u) => u !== url))} />
+                    <img key={url} src={url} alt="" loading="lazy" className="w-full object-cover rounded-xl" style={{ aspectRatio: "1 / 1" }} onError={() => setMediaThumbs((prev) => prev.filter((u) => u !== url))} />
                   ))}
                 </div>
               ) : (
