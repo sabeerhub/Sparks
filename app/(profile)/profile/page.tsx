@@ -79,22 +79,6 @@ export default function ProfilePage() {
     <div className="h-full w-full flex flex-col bg-white overflow-hidden relative">
       <StatusBar />
 
-      {/* Top gradient strip + curved white hill overlapping it */}
-      <div
-        className="absolute top-0 left-0 right-0 h-80 pointer-events-none"
-        style={{ background: "linear-gradient(180deg, #CFE4FF 0%, #E8F2FF 60%, #F5FAFF 100%)" }}
-      />
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          top: 300,
-          left: "-25%",
-          width: "150%",
-          height: 600,
-          background: "#FFFFFF",
-          borderRadius: "50% 50% 0 0 / 90px 90px 0 0",
-        }}
-      />
 
       <div className="flex items-center justify-between px-5 pt-4 relative z-10 flex-shrink-0">
         <button
@@ -130,9 +114,13 @@ export default function ProfilePage() {
           <ProfileSkeleton />
         ) : (
           <div className="w-full max-w-md mx-auto px-5">
-            {/* Identity */}
-            <div className="flex flex-col items-center pt-2 pb-6 text-center">
-              <Avatar name={profile.full_name ?? "?"} src={profile.avatar_url} size={104} online />
+            <div className="-mx-5 relative" style={{ height: 190 }}>
+              <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, #CFE4FF 0%, #EAF3FF 100%)", borderRadius: "0 0 50% 50% / 0 0 46px 46px" }} />
+              <div className="absolute left-1/2" style={{ bottom: -52, transform: "translateX(-50%)" }}>
+                <Avatar name={profile.full_name ?? "?"} src={profile.avatar_url} size={104} online />
+              </div>
+            </div>
+            <div className="flex flex-col items-center pt-14 pb-6 text-center">
 
               <div className="flex items-center gap-1.5 mt-4">
                 <h1 className="text-[21px] font-bold" style={{ color: "#1D1D1F" }}>{profile.full_name ?? "—"}</h1>
