@@ -36,6 +36,8 @@ export default function AccountSettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [fullNameLockedUntil, setFullNameLockedUntil] = useState<string | null>(null);
+  const [usernameLockedUntil, setUsernameLockedUntil] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
@@ -46,11 +48,13 @@ export default function AccountSettingsPage() {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase.from("profiles") as any)
-        .select("full_name, username")
+        .select("full_name, username, full_name_updated_at, username_updated_at")
         .eq("id", user.id)
         .maybeSingle();
       setFullName(data?.full_name ?? "");
       setUsername(data?.username ?? "");
+      setFullNameLockedUntil(data?.full_name_updated_at ?? null);
+      setUsernameLockedUntil(data?.username_updated_at ?? null);
     })();
   }, [router]);
 
@@ -65,8 +69,8 @@ export default function AccountSettingsPage() {
       await updateFullName(fullName);
       flash("success", "Name updated.");
       setEditing(null);
-    } catch {
-      flash("error", "Couldn't update name.");
+    } catch (err) {
+      flash("error", err instanceof Error ? err.message : "Couldn't update name.");
     } finally {
       setSaving(false);
     }
