@@ -28,6 +28,8 @@ export interface Profile {
   is_verified: boolean;
   public_key: string;
   spark_count: number;
+  username_updated_at: string | null;
+  full_name_updated_at: string | null;
   is_online: boolean;
   last_seen_at: string;
   created_at: string;
