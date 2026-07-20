@@ -18,6 +18,14 @@ import { createClient } from "@/lib/supabase";
 
 const supabase = createClient();
 
+function daysRemaining(lastChanged: string | null): number | null {
+  if (!lastChanged) return null;
+  const changedAt = new Date(lastChanged).getTime();
+  const daysSince = (Date.now() - changedAt) / (1000 * 60 * 60 * 24);
+  if (daysSince >= 30) return null;
+  return Math.ceil(30 - daysSince);
+}
+
 type FieldKey = "name" | "username" | "email" | "password" | null;
 
 export default function AccountSettingsPage() {
