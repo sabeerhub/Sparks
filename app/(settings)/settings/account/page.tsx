@@ -76,6 +76,7 @@ export default function AccountSettingsPage() {
     try {
       await updateFullName(fullName);
       flash("success", "Name updated.");
+      setFullNameLockedUntil(new Date().toISOString());
       setEditing(null);
     } catch (err) {
       flash("error", err instanceof Error ? err.message : "Couldn't update name.");
@@ -89,6 +90,7 @@ export default function AccountSettingsPage() {
     try {
       await updateUsername(username);
       flash("success", "Username updated.");
+      setUsernameLockedUntil(new Date().toISOString());
       setEditing(null);
     } catch (err) {
       flash("error", err instanceof Error ? err.message : "Couldn't update username.");
