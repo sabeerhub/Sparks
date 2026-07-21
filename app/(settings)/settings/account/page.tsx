@@ -181,12 +181,12 @@ export default function AccountSettingsPage() {
             </div>
           )}
 
-          <SettingRow icon={User} label="Full Name" value={fullName} editing={editing === "name"} onEditToggle={() => setEditing(editing === "name" ? null : "name")}>
+          <SettingRow icon={User} label="Full Name" value={fullName} editing={editing === "name"} onEditToggle={() => setEditing(editing === "name" ? null : "name")} lockedMessage={daysRemaining(fullNameLockedUntil) ? `Can change again in ${daysRemaining(fullNameLockedUntil)} day(s)` : null}>
             <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="flex-1 outline-none text-sm bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
             <SaveButton onClick={handleSaveName} saving={saving} />
           </SettingRow>
 
-          <SettingRow icon={AtSign} label="Username" value={`@${username}`} editing={editing === "username"} onEditToggle={() => setEditing(editing === "username" ? null : "username")}>
+          <SettingRow icon={AtSign} label="Username" value={`@${username}`} editing={editing === "username"} onEditToggle={() => setEditing(editing === "username" ? null : "username")} lockedMessage={daysRemaining(usernameLockedUntil) ? `Can change again in ${daysRemaining(usernameLockedUntil)} day(s)` : null}>
             <input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoCapitalize="none" autoCorrect="off" className="flex-1 outline-none text-sm bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
             <SaveButton onClick={handleSaveUsername} saving={saving} />
           </SettingRow>
@@ -273,6 +273,7 @@ function SettingRow({
   editing,
   onEditToggle,
   children,
+  lockedMessage,
 }: {
   icon: import("lucide-react").LucideIcon;
   label: string;
@@ -280,20 +281,25 @@ function SettingRow({
   editing: boolean;
   onEditToggle: () => void;
   children: React.ReactNode;
+  lockedMessage?: string | null;
 }) {
+  const locked = !!lockedMessage;
   return (
     <div className="rounded-2xl bg-white mt-3 overflow-hidden">
-      <button onClick={onEditToggle} className="w-full flex items-center gap-3 px-4 py-3.5">
+      <button onClick={locked ? undefined : onEditToggle} disabled={locked} className="w-full flex items-center gap-3 px-4 py-3.5 disabled:opacity-70">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
           <Icon size={18} color="var(--color-blue)" strokeWidth={1.8} />
         </div>
         <div className="flex-1 text-left min-w-0">
           <div className="text-xs" style={{ color: "var(--color-gray-1)" }}>{label}</div>
           <div className="text-sm font-medium truncate">{value || "—"}</div>
+          {locked && <div className="text-xs mt-0.5" style={{ color: "var(--color-orange)" }}>{lockedMessage}</div>}
         </div>
-        <span className="text-xs font-semibold" style={{ color: "var(--color-blue)" }}>{editing ? "Cancel" : "Edit"}</span>
+        {!locked && (
+          <span className="text-xs font-semibold" style={{ color: "var(--color-blue)" }}>{editing ? "Cancel" : "Edit"}</span>
+        )}
       </button>
-      {editing && (
+      {editing && !locked && (
         <div className="px-4 pb-4 flex items-end gap-3">
           {children}
         </div>
