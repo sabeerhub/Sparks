@@ -80,18 +80,27 @@ html, body {
 .app-surface {
   /* v1.4.0: a whisper of blue at the top so frosted glass has something
      to blur against on every screen — glass over a perfectly flat grey
-     is invisible. Barely there; the landing gets a richer aurora below. */
+     is invisible. v1.4.1: strengthened 0.05 → 0.12 — the v1.4.0 whisper
+     was too faint for the eye to notice behind any panel. Still soft;
+     the landing gets a richer aurora below. */
   background:
-    radial-gradient(120% 55% at 50% -5%, rgba(0, 122, 255, 0.05), transparent 60%),
+    radial-gradient(120% 55% at 50% -5%, rgba(0, 122, 255, 0.12), transparent 60%),
     var(--color-gray-2);
 }
 
-/* ─── v1.4.0 landing aurora ─────────────────────────────────────────────
+/* ─── v1.4.0 landing aurora, v1.4.1 STRONGER ──────────────────────────
    The ONE allowed colour background: soft light blue-grey tones, never
    loud. Frosted glass can only be seen when there is something behind
    it — over the old uniform pale grey the nav and cards looked like
-   flat white. These soft blobs sit behind the landing content so the
-   blur, the hairline edge and the sheen are actually visible. */
+   flat white. v1.4.0 added soft blobs, but a real browser looking at
+   the live site (00:51 WAT) found them VERY faint — a pale-blue wash
+   with no visible blobs, and the nav/cards still reading as solid
+   white. v1.4.1 raises the blob opacities ~3x (0.10–0.13 → 0.20–0.34),
+   adds a pale blue-violet blob, makes the bottom wash a real pale blue
+   instead of near-white, and spreads blobs across the WHOLE page height
+   (8% / 14% / 48% / 68% / 98%) so the sticky nav always has colour
+   behind it at any scroll position, not just at the top. Still soft
+   and premium — light tones only, never loud or neon. */
 .landing-aurora {
   position: absolute;
   inset: 0;
@@ -103,42 +112,47 @@ html, body {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(42% 38% at 12% 6%, rgba(0, 122, 255, 0.10), transparent 70%),
-    radial-gradient(38% 34% at 88% 16%, rgba(120, 170, 255, 0.13), transparent 70%),
-    radial-gradient(52% 44% at 55% 98%, rgba(232, 241, 255, 0.85), transparent 75%),
-    radial-gradient(30% 26% at 80% 60%, rgba(0, 122, 255, 0.06), transparent 70%);
+    radial-gradient(40% 30% at 10% 8%, rgba(0, 122, 255, 0.30), transparent 70%),
+    radial-gradient(36% 28% at 90% 14%, rgba(120, 170, 255, 0.34), transparent 70%),
+    radial-gradient(44% 32% at 72% 48%, rgba(147, 164, 255, 0.24), transparent 70%),
+    radial-gradient(38% 30% at 18% 68%, rgba(0, 122, 255, 0.20), transparent 70%),
+    radial-gradient(52% 36% at 55% 98%, rgba(178, 208, 255, 0.60), transparent 75%);
 }
 
+/* v1.4.1: genuinely translucent now — 0.55 white was still reading as
+   solid white over the faint aurora. 0.38 white + stronger blur means
+   the colour behind shows through; if a panel still reads solid white,
+   it is not done. */
 .glass {
-  background: rgba(255, 255, 255, 0.55);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.38);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 8px 32px rgba(29, 29, 31, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 8px 32px rgba(29, 29, 31, 0.10),
     0 2px 8px rgba(29, 29, 31, 0.05);
 }
 
 .glass-strong {
-  background: rgba(255, 255, 255, 0.72);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.75),
-    0 12px 40px rgba(29, 29, 31, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 12px 40px rgba(29, 29, 31, 0.14),
     0 2px 8px rgba(29, 29, 31, 0.06);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.68);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.45);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 4px 20px rgba(29, 29, 31, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 4px 20px rgba(29, 29, 31, 0.08),
     0 1px 4px rgba(29, 29, 31, 0.04);
 }
 
@@ -302,23 +316,26 @@ html, body {
 }
 
 /* Frosted-glass header: native iOS feel — blurred translucent white,
-   hairline bottom border. Apply to sticky/inline screen headers. */
+   hairline bottom border. Apply to sticky/inline screen headers.
+   v1.4.1: 0.60 → 0.42 white, blur 24 → 32px — the nav was the worst
+   offender on the live site, reading as plain solid white. */
 .frosted-header {
-  background: rgba(255, 255, 255, 0.6);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.04), 0 1px 12px rgba(29, 29, 31, 0.03);
+  background: rgba(255, 255, 255, 0.42);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  backdrop-filter: blur(32px) saturate(200%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(0, 0, 0, 0.04), 0 1px 16px rgba(29, 29, 31, 0.05);
 }
 
-/* Frosted floating pill (mobile nav) — now true liquid glass. */
+/* Frosted floating pill (mobile nav) — now true liquid glass.
+   v1.4.1: 0.60 → 0.45 white, blur 28 → 32px, same reason as the header. */
 .frosted-pill {
-  background: rgba(255, 255, 255, 0.6);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.45);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
     0 8px 24px rgba(0, 0, 0, 0.10),
     0 2px 8px rgba(0, 0, 0, 0.06);
 }
