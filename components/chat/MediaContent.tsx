@@ -91,7 +91,7 @@ export function MediaContent({ contentType, mediaPath, fileName, isMine, senderN
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center gap-3 rounded-[22px] px-4 py-3 active:scale-[0.98] transition-transform"
-      style={{ background: isMine ? "var(--color-blue)" : "var(--color-gray-2)", minWidth: 200, boxShadow: "0 2px 10px rgba(0,0,0,0.08)" }}
+      style={{ background: isMine ? "var(--color-blue)" : "rgba(255,255,255,0.75)", backdropFilter: isMine ? undefined : "blur(12px) saturate(160%)", border: isMine ? "none" : "1px solid rgba(255,255,255,0.7)", minWidth: 200, boxShadow: "0 2px 10px rgba(0,0,0,0.08)" }}
     >
       <div
         className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"

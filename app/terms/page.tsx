@@ -6,14 +6,14 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="app-surface min-h-screen">
       <div className="max-w-2xl mx-auto px-6 py-12">
         <Link href="/" className="text-body font-medium text-[#007AFF]">← Back</Link>
 
         <h1 className="text-title font-bold mt-6 mb-2 text-[#1D1D1F]">Terms of Service</h1>
         <p className="text-body text-[#1D1D1F]/50 mb-8">Last updated: July 2026</p>
 
-        <div className="space-y-8 text-body leading-relaxed text-[#1D1D1F]/80">
+        <div className="glass-card rounded-[28px] p-6 md:p-8 space-y-8 text-body leading-relaxed text-[#1D1D1F]/80">
           <section>
             <h2 className="text-body font-semibold text-[#1D1D1F] mb-2">1. Acceptance of Terms</h2>
             <p>By creating an account or using Spark Chat, you agree to these Terms of Service and our Privacy Policy. If you don&apos;t agree, please don&apos;t use the app.</p>

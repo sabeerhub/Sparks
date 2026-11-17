@@ -26,7 +26,7 @@ export function MessageContextMenu({ isMine, onClose, onReact, onReply, onEdit, 
   return (
     <div className="fixed inset-0 z-50" style={{ background: "rgba(0,0,0,0.3)" }} onClick={onClose}>
       <div
-        className="absolute left-4 right-4 bottom-20 rounded-3xl overflow-hidden shadow-2xl bg-white"
+        className="glass-strong absolute left-4 right-4 bottom-20 rounded-3xl overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--color-gray-2)" }}>

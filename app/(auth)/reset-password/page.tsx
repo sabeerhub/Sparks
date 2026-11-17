@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ScreenContainer } from "@/components/layout/ScreenContainer";
+import Link from "next/link";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
@@ -54,82 +55,90 @@ export default function ResetPasswordPage() {
 
   if (done) {
     return (
-      <ScreenContainer>
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-          <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6" style={{ background: "rgba(52,199,89,0.1)" }}>
+      <AuthShell
+        title="Password updated"
+        subtitle="Your password has been reset. You can now log in with your new password."
+      >
+        <div className="flex flex-col items-center">
+          <div className="glass w-20 h-20 rounded-[28px] flex items-center justify-center mb-5">
             <CheckIcon />
           </div>
-          <h1 className="text-title font-bold mb-3">Password updated</h1>
-          <p className="text-body mb-8" style={{ color: "var(--color-gray-1)" }}>
-            Your password has been reset. You can now log in with your new password.
-          </p>
           <Button fullWidth onClick={() => router.push("/login")}>Log In</Button>
         </div>
-      </ScreenContainer>
+      </AuthShell>
     );
   }
 
   return (
-    <ScreenContainer>
-      <div className="flex-1 flex flex-col px-6 pt-10">
-        <h1 className="text-title font-bold mb-2">Create new password</h1>
-        <p className="text-body mb-8" style={{ color: "var(--color-gray-1)" }}>
-          Choose a strong password for your account.
+    <AuthShell
+      title="Create new password"
+      subtitle="Choose a strong password for your account."
+      footer={
+        <p className="text-body" style={{ color: "var(--color-gray-1)" }}>
+          Link expired?{" "}
+          <Link href="/forgot-password" className="pressable font-semibold" style={{ color: "var(--color-blue)" }}>
+            Request a new one
+          </Link>
         </p>
-
-        <div className="space-y-3">
-          <div>
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="New password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-caption font-medium"
-                style={{ color: "var(--color-blue)" }}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-            {password && (
-              <div className="mt-2">
-                <div className="flex gap-1 mb-1">
-                  {[1, 2, 3, 4].map((level) => (
-                    <div
-                      key={level}
-                      className="h-1 flex-1 rounded-full transition-all"
-                      style={{ background: level <= strength ? STRENGTH_COLORS[strength] : "var(--color-gray-3)" }}
-                    />
-                  ))}
-                </div>
-                <p className="text-caption font-medium" style={{ color: STRENGTH_COLORS[strength] }}>
-                  {STRENGTH_LABELS[strength]}
-                </p>
-              </div>
-            )}
+      }
+    >
+      <div className="space-y-3">
+        <div>
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="New password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="pressable absolute right-4 top-1/2 -translate-y-1/2 text-caption font-medium"
+              style={{ color: "var(--color-blue)" }}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
           </div>
-
-          <Input
-            type={showPassword ? "text" : "password"}
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
+          {password && (
+            <div className="mt-2">
+              <div className="flex gap-1 mb-1">
+                {[1, 2, 3, 4].map((level) => (
+                  <div
+                    key={level}
+                    className="h-1 flex-1 rounded-full transition-all"
+                    style={{ background: level <= strength ? STRENGTH_COLORS[strength] : "var(--color-gray-3)" }}
+                  />
+                ))}
+              </div>
+              <p className="text-caption font-medium" style={{ color: STRENGTH_COLORS[strength] }}>
+                {STRENGTH_LABELS[strength]}
+              </p>
+            </div>
+          )}
         </div>
 
-        {error && (
-          <p className="text-body mt-3 font-medium" style={{ color: "var(--color-red)" }}>{error}</p>
-        )}
-
-        <Button fullWidth loading={loading} onClick={handleReset} className="mt-6">
-          Reset Password
-        </Button>
+        <Input
+          type={showPassword ? "text" : "password"}
+          placeholder="Confirm new password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
       </div>
-    </ScreenContainer>
+
+      {error && (
+        <div className="rounded-2xl px-4 py-3 mt-4 text-body" style={{ background: "rgba(255,59,48,0.08)", color: "var(--color-red)" }}>
+          <p className="font-medium">{error}</p>
+          <p className="text-caption mt-1" style={{ color: "var(--color-gray-1)" }}>
+            Reset links expire after 1 hour — request a fresh one from the login screen.
+          </p>
+        </div>
+      )}
+
+      <Button fullWidth loading={loading} onClick={handleReset} className="mt-6">
+        Reset Password
+      </Button>
+    </AuthShell>
   );
 }
 

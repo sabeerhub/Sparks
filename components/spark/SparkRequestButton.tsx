@@ -123,8 +123,8 @@ export function SparkRequestButton({ targetUserId, currentUserId, compact = fals
       ) : isOutgoing ? (
         <button
           disabled
-          className={`rounded-2xl font-medium text-center ${compact ? "px-4 py-2 text-caption" : "px-4 py-2 text-body w-full"}`}
-          style={{ background: "var(--color-gray-2)", color: "var(--color-gray-1)" }}
+          className={`glass rounded-2xl font-medium text-center ${compact ? "px-4 py-2 text-caption" : "px-4 py-2 text-body w-full"}`}
+          style={{ color: "var(--color-gray-1)" }}
         >
           Request Sent
         </button>
@@ -136,7 +136,7 @@ export function SparkRequestButton({ targetUserId, currentUserId, compact = fals
           fullWidth={!compact}
           className={compact ? "px-4 py-2 text-caption" : ""}
         >
-          ⚡ Send Spark
+          Send Spark
         </Button>
       )}
 

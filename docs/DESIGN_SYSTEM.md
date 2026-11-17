@@ -79,9 +79,10 @@
 - **CallScreen:** full-screen, black when video is live, frosted-glass
   control bar (`blur(24px) saturate(1.4)`), pulsing ring around the
   avatar while ringing, 72px red end button, 56px controls.
-- **Empty states:** centred icon in a blue-tint rounded square, a
-  bold title, one line of grey-1 explanation, and one action button
-  when there is something to do.
+- **Empty states:** a glass tile holding the calligraphic wordmark
+  (Chats / Calls / Activity) or a plain dot, a bold title, one line
+  of grey-1 explanation, and one action button when there is
+  something to do.
 
 ## 6. The Spark identity (unique, not a clone)
 
@@ -90,10 +91,21 @@ Sparks is not a WhatsApp/Telegram clone. Its identity is:
 1. **The Spark Request handshake** — the moment of accepting a Spark
    is the product's signature. It is clear, deliberate, and visible
    (Accept / Decline), not hidden.
-2. **The lightning mark** — the ⚡ is used sparingly and deliberately:
-   the app mark, the Spark Request moment, the call-connect moment.
-   One signature, not decoration everywhere.
-3. **Restraint** — one accent colour, one font stack, flat colour,
+2. **The calligraphic wordmark** — the brand is ONLY the word "Sparks"
+   in calligraphy (Great Vibes, `components/brand/SparkWordmark.tsx`),
+   finished with a plain blue dot. There is no icon next to it and no
+   lightning bolt anywhere in the app — no lightning character, no Zap/Bolt
+   icon. The wordmark writes itself in on entry, then loops forever
+   with a soft light shimmer and a slow glow (static under
+   prefers-reduced-motion). It appears on the landing hero, the
+   splash, every auth screen, and the Chats / Calls / Activity empty
+   states.
+3. **Liquid glass** — layered translucent white over blurred content
+   (`.glass` / `.glass-strong` / `.glass-card` / `.glass-dark` /
+   `.glass-input` in `styles/globals.css`), bright hairline edges,
+   soft shadows, spring motion. Translucency and blur are the glass;
+   there are no colour gradients anywhere.
+4. **Restraint** — one accent colour, one font stack, flat colour,
    generous spacing. The uniqueness comes from the experience
    (consent-first messaging), not from loud colours or gimmicks.
 

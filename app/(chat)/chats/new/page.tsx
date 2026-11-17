@@ -6,6 +6,7 @@ import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { searchUsers, startDirectChat } from "@/services/chat-service";
 import { createClient } from "@/lib/supabase";
 import type { Profile } from "@/types";
@@ -48,7 +49,7 @@ export default function NewChatPage() {
       <StatusBar />
       <div className="frosted-header px-4 pt-2 pb-3">
         <h2 className="text-title font-bold text-center mb-4">New Chat</h2>
-        <div className="flex items-center gap-2 rounded-full px-4 py-2" style={{ background: "var(--color-gray-2)" }}>
+        <div className="glass-input flex items-center gap-2 rounded-full px-4 py-2">
           <SearchGlyph />
           <input
             value={query}
@@ -60,14 +61,14 @@ export default function NewChatPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-2">
+      <div className="flex-1 overflow-y-auto px-2 py-2">
         {results.length > 0 && (
           <div className="px-4 py-2">
             <span className="text-caption font-semibold uppercase tracking-wider" style={{ color: "var(--color-gray-1)" }}>Results</span>
           </div>
         )}
         {results.map((u) => (
-          <button key={u.id} onClick={() => setSelected(u)} className="pressable w-full flex items-center gap-3 px-4 py-4 border-b active:bg-gray-50" style={{ borderColor: "var(--color-gray-2)" }}>
+          <button key={u.id} onClick={() => setSelected(u)} className="glass-row pressable w-full flex items-center gap-3 px-4 py-4 rounded-2xl">
             <Avatar name={u.full_name} src={u.avatar_url} size={44} />
             <div className="flex-1 text-left">
               <div className="text-body font-semibold">{u.full_name}</div>
@@ -85,10 +86,7 @@ export default function NewChatPage() {
           </button>
         ))}
         {query && results.length === 0 && (
-          <div className="flex flex-col items-center justify-center pt-16 px-8 text-center">
-            <p className="text-body font-semibold mb-1">No users found</p>
-            <p className="text-body" style={{ color: "var(--color-gray-1)" }}>Try a different name or username</p>
-          </div>
+          <EmptyState title="No users found" subtitle="Try a different name or username" />
         )}
       </div>
 

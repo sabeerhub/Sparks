@@ -118,7 +118,7 @@ export default function EditProfilePage() {
 
   if (loading) {
     return (
-      <div className="h-full w-full bg-white">
+      <div className="app-surface h-full w-full">
         <StatusBar />
         <div className="flex items-center justify-center h-full">
           <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: "var(--color-gray-3)", borderTopColor: "var(--color-blue)" }} />
@@ -129,8 +129,8 @@ export default function EditProfilePage() {
 
   return (
     <>
-    <div className="h-full w-full bg-white">
-      <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
+    <div className="app-surface h-full w-full">
+      <div className="app-surface flex flex-col h-full">
         <StatusBar />
 
         {/* Header bar */}
@@ -151,7 +151,7 @@ export default function EditProfilePage() {
 
         <div className="flex-1 overflow-y-auto">
           {/* Avatar */}
-          <div className="flex flex-col items-center py-8 bg-white">
+          <div className="glass flex flex-col items-center py-8">
             <button onClick={handlePickPhoto} className="relative active:opacity-70 transition-opacity" disabled={uploading}>
               <Avatar name={fullName || "?"} src={avatarPreview} size={96} />
               <div
@@ -185,7 +185,7 @@ export default function EditProfilePage() {
 
           {/* Fields */}
           <div className="px-4 pt-6 space-y-3">
-            <div className="rounded-2xl bg-white overflow-hidden">
+            <div className="glass-card rounded-2xl overflow-hidden">
               <Field label="Name">
                 <input
                   value={fullName}
@@ -202,7 +202,7 @@ export default function EditProfilePage() {
               </Field>
             </div>
 
-            <div className="rounded-2xl bg-white overflow-hidden p-4">
+            <div className="glass-card rounded-2xl overflow-hidden p-4">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-body font-medium">Bio</label>
                 <span className="text-caption" style={{ color: "var(--color-gray-1)" }}>
@@ -219,7 +219,7 @@ export default function EditProfilePage() {
             </div>
             </div>
 
-            <div className="rounded-2xl bg-white overflow-hidden p-4">
+            <div className="glass-card rounded-2xl overflow-hidden p-4">
               <label className="text-body font-medium mb-2 block">Location</label>
               <input
                 value={location}

@@ -6,6 +6,7 @@ import { Search as SearchIcon } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar } from "@/components/ui/Avatar";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SparkRequestButton } from "@/components/spark/SparkRequestButton";
 import { searchUsers, getNicknamesMap } from "@/services/chat-service";
 import { createClient } from "@/lib/supabase";
@@ -62,12 +63,12 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="h-full w-full bg-white">
+    <div className="app-surface h-full w-full">
       <div className="flex flex-col h-full">
         <StatusBar />
         <div className="frosted-header px-4 pt-4 pb-3">
           <h1 className="text-title font-bold mb-4">Find People</h1>
-          <div className="flex items-center gap-2 rounded-full px-4 py-2" style={{ background: "var(--color-gray-2)" }}>
+          <div className="glass-input flex items-center gap-2 rounded-full px-4 py-2">
             <SearchIcon size={14} color="var(--color-gray-1)" strokeWidth={1.8} />
             <input
               value={query}
@@ -86,32 +87,25 @@ export default function SearchPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto px-2 py-1">
           {!query.trim() && (
-            <div className="flex flex-col items-center justify-center pt-16 px-8 text-center">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: "rgba(0,122,255,0.1)" }}>
-                <SearchIcon size={28} color="var(--color-blue)" strokeWidth={1.8} />
-              </div>
-              <p className="font-semibold mb-1">Search for people</p>
-              <p className="text-body" style={{ color: "var(--color-gray-1)" }}>
-                Find friends by name or username, then send a Spark to connect.
-              </p>
-            </div>
+            <EmptyState
+              wordmark
+              title="Search for people"
+              subtitle="Find friends by name or username, then send a Spark to connect."
+            />
           )}
 
           {searching && <><UserRowSkeleton /><UserRowSkeleton /><UserRowSkeleton /></>}
 
           {!searching && query.trim() && results.length === 0 && (
-            <div className="flex flex-col items-center justify-center pt-16 px-8 text-center">
-              <p className="font-semibold mb-1">No results for &quot;{query}&quot;</p>
-              <p className="text-body" style={{ color: "var(--color-gray-1)" }}>Try a different name or username</p>
-            </div>
+            <EmptyState title={'No results for "' + query + '"'} subtitle="Try a different name or username" />
           )}
 
           {!searching && results.map((user) => {
             const nickname = nicknames.get(user.id);
             return (
-              <div key={user.id} className="flex items-center gap-3 px-4 py-4 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
+              <div key={user.id} className="glass-row flex items-center gap-3 px-4 py-4 rounded-2xl">
                 <button onClick={() => router.push(`/profile/${user.id}`)} className="flex-shrink-0">
                   <Avatar name={user.full_name} src={user.avatar_url} size={44} online={user.is_online} />
                 </button>

@@ -9,7 +9,7 @@ export function TypingIndicator({ label }: TypingIndicatorProps) {
   return (
     <div className="flex flex-col gap-1 mb-2">
       <div className="flex justify-start">
-        <div className="rounded-3xl px-4 py-3 flex items-center gap-1" style={{ background: "var(--color-gray-2)" }}>
+        <div className="glass rounded-3xl px-4 py-3 flex items-center gap-1">
           {[0, 1, 2].map((i) => (
             <span
               key={i}

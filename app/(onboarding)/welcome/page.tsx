@@ -2,26 +2,25 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ScreenContainer } from "@/components/layout/ScreenContainer";
-import { StatusBar } from "@/components/layout/StatusBar";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
+import { ShieldCheck, MessageCircle } from "lucide-react";
+import { SparkWordmark } from "@/components/brand/SparkWordmark";
 import { Button } from "@/components/ui/Button";
 
 const SLIDES = [
   {
     title: "Your Privacy\nComes First",
     desc: "Your data is protected with encryption at rest, row-level security, and secure HTTPS connections.",
-    bg: "var(--color-blue-light)",
-    iconBg: "var(--color-blue)",
-    icon: "shield",
+    icon: ShieldCheck,
   },
   {
     title: "Real-time\nMessaging",
     desc: "Messages delivered in milliseconds. Stay connected without interruption.",
-    bg: "#E8F9EF",
-    iconBg: "var(--color-green)",
-    icon: "bolt",
+    icon: MessageCircle,
   },
 ];
+
+const spring = { type: "spring" as const, stiffness: 120, damping: 16 };
 
 export default function WelcomePage() {
   const router = useRouter();
@@ -35,42 +34,62 @@ export default function WelcomePage() {
 
   if (!slide) return null;
 
-  return (
-    <ScreenContainer>
-      <StatusBar />
-      <div className="flex justify-end px-4 pt-2">
-        <button onClick={() => router.push("/onboarding/profile-setup")} className="pressable text-body font-semibold" style={{ color: "var(--color-blue)" }}>
-          Skip
-        </button>
-      </div>
-      <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-        <div className="w-32 h-32 rounded-3xl flex items-center justify-center mb-8" style={{ background: slide.bg }}>
-          <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: slide.iconBg }}>
-            {slide.icon === "shield" ? <ShieldIcon /> : <BoltIcon />}
-          </div>
-        </div>
-        <h2 className="text-title font-bold mb-4 whitespace-pre-line">{slide.title}</h2>
-        <p className="text-body leading-relaxed" style={{ color: "var(--color-gray-1)" }}>{slide.desc}</p>
-      </div>
-      <div className="px-6 pb-10">
-        <div className="flex justify-center gap-2 mb-6">
-          {SLIDES.map((_, i) => (
-            <div
-              key={i}
-              className="h-2 rounded-full transition-all"
-              style={{ width: step === i ? 20 : 8, background: step === i ? "var(--color-blue)" : "var(--color-gray-3)" }}
-            />
-          ))}
-        </div>
-        <Button fullWidth onClick={next}>Next</Button>
-      </div>
-    </ScreenContainer>
-  );
-}
+  const Icon = slide.icon;
 
-function ShieldIcon() {
-  return <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>;
-}
-function BoltIcon() {
-  return <svg width="40" height="40" viewBox="0 0 24 24" fill="#fff"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>;
+  return (
+    <MotionConfig reducedMotion="user">
+      <div className="app-surface min-h-screen flex items-center justify-center px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 16, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={spring}
+          className="w-full max-w-sm"
+        >
+          <div className="flex justify-center mb-6">
+            <SparkWordmark size="large" animate />
+          </div>
+
+          <div className="glass-card glass-sheen rounded-[28px] px-6 py-8">
+            <div className="flex justify-end -mt-2 mb-2">
+              <button onClick={() => router.push("/onboarding/profile-setup")} className="pressable text-body font-semibold" style={{ color: "var(--color-blue)" }}>
+                Skip
+              </button>
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -24 }}
+                transition={spring}
+                className="flex flex-col items-center text-center"
+              >
+                <div className="glass w-24 h-24 rounded-[28px] flex items-center justify-center mb-6">
+                  <Icon size={40} color="var(--color-blue)" strokeWidth={1.8} />
+                </div>
+                <h2 className="text-title font-bold mb-4 whitespace-pre-line">{slide.title}</h2>
+                <p className="text-body leading-relaxed" style={{ color: "var(--color-gray-1)" }}>{slide.desc}</p>
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="flex justify-center gap-2 mt-8 mb-6">
+              {SLIDES.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setStep(i)}
+                  aria-label={`Go to slide ${i + 1}`}
+                  className="h-2 rounded-full transition-all pressable"
+                  style={{ width: step === i ? 20 : 8, background: step === i ? "var(--color-blue)" : "var(--color-gray-3)" }}
+                />
+              ))}
+            </div>
+            <Button fullWidth onClick={next}>
+              {step < SLIDES.length - 1 ? "Next" : "Set Up Profile"}
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    </MotionConfig>
+  );
 }

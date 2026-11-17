@@ -8,7 +8,7 @@ export default function LanguageSettingsPage() {
   const router = useRouter();
   return (
     <ScreenContainer>
-      <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
+      <div className="app-surface flex flex-col h-full">
         <StatusBar />
         <div className="frosted-header flex items-center px-4 pt-2 pb-3">
           <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
@@ -17,7 +17,7 @@ export default function LanguageSettingsPage() {
           <h1 className="text-title font-bold ml-3">Language</h1>
         </div>
         <div className="flex-1 px-4">
-          <div className="rounded-2xl overflow-hidden bg-white">
+          <div className="glass-card rounded-2xl overflow-hidden">
             <div className="flex items-center gap-3 px-4 py-4">
               <span className="flex-1 text-body font-medium">English</span>
               <Check size={18} color="var(--color-blue)" strokeWidth={2.2} />

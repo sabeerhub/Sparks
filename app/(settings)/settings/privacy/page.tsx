@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Radio, CheckCheck, Keyboard, UserCircle, Zap, Ban } from "lucide-react";
+import { Eye, Radio, CheckCheck, Keyboard, UserCircle, UserPlus, Ban } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { Avatar } from "@/components/ui/Avatar";
@@ -61,7 +61,7 @@ export default function PrivacySettingsPage() {
 
   return (
     <ScreenContainer>
-      <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
+      <div className="app-surface flex flex-col h-full">
         <StatusBar />
         <div className="frosted-header flex items-center px-4 pt-2 pb-3">
           <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
@@ -72,7 +72,7 @@ export default function PrivacySettingsPage() {
 
         <div className="flex-1 overflow-y-auto px-4 pb-8">
           <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Visibility</p>
-          <div className="rounded-2xl overflow-hidden bg-white mb-4">
+          <div className="glass-card rounded-2xl overflow-hidden mb-4">
             <ToggleRow icon={Eye} label="Last Seen" desc="Let others see when you were last active" checked={profile.last_seen_visible} onChange={(v) => updateField({ last_seen_visible: v })} />
             <ToggleRow icon={Radio} label="Online Status" desc="Show a green dot when you're online" checked={profile.online_status_visible} onChange={(v) => updateField({ online_status_visible: v })} />
             <ToggleRow icon={CheckCheck} label="Read Receipts" desc="Let others see when you've read their messages" checked={profile.read_receipts_enabled} onChange={(v) => updateField({ read_receipts_enabled: v })} />
@@ -80,7 +80,7 @@ export default function PrivacySettingsPage() {
           </div>
 
           <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Access</p>
-          <div className="rounded-2xl overflow-hidden bg-white mb-4">
+          <div className="glass-card rounded-2xl overflow-hidden mb-4">
             <SelectRow
               icon={UserCircle}
               label="Profile Visibility"
@@ -93,7 +93,7 @@ export default function PrivacySettingsPage() {
               onChange={(v) => updateField({ profile_visibility: v as Profile["profile_visibility"] })}
             />
             <SelectRow
-              icon={Zap}
+              icon={UserPlus}
               label="Who Can Send Sparks"
               value={profile.who_can_spark}
               options={[
@@ -106,7 +106,7 @@ export default function PrivacySettingsPage() {
           </div>
 
           <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Blocked Users</p>
-          <div className="rounded-2xl overflow-hidden bg-white">
+          <div className="glass-card rounded-2xl overflow-hidden">
             {blockedUsers.length === 0 ? (
               <div className="flex items-center gap-3 px-4 py-4">
                 <Ban size={18} color="var(--color-gray-1)" strokeWidth={1.8} />

@@ -43,7 +43,7 @@ export default function StorageSettingsPage() {
 
   return (
     <ScreenContainer>
-      <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
+      <div className="app-surface flex flex-col h-full">
         <StatusBar />
         <div className="frosted-header flex items-center px-4 pt-2 pb-3">
           <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
@@ -59,7 +59,7 @@ export default function StorageSettingsPage() {
             </div>
           ) : (
             <>
-              <div className="rounded-2xl bg-white p-5 mb-4 flex flex-col items-center">
+              <div className="glass-card rounded-2xl p-5 mb-4 flex flex-col items-center">
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: "rgba(0,122,255,0.1)" }}>
                   <HardDrive size={28} color="var(--color-blue)" strokeWidth={1.8} />
                 </div>
@@ -67,7 +67,7 @@ export default function StorageSettingsPage() {
                 <span className="text-body" style={{ color: "var(--color-gray-1)" }}>Total Storage Used</span>
               </div>
 
-              <div className="rounded-2xl overflow-hidden bg-white">
+              <div className="glass-card rounded-2xl overflow-hidden">
                 <UsageRow icon={ImageIcon} label="Images" bytes={usage?.images_bytes ?? 0} barWidth={barWidth(usage?.images_bytes ?? 0)} color="var(--color-blue)" />
                 <UsageRow icon={FileText} label="Files" bytes={usage?.files_bytes ?? 0} barWidth={barWidth(usage?.files_bytes ?? 0)} color="var(--color-orange)" />
                 <UsageRow icon={Mic} label="Voice Notes" bytes={usage?.voice_bytes ?? 0} barWidth={barWidth(usage?.voice_bytes ?? 0)} color="var(--color-green)" last />

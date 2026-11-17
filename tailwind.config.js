@@ -35,6 +35,8 @@ module.exports = {
       },
       fontFamily: {
         sans: ["-apple-system", "BlinkMacSystemFont", "SF Pro Display", "SF Pro Text", "Inter", "sans-serif"],
+        // v1.3.0 calligraphic brand face — Great Vibes with cursive fallback.
+        script: ["Great Vibes", "Snell Roundhand", "Segoe Script", "Brush Script MT", "cursive"],
       },
       boxShadow: {
         sm: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",

@@ -143,8 +143,8 @@ export function CallScreen({
       {/* Local preview — avatar placeholder when the camera is off */}
       {isVideo && (
         <div
-          className="absolute top-6 right-5 z-20 w-24 h-32 rounded-2xl overflow-hidden border border-white/30"
-          style={{ top: "max(24px, env(safe-area-inset-top, 0px))", background: "rgba(255,255,255,0.12)" }}
+          className="glass-dark absolute top-6 right-5 z-20 w-24 h-32 rounded-2xl overflow-hidden"
+          style={{ top: "max(24px, env(safe-area-inset-top, 0px))" }}
         >
           {cameraOff || !localStream ? (
             <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 px-2">
@@ -161,13 +161,8 @@ export function CallScreen({
 
       {/* Frosted-glass control bar */}
       <div
-        className="relative z-10 mx-4 mb-4 rounded-[28px] px-4 pt-5"
-        style={{
-          background: "rgba(255,255,255,0.12)",
-          backdropFilter: "blur(24px) saturate(1.4)",
-          WebkitBackdropFilter: "blur(24px) saturate(1.4)",
-          paddingBottom: "max(20px, env(safe-area-inset-bottom, 0px))",
-        }}
+        className="glass-dark relative z-10 mx-4 mb-4 rounded-[28px] px-4 pt-5"
+        style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom, 0px))" }}
       >
         {isRinging && phase === "incoming-ringing" ? (
           <div className="flex items-center justify-center gap-16 pb-1">

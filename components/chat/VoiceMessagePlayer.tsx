@@ -117,12 +117,12 @@ export function VoiceMessagePlayer({ url, isMine }: VoiceMessagePlayerProps) {
   const progress = duration > 0 ? currentTime / duration : 0;
   const fg = isMine ? "white" : "var(--color-blue)";
   const bg = isMine ? "rgba(255,255,255,0.3)" : "var(--color-gray-3)";
-  const trackColor = isMine ? "var(--color-blue)" : "var(--color-gray-2)";
+  const trackColor = isMine ? "var(--color-blue)" : "rgba(255,255,255,0.75)";
 
   return (
     <div
       className="flex items-center gap-2 rounded-3xl px-3 py-2"
-      style={{ background: trackColor, minWidth: 240 }}
+      style={{ background: trackColor, minWidth: 240, backdropFilter: isMine ? undefined : "blur(12px) saturate(160%)", border: isMine ? "none" : "1px solid rgba(255,255,255,0.7)" }}
     >
       <button
         onClick={togglePlay}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ScreenContainer } from "@/components/layout/ScreenContainer";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
@@ -110,90 +110,85 @@ export default function SignupPage() {
   };
 
   return (
-    <ScreenContainer>
-      <div className="flex-1 flex flex-col px-6 pt-8 pb-6 overflow-y-auto">
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3" style={{ background: "var(--color-blue)" }}>
-            <BoltIcon />
-          </div>
-          <h1 className="text-title font-bold">Create account</h1>
-          <p className="text-body mt-1" style={{ color: "var(--color-gray-1)" }}>Join Sparks — it&apos;s free</p>
-        </div>
-
-        <div className="space-y-3">
-          <Input placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          <div>
-            <Input
-              placeholder="@username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value.replace(/^@/, ""))}
-              autoCapitalize="none"
-              autoCorrect="off"
-            />
-            <UsernameStatus status={usernameStatus} />
-          </div>
-          <Input type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} autoCapitalize="none" />
-          <div>
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-caption font-medium"
-                style={{ color: "var(--color-blue)" }}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-            <PasswordStrengthBar password={password} />
-          </div>
-          <Input
-            type={showPassword ? "text" : "password"}
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-        </div>
-
-        {error && (
-          <p className="text-body mt-3 font-medium" style={{ color: "var(--color-red)" }}>{error}</p>
-        )}
-
-        <label className="flex items-start gap-3 mt-5 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={agreedToTerms}
-            onChange={(e) => setAgreedToTerms(e.target.checked)}
-            className="mt-0.5 w-4 h-4 rounded flex-shrink-0"
-            style={{ accentColor: "var(--color-blue)" }}
-          />
-          <span className="text-body" style={{ color: "var(--color-gray-1)" }}>
-            I agree to the{" "}
-            <span style={{ color: "var(--color-blue)" }}>Terms of Service</span> and{" "}
-            <span style={{ color: "var(--color-blue)" }}>Privacy Policy</span>
-          </span>
-        </label>
-
-        <Button fullWidth loading={loading} onClick={handleSignUp} className="mt-5">
-          Create Account
-        </Button>
-
-        <p className="text-body text-center mt-5" style={{ color: "var(--color-gray-1)" }}>
+    <AuthShell
+      title="Create account"
+      subtitle="Join Sparks — it's free"
+      footer={
+        <p className="text-body" style={{ color: "var(--color-gray-1)" }}>
           Already have an account?{" "}
           <Link href="/login" className="pressable font-semibold" style={{ color: "var(--color-blue)" }}>
             Log In
           </Link>
         </p>
+      }
+    >
+      <div className="space-y-3">
+        <Input placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+        <div>
+          <Input
+            placeholder="@username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value.replace(/^@/, ""))}
+            autoCapitalize="none"
+            autoCorrect="off"
+          />
+          <UsernameStatus status={usernameStatus} />
+        </div>
+        <Input type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} autoCapitalize="none" />
+        <div>
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="pressable absolute right-4 top-1/2 -translate-y-1/2 text-caption font-medium"
+              style={{ color: "var(--color-blue)" }}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
+          <PasswordStrengthBar password={password} />
+        </div>
+        <Input
+          type={showPassword ? "text" : "password"}
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
       </div>
-    </ScreenContainer>
-  );
-}
 
-function BoltIcon() {
-  return <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>;
+      {error && (
+        <div className="rounded-2xl px-4 py-3 mt-4 text-body" style={{ background: "rgba(255,59,48,0.08)", color: "var(--color-red)" }}>
+          <p className="font-medium">{error}</p>
+          <p className="text-caption mt-1" style={{ color: "var(--color-gray-1)" }}>
+            Fix the detail above and try again — nothing is saved until it works.
+          </p>
+        </div>
+      )}
+
+      <label className="flex items-start gap-3 mt-5 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={agreedToTerms}
+          onChange={(e) => setAgreedToTerms(e.target.checked)}
+          className="mt-0.5 w-4 h-4 rounded flex-shrink-0"
+          style={{ accentColor: "var(--color-blue)" }}
+        />
+        <span className="text-body" style={{ color: "var(--color-gray-1)" }}>
+          I agree to the{" "}
+          <Link href="/terms" className="pressable" style={{ color: "var(--color-blue)" }}>Terms of Service</Link> and{" "}
+          <Link href="/privacy" className="pressable" style={{ color: "var(--color-blue)" }}>Privacy Policy</Link>
+        </span>
+      </label>
+
+      <Button fullWidth loading={loading} onClick={handleSignUp} className="mt-5">
+        Create Account
+      </Button>
+    </AuthShell>
+  );
 }

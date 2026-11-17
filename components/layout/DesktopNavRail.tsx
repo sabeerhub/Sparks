@@ -10,9 +10,11 @@ import { getUnreadCount } from "@/services/notification-service";
 const supabase = createClient();
 
 /**
- * v1.2.0 — exactly FOUR tabs, mirroring the mobile pill: Chats, Calls,
+ * v1.3.0 — exactly FOUR tabs, mirroring the mobile pill: Chats, Calls,
  * Activity, Profile. Search and New Chat left the rail; both now live in
- * the Chats screen header (desktop sidebar). No New Chat button here.
+ * the Chats screen header (desktop sidebar). The rail is glass, and its
+ * top mark is a plain clean blue dot — the wordmark lives in the
+ * sidebar header, and there is no bolt anywhere.
  */
 const TABS = [
   { href: "/chats", icon: MessageCircle, label: "Chats" },
@@ -58,12 +60,12 @@ export function DesktopNavRail() {
 
   return (
     <div
-      className="hidden md:flex md:flex-col md:items-center md:w-[72px] flex-shrink-0 border-r py-6 gap-2"
-      style={{ borderColor: "var(--color-gray-2)" }}
+      className="glass hidden md:flex md:flex-col md:items-center md:w-[72px] flex-shrink-0 py-6 gap-2"
+      style={{ borderLeft: "none", borderTop: "none", borderBottom: "none", borderRadius: 0 }}
     >
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-4" style={{ background: "var(--color-blue)" }}>
-        <span className="text-white text-base font-bold">⚡</span>
-      </div>
+      <Link href="/chats" aria-label="Sparks home" className="pressable glass w-9 h-9 rounded-xl flex items-center justify-center mb-4">
+        <span className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--color-blue)" }} />
+      </Link>
 
       {TABS.map(({ href, icon: Icon, label, badge }) => {
         const active = isActiveTab(href, pathname);

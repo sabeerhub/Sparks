@@ -1,5 +1,7 @@
 /**
  * components/ui/Button.tsx
+ * v1.3.0 — pill buttons. Primary keeps its solid Apple blue (with a
+ * soft blue shadow); secondary is now glass instead of flat white.
  */
 import { type ButtonHTMLAttributes, forwardRef } from "react";
 import { classNames } from "@/utils/helpers";
@@ -16,18 +18,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants: Record<string, string> = {
       primary: "text-white",
-      secondary: "border bg-white",
+      secondary: "glass",
       text: "bg-transparent py-2 px-3",
-      danger: "border text-[color:var(--color-red)] bg-white",
+      danger: "glass",
     };
 
     const style =
       variant === "primary"
-        ? { background: "var(--color-blue)" }
+        ? { background: "var(--color-blue)", boxShadow: "0 8px 24px rgba(0,122,255,0.3)" }
         : variant === "secondary"
-        ? { borderColor: "var(--color-gray-3)", color: "var(--color-black)" }
+        ? { color: "var(--color-black)" }
         : variant === "danger"
-        ? { borderColor: "var(--color-red)" }
+        ? { color: "var(--color-red)" }
         : { color: "var(--color-blue)" };
 
     return (

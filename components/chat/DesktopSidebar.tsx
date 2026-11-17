@@ -5,6 +5,8 @@ import { useRouter, useParams } from "next/navigation";
 import { Search, Bell, Plus } from "lucide-react";
 import { ChatListItem } from "@/components/chat/ChatListItem";
 import { ChatActionSheet } from "@/components/chat/ChatActionSheet";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SparkWordmark } from "@/components/brand/SparkWordmark";
 import { useChatStore } from "@/store/chat-store";
 import { fetchChatList, setChatPinned, setChatMuted, markChatRead, deleteChatForSelf, blockUser } from "@/services/chat-service";
 import { getUnreadCount } from "@/services/notification-service";
@@ -104,11 +106,11 @@ export function DesktopSidebar() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="app-surface flex flex-col h-full">
       {/* v1.2.0: frosted header. Search + New Chat moved here from the nav rail. */}
       <div className="frosted-header px-4 pt-6 pb-3">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-title font-bold">Sparks</h1>
+          <SparkWordmark size="small" />
           <div className="flex items-center gap-1">
             <button onClick={() => router.push("/search")} aria-label="Find people" className="pressable w-11 h-11 rounded-full flex items-center justify-center">
               <Search size={20} color="var(--color-black)" strokeWidth={1.8} />
@@ -127,7 +129,7 @@ export function DesktopSidebar() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 rounded-full px-4 py-2" style={{ background: "var(--color-gray-2)" }}>
+        <div className="glass-input flex items-center gap-2 rounded-full px-4 py-2">
           <Search size={16} color="var(--color-gray-1)" strokeWidth={1.8} />
           <input
             value={search}
@@ -138,31 +140,18 @@ export function DesktopSidebar() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-2">
+      <div className="flex-1 overflow-y-auto px-2 py-2">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center pt-16 px-6 text-center">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: "rgba(0,122,255,0.10)" }}>
-              <span className="text-title">⚡</span>
-            </div>
-            <p className="text-body font-semibold mb-1">
-              {search ? `No chats matching "${search}"` : "No chats yet"}
-            </p>
-            <p className="text-caption mb-4" style={{ color: "var(--color-gray-1)" }}>
-              {search ? "Try a different search" : "Search for people and send a Spark Request to connect"}
-            </p>
-            {!search && (
-              <button
-                onClick={() => router.push("/search")}
-                className="pressable px-4 py-2 rounded-full text-body font-semibold text-white"
-                style={{ background: "var(--color-blue)" }}
-              >
-                Find People
-              </button>
-            )}
-          </div>
+          <EmptyState
+            wordmark={!search}
+            title={search ? `No chats matching "${search}"` : "No chats yet"}
+            subtitle={search ? "Try a different search" : "Search for people and send a Spark Request to connect"}
+            actionLabel={search ? undefined : "Find People"}
+            onAction={search ? undefined : () => router.push("/search")}
+          />
         ) : (
           filtered.map((item) => (
-            <div key={item.chatId} style={item.chatId === params?.chatId ? { background: "rgba(0,122,255,0.08)" } : undefined}>
+            <div key={item.chatId} className="rounded-2xl" style={item.chatId === params?.chatId ? { background: "rgba(0,122,255,0.08)" } : undefined}>
               <ChatListItem
                 item={item}
                 onClick={() => router.push(`/chats/${item.chatId}`)}

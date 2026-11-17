@@ -8,7 +8,7 @@ export default function HelpSupportPage() {
   const router = useRouter();
   return (
     <ScreenContainer>
-      <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
+      <div className="app-surface flex flex-col h-full">
         <StatusBar />
         <div className="frosted-header flex items-center px-4 pt-2 pb-3">
           <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
@@ -17,7 +17,7 @@ export default function HelpSupportPage() {
           <h1 className="text-title font-bold ml-3">Help & Support</h1>
         </div>
         <div className="flex-1 px-4 space-y-3">
-          <a href="mailto:support@sparkschat.app" className="rounded-2xl bg-white p-4 flex items-center gap-3">
+          <a href="mailto:support@sparkschat.app" className="glass-card rounded-2xl p-4 flex items-center gap-3">
             <Mail size={20} color="var(--color-blue)" strokeWidth={1.8} />
             <div>
               <div className="text-body font-semibold">Email Support</div>

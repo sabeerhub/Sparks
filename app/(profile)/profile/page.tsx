@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, BadgeCheck, Zap, Calendar, MapPin, QrCode, Share2, MessageCircle, Users, Quote, Image as ImageIcon, ShieldCheck, Bookmark, Settings, ChevronRight, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, BadgeCheck, Calendar, MapPin, QrCode, Share2, MessageCircle, Users, Quote, Image as ImageIcon, ShieldCheck, Bookmark, Settings, ChevronRight, MoreHorizontal } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar } from "@/components/ui/Avatar";
@@ -76,15 +76,14 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col bg-white overflow-hidden relative">
+    <div className="app-surface h-full w-full flex flex-col overflow-hidden relative">
       <StatusBar />
 
 
       <div className="flex items-center justify-between px-4 pt-4 relative z-10 flex-shrink-0">
         <button
           onClick={() => router.back()}
-          className="pressable w-11 h-11 rounded-full flex items-center justify-center bg-white"
-          style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
+          className="glass pressable w-11 h-11 rounded-full flex items-center justify-center"
           aria-label="Back"
         >
           <ChevronLeft size={20} color="#1D1D1F" strokeWidth={2} />
@@ -92,16 +91,14 @@ export default function ProfilePage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShareOpen(true)}
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white"
-            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
+            className="glass w-10 h-10 rounded-full flex items-center justify-center"
             aria-label="QR Code"
           >
             <QrCode size={17} color="#1D1D1F" strokeWidth={1.8} />
           </button>
           <button
             onClick={() => router.push("/profile/edit")}
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white"
-            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
+            className="glass w-10 h-10 rounded-full flex items-center justify-center"
             aria-label="More"
           >
             <MoreHorizontal size={18} color="#1D1D1F" strokeWidth={1.8} />
@@ -146,11 +143,10 @@ export default function ProfilePage() {
 
             {/* Stats card */}
             <div
-              className="flex items-stretch justify-around py-5 rounded-3xl bg-white mb-4"
-              style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}
+              className="glass-card flex items-stretch justify-around py-5 rounded-3xl mb-4"
             >
               <div className="flex flex-col items-center gap-1 flex-1">
-                <Zap size={17} color="#007AFF" fill="#007AFF" />
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#007AFF" }} />
                 <span className="text-title font-bold" style={{ color: "#1D1D1F" }}>{(profile.spark_count ?? 0).toLocaleString()}</span>
                 <span className="text-caption" style={{ color: "#6E6E73" }}>Total Sparks</span>
               </div>
@@ -172,7 +168,7 @@ export default function ProfilePage() {
             <div className="flex gap-3 mb-4">
               <button
                 onClick={handleMessageSelf}
-                className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-full text-body font-medium border bg-white transition-transform active:scale-[0.98]"
+                className="glass flex-1 flex items-center justify-center gap-1.5 py-3 rounded-full text-body font-medium border transition-transform active:scale-[0.98]"
                 style={{ borderColor: "#E5E5EA", color: "#1D1D1F" }}
               >
                 <MessageCircle size={16} strokeWidth={1.8} /> Message
@@ -188,7 +184,7 @@ export default function ProfilePage() {
 
             {/* About card */}
             {profile.bio && (
-              <div className="relative rounded-2xl bg-white p-5 mb-4" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+              <div className="glass-card relative rounded-2xl p-5 mb-4">
                 <span className="text-body font-semibold" style={{ color: "#1D1D1F" }}>About</span>
                 <p className="text-body mt-2 leading-relaxed max-w-[85%]" style={{ color: "#6E6E73" }}>{profile.bio}</p>
                 <Quote size={26} color="#E8F1FF" fill="#E8F1FF" className="absolute top-5 right-5" />
@@ -196,7 +192,7 @@ export default function ProfilePage() {
             )}
 
             {/* Media */}
-            <div className="rounded-2xl bg-white p-5 mb-4" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+            <div className="glass-card rounded-2xl p-5 mb-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-body font-semibold" style={{ color: "#1D1D1F" }}>Media</span>
                 <button onClick={() => router.push("/profile/media")} className="flex items-center gap-0.5 text-caption" style={{ color: "#6E6E73" }}>
@@ -219,7 +215,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Settings list */}
-            <div className="rounded-2xl bg-white overflow-hidden mb-6" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+            <div className="glass-card rounded-2xl overflow-hidden mb-6">
               <SettingsRow icon={ShieldCheck} label="Security Center" desc="Manage your account security" onClick={() => router.push("/settings/security")} />
               <SettingsRow icon={Bookmark} label="Saved Messages" desc="Messages you saved" onClick={handleMessageSelf} />
               <SettingsRow icon={Settings} label="Settings" desc="Account, privacy, notifications" onClick={() => router.push("/settings")} last />
@@ -259,7 +255,7 @@ function SettingsRow({
   return (
     <button
       onClick={onClick}
-      className="pressable w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50"
+      className="pressable w-full flex items-center gap-3 px-4 py-4 active:bg-white/60"
       style={{ borderBottom: last ? "none" : "1px solid #F5F5F7" }}
     >
       <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#E8F1FF" }}>

@@ -161,7 +161,7 @@ export default function AccountSettingsPage() {
 
   return (
     <ScreenContainer>
-      <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
+      <div className="app-surface flex flex-col h-full">
         <StatusBar />
         <div className="frosted-header flex items-center px-4 pt-2 pb-3">
           <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
@@ -209,7 +209,7 @@ export default function AccountSettingsPage() {
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl bg-white mt-3 disabled:opacity-60"
+            className="glass-card w-full flex items-center gap-3 px-4 py-4 rounded-2xl mt-3 disabled:opacity-60"
           >
             <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(0,122,255,0.12)" }}>
               <Download size={18} color="var(--color-blue)" strokeWidth={1.8} />
@@ -219,7 +219,7 @@ export default function AccountSettingsPage() {
 
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl bg-white mt-3"
+            className="glass-card w-full flex items-center gap-3 px-4 py-4 rounded-2xl mt-3"
           >
             <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,59,48,0.12)" }}>
               <Trash2 size={18} color="var(--color-red)" strokeWidth={1.8} />
@@ -231,7 +231,7 @@ export default function AccountSettingsPage() {
 
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(0,0,0,0.5)" }}>
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
+          <div className="glass-strong rounded-3xl p-6 w-full max-w-sm">
             <h2 className="text-body font-bold mb-2">Delete your account?</h2>
             <p className="text-body mb-4" style={{ color: "var(--color-gray-1)" }}>
               This permanently deletes your profile, messages, Sparks, and all data. This cannot be undone.
@@ -247,8 +247,7 @@ export default function AccountSettingsPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
-                className="flex-1 py-2 rounded-2xl text-body font-semibold"
-                style={{ background: "var(--color-gray-2)" }}
+                className="glass flex-1 py-2 rounded-2xl text-body font-semibold"
               >
                 Cancel
               </button>
@@ -287,7 +286,7 @@ function SettingRow({
 }) {
   const locked = !!lockedMessage;
   return (
-    <div className="rounded-2xl bg-white mt-3 overflow-hidden">
+    <div className="glass-card rounded-2xl mt-3 overflow-hidden">
       <button onClick={locked ? undefined : onEditToggle} disabled={locked} className="w-full flex items-center gap-3 px-4 py-4 disabled:opacity-70">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
           <Icon size={18} color="var(--color-blue)" strokeWidth={1.8} />

@@ -27,8 +27,8 @@ export function MessageBubble({ message, isMine, senderName, onEdit, onDelete, o
     return (
       <div className={`flex ${isMine ? "justify-end" : "justify-start"} mb-1`}>
         <div
-          className="rounded-3xl px-4 py-2 text-body italic"
-          style={{ background: "var(--color-gray-2)", color: "var(--color-gray-1)" }}
+          className="glass rounded-3xl px-4 py-2 text-body italic"
+          style={{ color: "var(--color-gray-1)" }}
         >
           This message was deleted
         </div>
@@ -61,7 +61,11 @@ export function MessageBubble({ message, isMine, senderName, onEdit, onDelete, o
             <button
               className="pressable text-body text-left w-full shadow-sm"
               style={{
-                background: isMine ? "var(--color-blue)" : "var(--color-gray-2)",
+                background: isMine ? "var(--color-blue)" : "rgba(255,255,255,0.75)",
+                backdropFilter: isMine ? undefined : "blur(12px) saturate(160%)",
+                WebkitBackdropFilter: isMine ? undefined : "blur(12px) saturate(160%)",
+                border: isMine ? "none" : "1px solid rgba(255,255,255,0.7)",
+                boxShadow: isMine ? undefined : "inset 0 1px 0 rgba(255,255,255,0.7), 0 2px 8px rgba(29,29,31,0.05)",
                 color: isMine ? "#fff" : "var(--color-black)",
                 paddingLeft: "var(--bubble-pad-x)",
                 paddingRight: "var(--bubble-pad-x)",

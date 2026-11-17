@@ -127,7 +127,7 @@ export default function ChatThreadPage() {
 
   if (!otherUser) {
     return (
-      <div className="flex flex-col h-full bg-white">
+      <div className="app-surface flex flex-col h-full">
         <StatusBar />
         <div className="frosted-header flex items-center gap-2 px-4 py-2 animate-pulse">
           <div className="w-8 h-8 rounded-full" style={{ background: "var(--color-gray-3)" }} />
@@ -143,11 +143,11 @@ export default function ChatThreadPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="app-surface flex flex-col h-full">
       <StatusBar />
       <div className="frosted-header flex items-center justify-between px-4 py-2 flex-shrink-0">
         <div className="flex items-center gap-2 min-w-0">
-          <button onClick={() => router.push("/chats")} aria-label="Back" className="w-11 h-11 -ml-2 rounded-full flex items-center justify-center flex-shrink-0 md:hidden active:bg-gray-100 active:scale-95 transition-all duration-200">
+          <button onClick={() => router.push("/chats")} aria-label="Back" className="w-11 h-11 -ml-2 rounded-full flex items-center justify-center flex-shrink-0 md:hidden active:bg-white/60 active:scale-95 transition-all duration-200">
             <ArrowLeft size={22} color="var(--color-blue)" strokeWidth={2} />
           </button>
           <button onClick={() => isSelfChat ? router.push("/profile") : router.push(`/profile/${otherUser.id}`)} className="flex items-center gap-2 min-w-0">
@@ -164,8 +164,8 @@ export default function ChatThreadPage() {
         </div>
         {!isSelfChat && (
           <div className="flex items-center gap-1 flex-shrink-0">
-            <button aria-label="Voice call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "voice")} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-gray-100 active:scale-95 transition-all duration-200"><Phone size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
-            <button aria-label="Video call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "video")} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-gray-100 active:scale-95 transition-all duration-200"><Video size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
+            <button aria-label="Voice call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "voice")} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-white/60 active:scale-95 transition-all duration-200"><Phone size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
+            <button aria-label="Video call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "video")} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-white/60 active:scale-95 transition-all duration-200"><Video size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
           </div>
         )}
 
@@ -199,7 +199,7 @@ export default function ChatThreadPage() {
       </div>
 
       {replyTo && (
-        <div className="px-4 py-2 flex items-center justify-between border-t flex-shrink-0" style={{ borderColor: "var(--color-gray-2)", background: "var(--color-gray-2)" }}>
+        <div className="glass px-4 py-2 flex items-center justify-between border-t flex-shrink-0" style={{ borderColor: "rgba(255,255,255,0.6)" }}>
           <span className="text-caption" style={{ color: "var(--color-gray-1)" }}>Replying to message</span>
           <button onClick={() => setReplyTo(null)} className="text-caption font-semibold" style={{ color: "var(--color-blue)" }}>Cancel</button>
         </div>

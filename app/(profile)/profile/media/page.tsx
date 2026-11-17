@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default function SharedMediaPage() {
   const router = useRouter();
@@ -15,12 +16,7 @@ export default function SharedMediaPage() {
         </button>
         <h1 className="text-title font-semibold">Shared Media</h1>
       </div>
-      <div className="flex flex-col items-center justify-center pt-24 px-8 text-center">
-        <p className="font-semibold mb-1">No media yet</p>
-        <p className="text-body" style={{ color: "var(--color-gray-1)" }}>
-          Photos and files shared in your chats will appear here.
-        </p>
-      </div>
+      <EmptyState title="No media yet" subtitle="Photos and files shared in your chats will appear here." />
     </ScreenContainer>
   );
 }

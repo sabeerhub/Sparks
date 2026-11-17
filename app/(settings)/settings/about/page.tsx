@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { Zap } from "lucide-react";
+import { SparkWordmark } from "@/components/brand/SparkWordmark";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 
@@ -8,7 +8,7 @@ export default function AboutPage() {
   const router = useRouter();
   return (
     <ScreenContainer>
-      <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
+      <div className="app-surface flex flex-col h-full">
         <StatusBar />
         <div className="frosted-header flex items-center px-4 pt-2 pb-3">
           <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
@@ -17,12 +17,11 @@ export default function AboutPage() {
           <h1 className="text-title font-bold ml-3">About Sparks</h1>
         </div>
         <div className="flex-1 flex flex-col items-center pt-10 px-8 text-center">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "var(--color-blue)" }}>
-            <Zap size={28} fill="white" color="white" />
+          <div className="glass-card rounded-[28px] px-8 py-8 flex flex-col items-center w-full max-w-xs">
+            <SparkWordmark size="medium" animate />
+            <p className="text-body mt-4" style={{ color: "var(--color-gray-1)" }}>Version 1.3.0</p>
+            <p className="text-body mt-4" style={{ color: "var(--color-gray-1)" }}>Private, secure, real-time messaging.</p>
           </div>
-          <h2 className="text-body font-bold mb-1">Sparks</h2>
-          <p className="text-body" style={{ color: "var(--color-gray-1)" }}>Version 1.1.0</p>
-          <p className="text-body mt-4" style={{ color: "var(--color-gray-1)" }}>Private, secure, real-time messaging.</p>
         </div>
       </div>
     </ScreenContainer>

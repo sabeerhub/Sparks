@@ -63,7 +63,7 @@ export default function SecurityCenterPage() {
 
   return (
     <ScreenContainer>
-      <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
+      <div className="app-surface flex flex-col h-full">
         <StatusBar />
         <div className="frosted-header flex items-center px-4 pt-2 pb-3">
           <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
@@ -83,7 +83,7 @@ export default function SecurityCenterPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl overflow-hidden mb-4 bg-white">
+          <div className="glass-card rounded-2xl overflow-hidden mb-4">
             <div className="flex items-center gap-3 px-4 py-4 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: emailVerified ? "rgba(52,199,89,0.12)" : "rgba(255,149,0,0.12)" }}>
                 <Mail size={18} color={emailVerified ? "var(--color-green)" : "var(--color-orange)"} strokeWidth={1.8} />
@@ -100,7 +100,7 @@ export default function SecurityCenterPage() {
           <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>
             Active Devices
           </p>
-          <div className="rounded-2xl overflow-hidden mb-4 bg-white">
+          <div className="glass-card rounded-2xl overflow-hidden mb-4">
             {loading ? (
               <div className="px-4 py-4 text-body" style={{ color: "var(--color-gray-1)" }}>Loading…</div>
             ) : sessions.length === 0 ? (

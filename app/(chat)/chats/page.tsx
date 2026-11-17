@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircleMore, Bell, Plus, Search as SearchIconLucide } from "lucide-react";
+import { Bell, Plus, Search as SearchIconLucide } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { ChatListItem } from "@/components/chat/ChatListItem";
 import { ChatActionSheet } from "@/components/chat/ChatActionSheet";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SparkWordmark } from "@/components/brand/SparkWordmark";
 import { useChatStore } from "@/store/chat-store";
 import { fetchChatList, setChatPinned, setChatMuted, markChatRead, deleteChatForSelf, blockUser } from "@/services/chat-service";
 import { getUnreadCount } from "@/services/notification-service";
@@ -135,7 +137,7 @@ export default function ChatsPage() {
             {/* v1.2.0: frosted header. Search + New Chat moved here from the nav. */}
             <div className="frosted-header px-4 pt-4 pb-3">
               <div className="flex items-center justify-between mb-4">
-                <h1 className="text-title font-bold">Sparks</h1>
+                <SparkWordmark size="small" />
                 <div className="flex items-center gap-1">
                   <button onClick={() => router.push("/search")} aria-label="Find people" className="pressable w-11 h-11 rounded-full flex items-center justify-center">
                     <SearchIconLucide size={22} color="var(--color-black)" strokeWidth={1.8} />
@@ -154,7 +156,7 @@ export default function ChatsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 rounded-full px-4 py-2" style={{ background: "var(--color-gray-2)" }}>
+              <div className="glass-input flex items-center gap-2 rounded-full px-4 py-2">
                 <SearchIconLucide size={14} color="var(--color-gray-1)" strokeWidth={1.8} />
                 <input
                   value={search}
@@ -170,32 +172,19 @@ export default function ChatsPage() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto px-2 py-1">
               {showSkeletons && (
                 <>{[1,2,3,4,5].map((i) => <ChatRowSkeleton key={i} />)}</>
               )}
 
               {!showSkeletons && filtered.length === 0 && (
-                <div className="flex flex-col items-center justify-center pt-20 px-8 text-center">
-                  <div className="w-16 h-16 rounded-3xl flex items-center justify-center mb-4" style={{ background: "rgba(0,122,255,0.1)" }}>
-                    <span className="text-title">⚡</span>
-                  </div>
-                  <p className="font-semibold mb-1">
-                    {search ? `No chats matching "${search}"` : "No chats yet"}
-                  </p>
-                  <p className="text-body mb-5" style={{ color: "var(--color-gray-1)" }}>
-                    {search ? "Try a different search" : "Search for people and send a Spark Request to connect"}
-                  </p>
-                  {!search && (
-                    <button
-                      onClick={() => router.push("/search")}
-                      className="px-4 py-2 rounded-2xl text-body font-semibold text-white"
-                      style={{ background: "var(--color-blue)" }}
-                    >
-                      Find People
-                    </button>
-                  )}
-                </div>
+                <EmptyState
+                  wordmark={!search}
+                  title={search ? `No chats matching "${search}"` : "No chats yet"}
+                  subtitle={search ? "Try a different search" : "Search for people and send a Spark Request to connect"}
+                  actionLabel={search ? undefined : "Find People"}
+                  onAction={search ? undefined : () => router.push("/search")}
+                />
               )}
 
               {filtered.map((item) => (
@@ -217,9 +206,9 @@ export default function ChatsPage() {
 
       {/* Desktop: sidebar already shows the list, so this panel is just an empty state until a chat is picked. */}
       <div className="hidden md:flex md:flex-1 md:items-center md:justify-center h-full">
-        <div className="flex flex-col items-center text-center px-8">
-          <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5" style={{ background: "rgba(0,122,255,0.08)" }}>
-            <MessageCircleMore size={36} color="var(--color-blue)" strokeWidth={1.5} />
+        <div className="glass-card rounded-[32px] px-8 py-10 flex flex-col items-center text-center max-w-sm mx-8">
+          <div className="mb-4">
+            <SparkWordmark size="medium" animate />
           </div>
           <p className="text-title font-semibold mb-1">Select a chat</p>
           <p className="text-body max-w-xs mb-6" style={{ color: "var(--color-gray-1)" }}>
@@ -228,7 +217,7 @@ export default function ChatsPage() {
           <button
             onClick={() => router.push("/chats/new")}
             className="pressable px-6 py-3 rounded-full text-body font-semibold text-white"
-            style={{ background: "var(--color-blue)" }}
+            style={{ background: "var(--color-blue)", boxShadow: "0 8px 24px rgba(0,122,255,0.3)" }}
           >
             New Chat
           </button>

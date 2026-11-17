@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, Zap, BadgeCheck, Phone, Video, CheckCheck, Trash2 } from "lucide-react";
+import { MessageCircle, UserPlus, BadgeCheck, Phone, Video, CheckCheck, Trash2 } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { updateOwnProfile } from "@/services/chat-service";
@@ -67,7 +67,7 @@ export default function NotificationSettingsPage() {
 
   return (
     <ScreenContainer>
-      <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
+      <div className="app-surface flex flex-col h-full">
         <StatusBar />
         <div className="frosted-header flex items-center px-4 pt-2 pb-3">
           <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
@@ -84,15 +84,15 @@ export default function NotificationSettingsPage() {
           )}
 
           <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Notify Me About</p>
-          <div className="rounded-2xl overflow-hidden bg-white mb-4">
+          <div className="glass-card rounded-2xl overflow-hidden mb-4">
             <ToggleRow icon={MessageCircle} label="Messages" checked={profile.notify_messages} onChange={(v) => updateField({ notify_messages: v })} />
-            <ToggleRow icon={Zap} label="Spark Requests" checked={profile.notify_spark_requests} onChange={(v) => updateField({ notify_spark_requests: v })} />
+            <ToggleRow icon={UserPlus} label="Spark Requests" checked={profile.notify_spark_requests} onChange={(v) => updateField({ notify_spark_requests: v })} />
             <ToggleRow icon={BadgeCheck} label="Spark Accepted" checked={profile.notify_spark_accepted} onChange={(v) => updateField({ notify_spark_accepted: v })} />
             <ToggleRow icon={Phone} label="Voice Calls" checked={profile.notify_voice_calls} onChange={(v) => updateField({ notify_voice_calls: v })} />
             <ToggleRow icon={Video} label="Video Calls" checked={profile.notify_video_calls} onChange={(v) => updateField({ notify_video_calls: v })} last />
           </div>
 
-          <div className="rounded-2xl overflow-hidden bg-white">
+          <div className="glass-card rounded-2xl overflow-hidden">
             <button onClick={handleMarkAllRead} className="w-full flex items-center gap-3 px-4 py-4 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
                 <CheckCheck size={18} color="var(--color-blue)" strokeWidth={1.8} />

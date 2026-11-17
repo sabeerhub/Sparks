@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ScreenContainer } from "@/components/layout/ScreenContainer";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
@@ -51,36 +51,41 @@ export default function ProfileSetupPage() {
   };
 
   return (
-    <ScreenContainer>
-      <div className="flex-1 flex flex-col px-6 pt-10">
-        <div className="flex flex-col items-center mb-8">
-          <div className="mb-4">
-            <Avatar name={fullName || "You"} size={72} />
-          </div>
-          <h1 className="text-title font-bold mb-1">Set up your profile</h1>
-          <p className="text-body text-center" style={{ color: "var(--color-gray-1)" }}>
-            Tell people a bit about yourself
+    <AuthShell
+      title="Set up your profile"
+      subtitle="Tell people a bit about yourself"
+    >
+      <div className="flex justify-center mb-6">
+        <div className="glass rounded-full p-1.5">
+          <Avatar name={fullName || "You"} size={72} />
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <Input
+          placeholder="Full Name"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+        />
+        <Input
+          placeholder="Bio (optional)"
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+        />
+      </div>
+
+      {error && (
+        <div className="rounded-2xl px-4 py-3 mt-4 text-body" style={{ background: "rgba(255,59,48,0.08)", color: "var(--color-red)" }}>
+          <p className="font-medium">{error}</p>
+          <p className="text-caption mt-1" style={{ color: "var(--color-gray-1)" }}>
+            Check your connection and try again — your details aren&apos;t lost.
           </p>
         </div>
+      )}
 
-        <div className="space-y-3">
-          <Input
-            placeholder="Full Name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            error={error ?? undefined}
-          />
-          <Input
-            placeholder="Bio (optional)"
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-          />
-        </div>
-
-        <Button fullWidth loading={loading} onClick={handleContinue} className="mt-6">
-          Continue to Sparks
-        </Button>
-      </div>
-    </ScreenContainer>
+      <Button fullWidth loading={loading} onClick={handleContinue} className="mt-6">
+        Continue to Sparks
+      </Button>
+    </AuthShell>
   );
 }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ScreenContainer } from "@/components/layout/ScreenContainer";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
@@ -38,66 +38,79 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <ScreenContainer>
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-          <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6" style={{ background: "rgba(0,122,255,0.1)" }}>
-            <MailIcon />
-          </div>
-          <h1 className="text-title font-bold mb-3">Check your email</h1>
-          <p className="text-body leading-relaxed mb-2" style={{ color: "var(--color-gray-1)" }}>
-            We sent a password reset link to
-          </p>
-          <p className="text-body font-semibold mb-6">{email}</p>
-          <p className="text-body leading-relaxed mb-8" style={{ color: "var(--color-gray-1)" }}>
-            Click the link in the email to reset your password. The link expires in 1 hour.
-          </p>
+      <AuthShell
+        title="Check your email"
+        subtitle="We sent a password reset link"
+        footer={
           <button onClick={() => router.push("/login")} className="pressable text-body font-medium" style={{ color: "var(--color-blue)" }}>
             Back to Log In
           </button>
+        }
+      >
+        <div className="flex flex-col items-center text-center">
+          <div className="glass w-20 h-20 rounded-[28px] flex items-center justify-center mb-5">
+            <MailIcon />
+          </div>
+          <p className="text-body leading-relaxed" style={{ color: "var(--color-gray-1)" }}>
+            We sent a password reset link to
+          </p>
+          <p className="text-body font-semibold mt-1 mb-2">{email}</p>
+          <p className="text-body leading-relaxed" style={{ color: "var(--color-gray-1)" }}>
+            Click the link in the email to reset your password. The link expires in 1 hour.
+            Didn&apos;t get it? Check spam, then try again.
+          </p>
+          <Button variant="secondary" fullWidth onClick={() => setSent(false)} className="mt-6">
+            Try a different email
+          </Button>
         </div>
-      </ScreenContainer>
+      </AuthShell>
     );
   }
 
   return (
-    <ScreenContainer>
-      <div className="flex-1 flex flex-col px-6 pt-10">
-        <button onClick={() => router.push("/login")} className="self-start mb-8" aria-label="Back">
-          <BackIcon />
-        </button>
-
-        <h1 className="text-title font-bold mb-2">Forgot password?</h1>
-        <p className="text-body mb-8" style={{ color: "var(--color-gray-1)" }}>
-          Enter your email and we&apos;ll send you a link to reset your password.
-        </p>
-
-        <Input
-          type="email"
-          placeholder="Email address"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-          error={error ?? undefined}
-          autoCapitalize="none"
-        />
-
-        <Button fullWidth loading={loading} onClick={handleSubmit} className="mt-4">
-          Send Reset Link
-        </Button>
-
-        <p className="text-body text-center mt-6" style={{ color: "var(--color-gray-1)" }}>
+    <AuthShell
+      title="Forgot password?"
+      subtitle="Enter your email and we'll send you a link to reset your password."
+      footer={
+        <p className="text-body" style={{ color: "var(--color-gray-1)" }}>
           Remembered it?{" "}
           <Link href="/login" className="pressable font-semibold" style={{ color: "var(--color-blue)" }}>
             Log In
           </Link>
         </p>
-      </div>
-    </ScreenContainer>
+      }
+    >
+      <button onClick={() => router.push("/login")} className="pressable flex items-center gap-1 text-body font-medium mb-5" style={{ color: "var(--color-blue)" }} aria-label="Back to log in">
+        <BackIcon /> Back
+      </button>
+
+      <Input
+        type="email"
+        placeholder="Email address"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+        autoCapitalize="none"
+      />
+
+      {error && (
+        <div className="rounded-2xl px-4 py-3 mt-4 text-body" style={{ background: "rgba(255,59,48,0.08)", color: "var(--color-red)" }}>
+          <p className="font-medium">{error}</p>
+          <p className="text-caption mt-1" style={{ color: "var(--color-gray-1)" }}>
+            Check the address and try again, or contact support.
+          </p>
+        </div>
+      )}
+
+      <Button fullWidth loading={loading} onClick={handleSubmit} className="mt-4">
+        Send Reset Link
+      </Button>
+    </AuthShell>
   );
 }
 
 function BackIcon() {
-  return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>;
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>;
 }
 function MailIcon() {
   return (
@@ -107,4 +120,3 @@ function MailIcon() {
     </svg>
   );
 }
-

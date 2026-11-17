@@ -6,6 +6,7 @@ import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Video } from "lucide-
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar } from "@/components/ui/Avatar";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { fetchCallHistory, type CallHistoryItem } from "@/services/call-service";
 import { useCallActions } from "@/components/call/CallProvider";
 import { formatChatListTime } from "@/utils/helpers";
@@ -48,7 +49,7 @@ export default function CallsPage() {
   }, []);
 
   return (
-    <div className="h-full w-full bg-white">
+    <div className="app-surface h-full w-full">
       <div className="flex flex-col h-full">
         <StatusBar />
 
@@ -75,29 +76,20 @@ export default function CallsPage() {
           )}
 
           {!loading && history.length === 0 && (
-            <div className="flex flex-col items-center justify-center pt-20 px-8 text-center">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: "rgba(0,122,255,0.1)" }}>
-                <Phone size={28} color="var(--color-blue)" strokeWidth={1.8} />
-              </div>
-              <p className="text-body font-semibold mb-1">No calls yet</p>
-              <p className="text-body mb-6" style={{ color: "var(--color-gray-1)" }}>
-                Calls you make or receive will show up here.
-              </p>
-              <button
-                onClick={() => router.push("/search")}
-                className="pressable px-4 py-2 rounded-full text-body font-semibold text-white"
-                style={{ background: "var(--color-blue)" }}
-              >
-                Find People to Call
-              </button>
-            </div>
+            <EmptyState
+              wordmark
+              title="No calls yet"
+              subtitle="Calls you make or receive will show up here."
+              actionLabel="Find People to Call"
+              onAction={() => router.push("/search")}
+            />
           )}
 
           {history.map((item) => {
             const missed = item.status === "missed";
             const DirectionIcon = missed ? PhoneMissed : item.isOutgoing ? PhoneOutgoing : PhoneIncoming;
             return (
-              <div key={item.id} className="w-full flex items-center gap-3 px-4 py-4 text-left border-b active:bg-gray-50 transition-colors" style={{ borderColor: "var(--color-gray-2)" }}>
+              <div key={item.id} className="glass-row w-full flex items-center gap-3 px-4 py-4 text-left rounded-2xl" style={{ borderColor: "var(--color-gray-2)" }}>
                 <Avatar name={item.otherUserName} src={item.otherUserAvatar} size={48} />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-body truncate">{item.otherUserName}</p>

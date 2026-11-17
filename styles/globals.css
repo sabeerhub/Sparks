@@ -37,6 +37,10 @@
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
 
   --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, sans-serif;
+  /* Calligraphic brand face (Great Vibes via next/font/google) with a
+     plain cursive fallback — the wordmark never breaks if the webfont
+     fails to load. */
+  --font-script: "Great Vibes", "Snell Roundhand", "Segoe Script", "Brush Script MT", cursive;
 }
 
 html, body {
@@ -61,7 +65,165 @@ html, body {
   height: 0px;
 }
 
-/* ─── v1.2.0 shared primitives ────────────────────────────────────────── */
+/* ─── v1.3.0 liquid glass ───────────────────────────────────────────────
+   Real Apple glass: layered translucent white over blurred content,
+   backdrop blur + saturate, a bright hairline edge with an inner top
+   highlight, and a soft deep shadow. Translucency and blur are the
+   glass; coloured gradients are not — there are none here. The only
+   gradient in this file is a white light sheen, never a colour.
+   Apply `.glass` to floating surfaces (nav, headers, sheets),
+   `.glass-card` to cards sitting on the flat app surface, `.glass-dark`
+   to surfaces over dark content (call screen), `.glass-input` to pill
+   fields. Pages sit on `.app-surface`, a flat light grey — the thing
+   the glass blurs against. */
+
+.app-surface {
+  background: var(--color-gray-2);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 8px 32px rgba(29, 29, 31, 0.08),
+    0 2px 8px rgba(29, 29, 31, 0.05);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 12px 40px rgba(29, 29, 31, 0.12),
+    0 2px 8px rgba(29, 29, 31, 0.06);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.68);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 4px 20px rgba(29, 29, 31, 0.06),
+    0 1px 4px rgba(29, 29, 31, 0.04);
+}
+
+.glass-dark {
+  background: rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* Translucent pill field: glass that takes a blue focus ring. */
+.glass-input {
+  background: rgba(255, 255, 255, 0.6);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.glass-input:focus-within {
+  border-color: var(--color-blue);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 0 0 4px rgba(0, 122, 255, 0.18);
+}
+
+/* List-row hover: the row itself becomes a glass tile on hover/press. */
+.glass-row {
+  transition: background-color 0.2s ease, backdrop-filter 0.2s ease, transform 0.2s ease;
+}
+.glass-row:hover {
+  background: rgba(255, 255, 255, 0.65);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
+}
+
+/* Slow light sheen drifting across hero glass — white light only,
+   never a colour. Add to one hero surface per screen at most. */
+.glass-sheen {
+  position: relative;
+  overflow: hidden;
+}
+.glass-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.55) 50%, transparent 58%);
+  transform: translateX(-130%);
+  animation: glass-sheen 7s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes glass-sheen {
+  0%, 55% { transform: translateX(-130%); }
+  90%, 100% { transform: translateX(130%); }
+}
+
+/* ─── v1.3.0 calligraphic wordmark — infinite loop ─────────────────────
+   The "Sparks" wordmark writes itself in on entry (framer-motion, in
+   the component), then loops FOREVER, gently: a soft light shimmer
+   sweeps across the letters and the wordmark breathes with a slow blue
+   glow. Calm by design — long pauses between sweeps, low glow. The
+   shimmer is white light over ink, not a colour gradient. Under
+   prefers-reduced-motion the wordmark is static solid ink. */
+.font-script {
+  font-family: var(--font-script);
+}
+
+.wordmark-loop {
+  /* Solid ink by default — the shimmer only applies where
+     background-clip: text is supported, so the word can never vanish. */
+  color: #1D1D1F;
+}
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .wordmark-loop {
+    background-image: linear-gradient(105deg, #1D1D1F 42%, rgba(255, 255, 255, 0.95) 50%, #1D1D1F 58%);
+    background-size: 250% 100%;
+    background-position: 120% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: wordmark-shimmer 6s ease-in-out infinite, wordmark-breathe 4.5s ease-in-out infinite;
+  }
+}
+@keyframes wordmark-shimmer {
+  0% { background-position: 120% 0; }
+  55% { background-position: 120% 0; }
+  90% { background-position: -120% 0; }
+  100% { background-position: -120% 0; }
+}
+@keyframes wordmark-breathe {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(0, 122, 255, 0)); }
+  50% { filter: drop-shadow(0 0 10px rgba(0, 122, 255, 0.28)); }
+}
+
+/* Plain clean dot that finishes the wordmark lockup (never a bolt). */
+.wordmark-dot {
+  display: inline-block;
+  width: 0.14em;
+  height: 0.14em;
+  margin-left: 0.1em;
+  border-radius: 9999px;
+  background: var(--color-blue);
+  animation: wordmark-dot 4.5s ease-in-out infinite;
+}
+@keyframes wordmark-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.25); opacity: 0.85; }
+}
+
+/* ─── v1.2.0 shared primitives (kept, upgraded to true glass) ────────── */
 
 /* Landing hero display size — the single exception to the unified scale. */
 .text-display {
@@ -74,19 +236,23 @@ html, body {
 /* Frosted-glass header: native iOS feel — blurred translucent white,
    hairline bottom border. Apply to sticky/inline screen headers. */
 .frosted-header {
-  background: rgba(255, 255, 255, 0.82);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, 0.6);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.04), 0 1px 12px rgba(29, 29, 31, 0.03);
 }
 
-/* Frosted floating pill (mobile nav). */
+/* Frosted floating pill (mobile nav) — now true liquid glass. */
 .frosted-pill {
-  background: rgba(255, 255, 255, 0.85);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid var(--hairline);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.6);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 8px 24px rgba(0, 0, 0, 0.10),
+    0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 /* Press state shared by everything tappable: shrink slightly + fade. */
@@ -130,10 +296,24 @@ html, body {
   border-radius: 9999px;
 }
 
-/* Reduced motion: no pulsing, no bouncing — content stays still. */
+/* Reduced motion: no pulsing, no bouncing, no sheen, no wordmark loop —
+   the wordmark is static solid ink and every surface stays still. */
 @media (prefers-reduced-motion: reduce) {
   .animate-call-ring,
   .animate-typing-dot {
+    animation: none;
+  }
+  .glass-sheen::after {
+    animation: none;
+    display: none;
+  }
+  .wordmark-loop {
+    animation: none;
+    background-image: none;
+    color: #1D1D1F;
+    -webkit-text-fill-color: #1D1D1F;
+  }
+  .wordmark-dot {
     animation: none;
   }
   *,

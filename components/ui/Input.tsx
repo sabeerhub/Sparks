@@ -1,5 +1,6 @@
 /**
  * components/ui/Input.tsx
+ * v1.3.0 — glass pill field: translucent, blurred, blue focus ring.
  */
 import { type InputHTMLAttributes, forwardRef } from "react";
 import { classNames } from "@/utils/helpers";
@@ -21,11 +22,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           className={classNames(
-            "w-full px-4 py-4 rounded-2xl border outline-none text-body transition-colors focus:ring-2 focus:ring-[rgba(0,122,255,0.25)]",
-            "focus:border-[color:var(--color-blue)]",
+            "glass-input w-full px-4 py-4 rounded-full outline-none text-body transition-all placeholder:text-[#1D1D1F]/40",
             className
           )}
-          style={{ borderColor: error ? "var(--color-red)" : "var(--color-gray-3)", background: "var(--color-gray-2)", color: "var(--color-black)" }}
+          style={{ borderColor: error ? "var(--color-red)" : undefined, color: "var(--color-black)" }}
           {...props}
         />
         {error && <p className="text-caption mt-1" style={{ color: "var(--color-red)" }}>{error}</p>}

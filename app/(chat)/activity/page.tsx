@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, Zap, BadgeCheck, AtSign, Trash2, X } from "lucide-react";
+import { MessageCircle, UserPlus, BadgeCheck, AtSign, Trash2, X } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar } from "@/components/ui/Avatar";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   getIncomingRequests,
   getOutgoingRequests,
@@ -46,7 +47,7 @@ function NotificationIcon({ type }: { type: AppNotification["type"] }) {
   );
   switch (type) {
     case "message": return wrap("rgba(0,122,255,0.12)", <MessageCircle size={19} color="var(--color-blue)" strokeWidth={1.8} />);
-    case "spark_request": return wrap("rgba(0,122,255,0.12)", <Zap size={19} color="var(--color-blue)" fill="var(--color-blue)" />);
+    case "spark_request": return wrap("rgba(0,122,255,0.12)", <UserPlus size={19} color="var(--color-blue)" strokeWidth={1.8} />);
     case "spark_accepted": return wrap("rgba(52,199,89,0.12)", <BadgeCheck size={19} color="var(--color-green)" />);
     case "mention": return wrap("rgba(255,149,0,0.12)", <AtSign size={19} color="var(--color-orange)" strokeWidth={1.8} />);
   }
@@ -55,7 +56,7 @@ function NotificationIcon({ type }: { type: AppNotification["type"] }) {
 function NotificationRow({ n, onOpen, onDelete }: { n: AppNotification; onOpen: () => void; onDelete: () => void }) {
   return (
     <div
-      className="flex items-center gap-3 px-4 py-4 border-b active:bg-gray-50 transition-colors"
+      className="glass-row flex items-center gap-3 px-4 py-4 rounded-2xl"
       style={{ borderColor: "var(--color-gray-2)", background: n.is_read ? "transparent" : "rgba(0,122,255,0.04)" }}
     >
       <button onClick={onOpen} className="flex items-center gap-3 flex-1 min-w-0 text-left">
@@ -92,8 +93,8 @@ function IncomingRow({ request, onRespond }: { request: SparkRequestWithProfile;
         <button
           onClick={() => handle(false)}
           disabled={loading}
-          className="pressable px-4 py-2 rounded-full text-caption font-medium"
-          style={{ background: "var(--color-gray-2)", color: "var(--color-gray-1)" }}
+          className="glass pressable px-4 py-2 rounded-full text-caption font-medium"
+          style={{ color: "var(--color-gray-1)" }}
         >
           Decline
         </button>
@@ -122,16 +123,6 @@ function OutgoingRow({ request }: { request: SparkRequestWithProfile }) {
       <span className="text-caption font-medium px-2.5 py-1 rounded-full flex-shrink-0" style={{ background: "rgba(0,122,255,0.1)", color: "var(--color-blue)" }}>
         Pending
       </span>
-    </div>
-  );
-}
-
-function EmptyState({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center pt-20 px-8 text-center">
-      <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: "rgba(0,122,255,0.10)" }}>{icon}</div>
-      <p className="font-semibold mb-1">{title}</p>
-      <p className="text-body" style={{ color: "var(--color-gray-1)" }}>{subtitle}</p>
     </div>
   );
 }
@@ -208,7 +199,7 @@ export default function ActivityPage() {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
-    <div className="h-full w-full bg-white">
+    <div className="app-surface h-full w-full">
       <div className="flex flex-col h-full">
         <StatusBar />
         <div className="frosted-header px-4 pt-4 pb-3">
@@ -227,7 +218,7 @@ export default function ActivityPage() {
               </div>
             )}
           </div>
-          <div className="flex gap-1 overflow-x-auto rounded-full p-1" style={{ background: "var(--color-gray-2)" }}>
+          <div className="glass flex gap-1 overflow-x-auto rounded-full p-1">
             {([
               { key: "notifications" as Tab, label: "Notifications", count: unreadCount },
               { key: "incoming" as Tab, label: "Received", count: incoming.length },
@@ -258,7 +249,7 @@ export default function ActivityPage() {
 
           {!loading && tab === "notifications" && (
             notifications.length === 0
-              ? <EmptyState icon={<MessageCircle size={40} color="var(--color-gray-3)" strokeWidth={1.5} />} title="No notifications yet" subtitle="New messages, Spark requests, and updates will appear here." />
+              ? <EmptyState title="No notifications yet" subtitle="New messages, Spark requests, and updates will appear here." />
               : notifications.map((n) => (
                   <NotificationRow key={n.id} n={n} onOpen={() => handleOpenNotification(n)} onDelete={() => handleDeleteNotification(n.id)} />
                 ))
@@ -266,13 +257,13 @@ export default function ActivityPage() {
 
           {!loading && tab === "incoming" && (
             incoming.length === 0
-              ? <EmptyState icon={<Zap size={40} color="var(--color-gray-3)" />} title="No spark requests" subtitle="When someone sends you a Spark Request, it will appear here." />
+              ? <EmptyState wordmark title="No spark requests" subtitle="When someone sends you a Spark Request, it will appear here." />
               : incoming.map((r) => <IncomingRow key={r.id} request={r} onRespond={handleRespond} />)
           )}
 
           {!loading && tab === "outgoing" && (
             outgoing.length === 0
-              ? <EmptyState icon={<Zap size={40} color="var(--color-gray-3)" />} title="No pending requests" subtitle="Requests you've sent that haven't been accepted yet will appear here." />
+              ? <EmptyState wordmark title="No pending requests" subtitle="Requests you've sent that haven't been accepted yet will appear here." />
               : outgoing.map((r) => <OutgoingRow key={r.id} request={r} />)
           )}
           <div className="h-4" />

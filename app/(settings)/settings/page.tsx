@@ -38,7 +38,7 @@ export default function SettingsPage() {
 
   return (
     <ScreenContainer>
-      <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
+      <div className="app-surface flex flex-col h-full">
         <StatusBar />
         <div className="frosted-header flex items-center px-4 pt-2 pb-3">
           <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
@@ -49,12 +49,12 @@ export default function SettingsPage() {
 
         <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-6">
           {sections.map((rows, i) => (
-            <div key={i} className="rounded-2xl overflow-hidden bg-white">
+            <div key={i} className="glass-card rounded-2xl overflow-hidden">
               {rows.map((row, j) => (
                 <button
                   key={row.label}
                   onClick={() => router.push(row.path)}
-                  className="pressable w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50"
+                  className="pressable w-full flex items-center gap-3 px-4 py-4 active:bg-white/60"
                   style={{ borderBottom: j < rows.length - 1 ? "1px solid var(--color-gray-2)" : "none" }}
                 >
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${row.color}20` }}>
@@ -68,13 +68,13 @@ export default function SettingsPage() {
             </div>
           ))}
 
-          <div className="rounded-2xl overflow-hidden bg-white">
+          <div className="glass-card rounded-2xl overflow-hidden">
             <button
               onClick={async () => {
                 await logout();
                 router.push("/");
               }}
-              className="pressable w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50"
+              className="pressable w-full flex items-center gap-3 px-4 py-4 active:bg-white/60"
             >
               <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,59,48,0.12)" }}>
                 <LogOut size={18} color="var(--color-red)" strokeWidth={1.8} />

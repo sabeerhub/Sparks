@@ -45,7 +45,7 @@ export function ChatListItem({ item, onClick, onLongPress }: ChatListItemProps) 
       onMouseUp={endPress}
       onMouseLeave={endPress}
       onContextMenu={(e) => { e.preventDefault(); onLongPress(); }}
-      className="w-full flex items-center gap-3 px-4 py-4 min-h-[72px] text-left border-b hover:bg-gray-50 active:bg-gray-100 active:scale-[0.99] transition-all duration-200" style={{ borderColor: "var(--color-gray-2)" }}
+      className="glass-row w-full flex items-center gap-3 px-4 py-3.5 min-h-[72px] text-left rounded-2xl active:scale-[0.99] transition-all duration-200"
     >
       <Avatar name={item.otherUser.full_name} src={item.otherUser.avatar_url} size={52} online={item.isOnline} badge={item.unreadCount || null} />
       <div className="flex-1 min-w-0">

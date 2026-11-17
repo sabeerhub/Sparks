@@ -264,7 +264,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
 
   if (recording) {
     return (
-      <div className="relative px-3 py-2 border-t" style={{ borderColor: "var(--color-gray-2)" }}>
+      <div className="relative px-3 py-2 border-t glass" style={{ borderColor: "rgba(255,255,255,0.6)" }}>
         {!locked && (
           <div
             className="absolute right-6 flex flex-col items-center gap-1"
@@ -274,7 +274,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
               transition: dragY === 0 ? "bottom 200ms ease-out" : "none",
             }}
           >
-            <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "var(--color-gray-2)" }}>
+            <div className="glass w-9 h-9 rounded-full flex items-center justify-center">
               <Lock size={16} color="var(--color-blue)" strokeWidth={2} />
             </div>
           </div>
@@ -346,8 +346,8 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
           </div>
         </div>
       )}
-      {/* v1.2.0: 8/16px spacing, pill input, safe-area bottom padding. */}
-      <div className="px-4 py-2 border-t flex items-end gap-2" style={{ borderColor: "var(--color-gray-2)", paddingBottom: "max(8px, env(safe-area-inset-bottom, 0px))" }}>
+      {/* v1.3.0: glass composer bar, glass pill input, 8/16px spacing, pill input, safe-area bottom padding. */}
+      <div className="glass px-4 py-2 border-t flex items-end gap-2" style={{ borderColor: "rgba(255,255,255,0.6)", paddingBottom: "max(8px, env(safe-area-inset-bottom, 0px))" }}>
         <button className="pressable mb-1.5 w-11 h-11 -ml-2 flex items-center justify-center flex-shrink-0" onClick={handleAttachClick} aria-label="Attach file" disabled={uploading}>
           {uploading ? (
             <div className="w-[22px] h-[22px] rounded-full border-2 animate-spin" style={{ borderColor: "var(--color-gray-3)", borderTopColor: "var(--color-blue)" }} />
@@ -364,8 +364,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
         />
 
         <div
-          className="flex-1 flex items-end rounded-full border px-4 py-2"
-          style={{ borderColor: "var(--color-gray-3)", background: "var(--color-gray-2)" }}
+          className="glass-input flex-1 flex items-end rounded-full px-4 py-2"
         >
           <input
             ref={inputRef}

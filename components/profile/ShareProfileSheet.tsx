@@ -45,7 +45,7 @@ export function ShareProfileSheet({ open, onClose, userId, username }: ShareProf
     <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
       <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.4)" }} />
       <div
-        className="relative w-full bg-white rounded-t-3xl px-4 pt-3 pb-8 max-w-lg mx-auto"
+        className="glass-strong relative w-full rounded-t-3xl px-4 pt-3 pb-8 max-w-lg mx-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--color-gray-3)" }} />
@@ -56,15 +56,14 @@ export function ShareProfileSheet({ open, onClose, userId, username }: ShareProf
         </p>
 
         <div className="flex justify-center mb-5">
-          <div className="p-3 rounded-2xl" style={{ background: "var(--color-gray-2)" }}>
+          <div className="glass p-3 rounded-2xl">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={qrUrl} alt="Profile QR code" width={220} height={220} className="rounded-lg" />
           </div>
         </div>
 
         <div
-          className="flex items-center justify-between gap-2 px-4 py-3 rounded-2xl mb-3"
-          style={{ background: "var(--color-gray-2)" }}
+          className="glass flex items-center justify-between gap-2 px-4 py-3 rounded-2xl mb-3"
         >
           <span className="text-caption truncate" style={{ color: "var(--color-gray-1)" }}>{profileUrl}</span>
           <button onClick={handleCopy} className="text-caption font-semibold flex-shrink-0" style={{ color: "var(--color-blue)" }}>

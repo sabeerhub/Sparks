@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { BadgeCheck, MapPin, Share2, Pencil, Phone, Video, Zap, Users } from "lucide-react";
+import { BadgeCheck, MapPin, Share2, Pencil, Phone, Video, Users } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { Avatar } from "@/components/ui/Avatar";
 import { ShareProfileSheet } from "@/components/profile/ShareProfileSheet";
@@ -65,7 +65,7 @@ export default function PublicProfilePage() {
 
   if (loading || !profile) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-white">
+      <div className="app-surface h-full w-full flex items-center justify-center">
         <StatusBar />
         <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: "var(--color-gray-3)", borderTopColor: "var(--color-blue)" }} />
       </div>
@@ -73,10 +73,10 @@ export default function PublicProfilePage() {
   }
 
   return (
-    <div className="h-full w-full flex flex-col" style={{ background: "var(--color-gray-2)" }}>
+    <div className="app-surface h-full w-full flex flex-col">
       <StatusBar />
       <div className="flex-1 overflow-y-auto">
-        <div className="w-full max-w-4xl mx-auto bg-white min-h-full">
+        <div className="glass w-full max-w-4xl mx-auto min-h-full">
           <div className="frosted-header flex items-center px-4 py-3">
             <button onClick={() => router.back()} className="pressable text-body font-medium" style={{ color: "var(--color-blue)" }}>
               Back
@@ -129,7 +129,7 @@ export default function PublicProfilePage() {
 
             <div className="flex items-center gap-4 mt-4 text-body">
               <span className="flex items-center gap-1">
-                <Zap size={15} fill="var(--color-blue)" color="var(--color-blue)" />
+                <span className="w-2 h-2 rounded-full" style={{ background: "var(--color-blue)" }} />
                 <span className="font-bold">{profile.spark_count?.toLocaleString() ?? 0}</span>
                 <span style={{ color: "var(--color-gray-1)" }}>Total Sparks</span>
               </span>
@@ -149,18 +149,17 @@ export default function PublicProfilePage() {
               )}
               {canCall && (
                 <>
-                  <button onClick={() => placeCall(userId, nickname || profile.full_name, profile.avatar_url, "voice")} className="w-11 h-11 flex items-center justify-center rounded-2xl border flex-shrink-0" style={{ borderColor: "var(--color-gray-3)" }} aria-label="Call">
+                  <button onClick={() => placeCall(userId, nickname || profile.full_name, profile.avatar_url, "voice")} className="glass pressable w-11 h-11 flex items-center justify-center rounded-2xl flex-shrink-0" aria-label="Call">
                     <Phone size={18} color="var(--color-blue)" strokeWidth={1.8} />
                   </button>
-                  <button onClick={() => placeCall(userId, nickname || profile.full_name, profile.avatar_url, "video")} className="w-11 h-11 flex items-center justify-center rounded-2xl border flex-shrink-0" style={{ borderColor: "var(--color-gray-3)" }} aria-label="Video call">
+                  <button onClick={() => placeCall(userId, nickname || profile.full_name, profile.avatar_url, "video")} className="glass pressable w-11 h-11 flex items-center justify-center rounded-2xl flex-shrink-0" aria-label="Video call">
                     <Video size={18} color="var(--color-blue)" strokeWidth={1.8} />
                   </button>
                 </>
               )}
               <button
                 onClick={() => setShareOpen(true)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-2xl text-body font-medium border"
-                style={{ borderColor: "var(--color-gray-3)" }}
+                className="glass pressable flex-1 flex items-center justify-center gap-1.5 py-2 rounded-2xl text-body font-medium"
               >
                 <Share2 size={16} color="var(--color-blue)" strokeWidth={1.8} /> Share
               </button>

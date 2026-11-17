@@ -55,7 +55,7 @@ export default function AppearanceSettingsPage() {
 
   return (
     <ScreenContainer>
-      <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
+      <div className="app-surface flex flex-col h-full">
         <StatusBar />
         <div className="frosted-header flex items-center px-4 pt-2 pb-3">
           <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
@@ -66,7 +66,7 @@ export default function AppearanceSettingsPage() {
 
         <div className="flex-1 overflow-y-auto px-4 pb-8">
           <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Theme</p>
-          <div className="rounded-2xl overflow-hidden bg-white mb-4">
+          <div className="glass-card rounded-2xl overflow-hidden mb-4">
             <OptionRow icon={Sun} label="Light" selected={profile.theme_preference === "light"} onClick={() => updateField({ theme_preference: "light" })} last />
           </div>
           <p className="text-caption px-1 mb-4" style={{ color: "var(--color-gray-1)" }}>
@@ -74,14 +74,14 @@ export default function AppearanceSettingsPage() {
           </p>
 
           <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Font Size</p>
-          <div className="rounded-2xl overflow-hidden bg-white mb-4">
+          <div className="glass-card rounded-2xl overflow-hidden mb-4">
             <OptionRow icon={Type} label="Small" selected={profile.font_size === "small"} onClick={() => updateField({ font_size: "small" })} />
             <OptionRow icon={Type} label="Medium" selected={profile.font_size === "medium"} onClick={() => updateField({ font_size: "medium" })} />
             <OptionRow icon={Type} label="Large" selected={profile.font_size === "large"} onClick={() => updateField({ font_size: "large" })} last />
           </div>
 
           <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Chat Bubble Size</p>
-          <div className="rounded-2xl overflow-hidden bg-white">
+          <div className="glass-card rounded-2xl overflow-hidden">
             <OptionRow icon={MessageSquare} label="Compact" selected={profile.bubble_size === "compact"} onClick={() => updateField({ bubble_size: "compact" })} />
             <OptionRow icon={MessageSquare} label="Standard" selected={profile.bubble_size === "standard"} onClick={() => updateField({ bubble_size: "standard" })} />
             <OptionRow icon={MessageSquare} label="Large" selected={profile.bubble_size === "large"} onClick={() => updateField({ bubble_size: "large" })} last />
