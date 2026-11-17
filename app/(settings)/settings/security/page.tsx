@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Shield, Smartphone, Laptop, Tablet, Monitor, LogOut, Mail } from "lucide-react";
+import { Shield, Smartphone, Laptop, Tablet, Monitor, LogOut, Mail, CheckCircle2 } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
-import { Button } from "@/components/ui/Button";
+import { SettingsHeader, SectionLabel, SettingsCard, RowDivider } from "@/components/settings/settings-ui";
 import { useAuth } from "@/hooks/useAuth";
 import { listSessions, revokeSession, revokeAllOtherSessions } from "@/services/session-service";
 import { createClient } from "@/lib/supabase";
@@ -15,7 +15,7 @@ import type { DeviceSessionItem } from "@/types";
 const supabase = createClient();
 
 function DeviceIcon({ type }: { type: DeviceSessionItem["device_type"] }) {
-  const props = { size: 18, color: "var(--color-blue)", strokeWidth: 1.8 };
+  const props = { size: 19, color: "var(--color-blue)", strokeWidth: 1.8 };
   switch (type) {
     case "mobile": return <Smartphone {...props} />;
     case "tablet": return <Tablet {...props} />;
@@ -65,91 +65,103 @@ export default function SecurityCenterPage() {
     <ScreenContainer>
       <div className="app-surface flex flex-col h-full">
         <StatusBar />
-        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
-            <BackIcon />
-          </button>
-          <h1 className="text-title font-bold ml-3">Security Center</h1>
-        </div>
+        <SettingsHeader title="Security Center" />
 
-        <div className="flex-1 overflow-y-auto px-4 pb-6">
-          <div className="flex flex-col items-center py-8">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4" style={{ background: "#E8F9EF" }}>
-              <Shield size={36} color="var(--color-green)" strokeWidth={1.8} />
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8 space-y-6">
+          {/* Hero — account status, glass tile with sheen. */}
+          <div className="glass-card glass-sheen rounded-[28px] px-5 py-7 flex flex-col items-center text-center">
+            <div className="glass w-[76px] h-[76px] rounded-full flex items-center justify-center mb-4" style={{ background: "rgba(52,199,89,0.14)" }}>
+              <Shield size={36} color="var(--color-green)" strokeWidth={1.7} />
             </div>
-            <h2 className="text-body font-bold mb-1">Your account is secure</h2>
-            <p className="text-body" style={{ color: "var(--color-gray-1)" }}>
+            <h2 className="text-title font-bold">Your account is secure</h2>
+            <p className="text-body mt-1" style={{ color: "var(--color-gray-1)" }}>
               {sessions.length} active {sessions.length === 1 ? "session" : "sessions"}
+              {emailVerified ? " · Email verified" : " · Email not verified"}
             </p>
           </div>
 
-          <div className="glass-card rounded-2xl overflow-hidden mb-4">
-            <div className="flex items-center gap-3 px-4 py-4 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: emailVerified ? "rgba(52,199,89,0.12)" : "rgba(255,149,0,0.12)" }}>
-                <Mail size={18} color={emailVerified ? "var(--color-green)" : "var(--color-orange)"} strokeWidth={1.8} />
-              </div>
-              <div className="flex-1">
-                <div className="text-body font-semibold">Email Verification</div>
-                <div className="text-caption" style={{ color: "var(--color-gray-1)" }}>
-                  {emailVerified ? "Verified" : "Not verified"}
+          <div>
+            <SectionLabel>Verification</SectionLabel>
+            <SettingsCard>
+              <div className="flex items-center gap-3 px-4 py-4">
+                <div className="glass w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: emailVerified ? "rgba(52,199,89,0.12)" : "rgba(255,149,0,0.12)" }}>
+                  <Mail size={19} color={emailVerified ? "var(--color-green)" : "var(--color-orange)"} strokeWidth={1.8} />
                 </div>
+                <div className="flex-1">
+                  <div className="text-body font-medium">Email Verification</div>
+                  <div className="text-caption mt-0.5" style={{ color: "var(--color-gray-1)" }}>
+                    {emailVerified ? "Your email address is verified." : "Your email address is not verified yet."}
+                  </div>
+                </div>
+                {emailVerified && <CheckCircle2 size={20} color="var(--color-green)" strokeWidth={1.8} className="flex-shrink-0" />}
               </div>
-            </div>
+            </SettingsCard>
           </div>
 
-          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>
-            Active Devices
-          </p>
-          <div className="glass-card rounded-2xl overflow-hidden mb-4">
-            {loading ? (
-              <div className="px-4 py-4 text-body" style={{ color: "var(--color-gray-1)" }}>Loading…</div>
-            ) : sessions.length === 0 ? (
-              <div className="px-4 py-4 text-body" style={{ color: "var(--color-gray-1)" }}>No active sessions found.</div>
-            ) : (
-              sessions.map((s, i) => (
-                <div key={s.id} className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: i < sessions.length - 1 ? "1px solid var(--color-gray-2)" : "none" }}>
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.1)" }}>
-                    <DeviceIcon type={s.device_type} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-body font-semibold truncate">
-                      {s.device_label}{s.isCurrent && <span style={{ color: "var(--color-green)" }}> · This device</span>}
-                    </div>
-                    <div className="text-caption truncate" style={{ color: "var(--color-gray-1)" }}>
-                      {[s.location_city, s.location_country].filter(Boolean).join(", ") || "Unknown location"} · Active {formatLastSeen(s.last_active_at)}
-                    </div>
-                  </div>
-                  {!s.isCurrent && (
-                    <button onClick={() => handleRevoke(s.id)} className="text-caption font-semibold flex-shrink-0" style={{ color: "var(--color-red)" }}>
-                      Log out
-                    </button>
-                  )}
+          <div>
+            <SectionLabel>Active Devices</SectionLabel>
+            <SettingsCard>
+              {loading ? (
+                <div className="px-4 py-5 text-body" style={{ color: "var(--color-gray-1)" }}>Loading devices…</div>
+              ) : sessions.length === 0 ? (
+                <div className="px-4 py-5">
+                  <div className="text-body font-medium">No active sessions found</div>
+                  <div className="text-caption mt-0.5" style={{ color: "var(--color-gray-1)" }}>Devices you sign in on will appear here.</div>
                 </div>
-              ))
-            )}
+              ) : (
+                sessions.map((s, i) => (
+                  <div key={s.id}>
+                    {i > 0 && <RowDivider />}
+                    <div className="flex items-center gap-3 px-4 py-4">
+                      <div className="glass w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.1)" }}>
+                        <DeviceIcon type={s.device_type} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-body font-medium truncate">
+                          {s.device_label}
+                          {s.isCurrent && <span style={{ color: "var(--color-green)" }}> · This device</span>}
+                        </div>
+                        <div className="text-caption truncate mt-0.5" style={{ color: "var(--color-gray-1)" }}>
+                          {[s.location_city, s.location_country].filter(Boolean).join(", ") || "Unknown location"} · Active {formatLastSeen(s.last_active_at)}
+                        </div>
+                      </div>
+                      {!s.isCurrent && (
+                        <button onClick={() => handleRevoke(s.id)} className="glass pressable px-3.5 py-1.5 rounded-full text-caption font-semibold flex-shrink-0" style={{ color: "var(--color-red)" }}>
+                          Log out
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </SettingsCard>
           </div>
 
           <div className="space-y-3">
-            <Button variant="secondary" fullWidth onClick={() => router.push("/settings/account")}>
+            <button
+              onClick={() => router.push("/settings/account")}
+              className="glass pressable w-full py-3.5 rounded-full text-body font-semibold"
+              style={{ color: "var(--color-blue)" }}
+            >
               Change Password
-            </Button>
-            <Button variant="danger" fullWidth onClick={handleLogoutAll}>
+            </button>
+            <button
+              onClick={handleLogoutAll}
+              className="pressable w-full py-3.5 rounded-full text-body font-semibold text-white"
+              style={{ background: "var(--color-red)" }}
+            >
               Log Out All Other Devices
-            </Button>
+            </button>
             <button
               onClick={handleLogoutCurrent}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-body font-semibold"
+              className="pressable w-full flex items-center justify-center gap-2 py-3 rounded-full text-body font-semibold"
               style={{ color: "var(--color-red)" }}
             >
-              <LogOut size={16} strokeWidth={1.8} /> Log Out This Device
+              <LogOut size={17} strokeWidth={1.8} /> Log Out This Device
             </button>
           </div>
         </div>
       </div>
     </ScreenContainer>
   );
-}
-
-function BackIcon() {
-  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>;
 }

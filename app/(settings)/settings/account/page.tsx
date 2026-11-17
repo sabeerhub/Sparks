@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { User, AtSign, Mail, Lock, Download, Trash2 } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
+import { SettingsHeader, SectionLabel, SettingsCard, RowIcon, RowDivider } from "@/components/settings/settings-ui";
 import {
   updateFullName,
   updateUsername,
@@ -163,19 +164,14 @@ export default function AccountSettingsPage() {
     <ScreenContainer>
       <div className="app-surface flex flex-col h-full">
         <StatusBar />
-        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
-            <BackIcon />
-          </button>
-          <h1 className="text-title font-bold ml-3">Account</h1>
-        </div>
+        <SettingsHeader title="Account" />
 
-        <div className="flex-1 overflow-y-auto px-4 pb-8">
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8 space-y-6">
           {message && (
             <div
-              className="mb-4 px-4 py-3 rounded-2xl text-body"
+              className="glass-card px-4 py-3.5 rounded-[20px] text-body font-medium"
               style={{
-                background: message.type === "success" ? "rgba(52,199,89,0.12)" : "rgba(255,59,48,0.12)",
+                background: message.type === "success" ? "rgba(52,199,89,0.14)" : "rgba(255,59,48,0.12)",
                 color: message.type === "success" ? "var(--color-green)" : "var(--color-red)",
               }}
             >
@@ -183,57 +179,66 @@ export default function AccountSettingsPage() {
             </div>
           )}
 
-          <SettingRow icon={User} label="Full Name" value={fullName} editing={editing === "name"} onEditToggle={() => setEditing(editing === "name" ? null : "name")} lockedMessage={daysRemaining(fullNameLockedUntil) ? `Can change again in ${daysRemaining(fullNameLockedUntil)} day(s)` : null}>
-            <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="flex-1 outline-none text-body bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
-            <SaveButton onClick={handleSaveName} saving={saving} />
-          </SettingRow>
+          <div>
+            <SectionLabel>Profile Details</SectionLabel>
+            <SettingsCard>
+              <SettingRow icon={User} label="Full Name" value={fullName} editing={editing === "name"} onEditToggle={() => setEditing(editing === "name" ? null : "name")} lockedMessage={daysRemaining(fullNameLockedUntil) ? `Can change again in ${daysRemaining(fullNameLockedUntil)} day(s)` : null}>
+                <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="glass-input flex-1 outline-none text-body px-4 py-2.5 rounded-full min-w-0" />
+                <SaveButton onClick={handleSaveName} saving={saving} />
+              </SettingRow>
+              <RowDivider />
+              <SettingRow icon={AtSign} label="Username" value={`@${username}`} editing={editing === "username"} onEditToggle={() => setEditing(editing === "username" ? null : "username")} lockedMessage={daysRemaining(usernameLockedUntil) ? `Can change again in ${daysRemaining(usernameLockedUntil)} day(s)` : null}>
+                <input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoCapitalize="none" autoCorrect="off" className="glass-input flex-1 outline-none text-body px-4 py-2.5 rounded-full min-w-0" />
+                <SaveButton onClick={handleSaveUsername} saving={saving} />
+              </SettingRow>
+              <RowDivider />
+              <SettingRow icon={Mail} label="Email" value={email} editing={editing === "email"} onEditToggle={() => setEditing(editing === "email" ? null : "email")}>
+                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoCapitalize="none" autoCorrect="off" className="glass-input flex-1 outline-none text-body px-4 py-2.5 rounded-full min-w-0" />
+                <SaveButton onClick={handleSaveEmail} saving={saving} />
+              </SettingRow>
+              <RowDivider />
+              <SettingRow icon={Lock} label="Password" value="••••••••" editing={editing === "password"} onEditToggle={() => setEditing(editing === "password" ? null : "password")}>
+                <div className="flex-1 space-y-2 min-w-0">
+                  <input value={newPassword} onChange={(e) => setNewPassword(e.target.value)} type="password" placeholder="New password" className="glass-input w-full outline-none text-body px-4 py-2.5 rounded-full" />
+                  <input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type="password" placeholder="Confirm new password" className="glass-input w-full outline-none text-body px-4 py-2.5 rounded-full" />
+                </div>
+                <SaveButton onClick={handleSavePassword} saving={saving} />
+              </SettingRow>
+            </SettingsCard>
+            <p className="text-caption mt-2 px-2" style={{ color: "var(--color-gray-1)" }}>
+              Your name and username can be changed once every 30 days.
+            </p>
+          </div>
 
-          <SettingRow icon={AtSign} label="Username" value={`@${username}`} editing={editing === "username"} onEditToggle={() => setEditing(editing === "username" ? null : "username")} lockedMessage={daysRemaining(usernameLockedUntil) ? `Can change again in ${daysRemaining(usernameLockedUntil)} day(s)` : null}>
-            <input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoCapitalize="none" autoCorrect="off" className="flex-1 outline-none text-body bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
-            <SaveButton onClick={handleSaveUsername} saving={saving} />
-          </SettingRow>
-
-          <SettingRow icon={Mail} label="Email" value={email} editing={editing === "email"} onEditToggle={() => setEditing(editing === "email" ? null : "email")}>
-            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoCapitalize="none" autoCorrect="off" className="flex-1 outline-none text-body bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
-            <SaveButton onClick={handleSaveEmail} saving={saving} />
-          </SettingRow>
-
-          <SettingRow icon={Lock} label="Password" value="••••••••" editing={editing === "password"} onEditToggle={() => setEditing(editing === "password" ? null : "password")}>
-            <div className="flex-1 space-y-2">
-              <input value={newPassword} onChange={(e) => setNewPassword(e.target.value)} type="password" placeholder="New password" className="w-full outline-none text-body bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
-              <input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type="password" placeholder="Confirm new password" className="w-full outline-none text-body bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
-            </div>
-            <SaveButton onClick={handleSavePassword} saving={saving} />
-          </SettingRow>
-
-          <button
-            onClick={handleExport}
-            disabled={exporting}
-            className="glass-card w-full flex items-center gap-3 px-4 py-4 rounded-2xl mt-3 disabled:opacity-60"
-          >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(0,122,255,0.12)" }}>
-              <Download size={18} color="var(--color-blue)" strokeWidth={1.8} />
-            </div>
-            <span className="text-body font-medium flex-1 text-left">{exporting ? "Preparing download…" : "Download Account Data"}</span>
-          </button>
-
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="glass-card w-full flex items-center gap-3 px-4 py-4 rounded-2xl mt-3"
-          >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,59,48,0.12)" }}>
-              <Trash2 size={18} color="var(--color-red)" strokeWidth={1.8} />
-            </div>
-            <span className="text-body font-medium flex-1 text-left" style={{ color: "var(--color-red)" }}>Delete Account</span>
-          </button>
+          <div>
+            <SectionLabel>Your Data</SectionLabel>
+            <SettingsCard>
+              <button
+                onClick={handleExport}
+                disabled={exporting}
+                className="pressable w-full flex items-center gap-3 px-4 py-4 text-left disabled:opacity-60"
+              >
+                <RowIcon icon={Download} />
+                <span className="text-body font-medium flex-1">{exporting ? "Preparing download…" : "Download Account Data"}</span>
+              </button>
+              <RowDivider />
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="pressable w-full flex items-center gap-3 px-4 py-4 text-left"
+              >
+                <RowIcon icon={Trash2} tint="rgba(255,59,48,0.12)" color="var(--color-red)" />
+                <span className="text-body font-medium flex-1" style={{ color: "var(--color-red)" }}>Delete Account</span>
+              </button>
+            </SettingsCard>
+          </div>
         </div>
       </div>
 
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(0,0,0,0.5)" }}>
-          <div className="glass-strong rounded-3xl p-6 w-full max-w-sm">
-            <h2 className="text-body font-bold mb-2">Delete your account?</h2>
-            <p className="text-body mb-4" style={{ color: "var(--color-gray-1)" }}>
+          <div className="glass-strong rounded-[28px] p-6 w-full max-w-sm">
+            <h2 className="text-title font-bold mb-2">Delete your account?</h2>
+            <p className="text-body mb-4 leading-relaxed" style={{ color: "var(--color-gray-1)" }}>
               This permanently deletes your profile, messages, Sparks, and all data. This cannot be undone.
               Type <strong>DELETE</strong> to confirm.
             </p>
@@ -241,20 +246,19 @@ export default function AccountSettingsPage() {
               value={deleteConfirmText}
               onChange={(e) => setDeleteConfirmText(e.target.value)}
               placeholder="DELETE"
-              className="w-full px-4 py-2 rounded-2xl text-body mb-4 outline-none border"
-              style={{ borderColor: "var(--color-gray-3)" }}
+              className="glass-input w-full px-4 py-3 rounded-full text-body mb-4 outline-none"
             />
             <div className="flex gap-2">
               <button
                 onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
-                className="glass flex-1 py-2 rounded-2xl text-body font-semibold"
+                className="glass pressable flex-1 py-3 rounded-full text-body font-semibold"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleteConfirmText !== "DELETE" || deleting}
-                className="flex-1 py-2 rounded-2xl text-body font-semibold text-white disabled:opacity-40"
+                className="pressable flex-1 py-3 rounded-full text-body font-semibold text-white disabled:opacity-40"
                 style={{ background: "var(--color-red)" }}
               >
                 {deleting ? "Deleting…" : "Delete"}
@@ -286,22 +290,22 @@ function SettingRow({
 }) {
   const locked = !!lockedMessage;
   return (
-    <div className="glass-card rounded-2xl mt-3 overflow-hidden">
-      <button onClick={locked ? undefined : onEditToggle} disabled={locked} className="w-full flex items-center gap-3 px-4 py-4 disabled:opacity-70">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
-          <Icon size={18} color="var(--color-blue)" strokeWidth={1.8} />
-        </div>
+    <div className="px-4 py-4">
+      <button onClick={locked ? undefined : onEditToggle} disabled={locked} className="pressable w-full flex items-center gap-3 disabled:opacity-70 text-left">
+        <RowIcon icon={Icon} />
         <div className="flex-1 text-left min-w-0">
           <div className="text-caption" style={{ color: "var(--color-gray-1)" }}>{label}</div>
-          <div className="text-body font-medium truncate">{value || "—"}</div>
+          <div className="text-body font-medium truncate mt-0.5">{value || "—"}</div>
           {locked && <div className="text-caption mt-0.5" style={{ color: "var(--color-orange)" }}>{lockedMessage}</div>}
         </div>
         {!locked && (
-          <span className="text-caption font-semibold" style={{ color: "var(--color-blue)" }}>{editing ? "Cancel" : "Edit"}</span>
+          <span className="glass px-3.5 py-1.5 rounded-full text-caption font-semibold flex-shrink-0" style={{ color: "var(--color-blue)" }}>
+            {editing ? "Done" : "Edit"}
+          </span>
         )}
       </button>
       {editing && !locked && (
-        <div className="px-4 pb-4 flex items-end gap-3">
+        <div className="pt-3 flex items-start gap-2">
           {children}
         </div>
       )}
@@ -314,14 +318,10 @@ function SaveButton({ onClick, saving }: { onClick: () => void; saving: boolean 
     <button
       onClick={onClick}
       disabled={saving}
-      className="px-4 py-2 rounded-xl text-caption font-semibold text-white disabled:opacity-50 flex-shrink-0"
+      className="pressable px-4 py-2.5 rounded-full text-caption font-semibold text-white disabled:opacity-50 flex-shrink-0"
       style={{ background: "var(--color-blue)" }}
     >
       {saving ? "Saving…" : "Save"}
     </button>
   );
-}
-
-function BackIcon() {
-  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>;
 }

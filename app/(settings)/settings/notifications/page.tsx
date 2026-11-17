@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { MessageCircle, UserPlus, BadgeCheck, Phone, Video, CheckCheck, Trash2 } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
+import { SettingsHeader, SectionLabel, SettingsCard, RowIcon, RowDivider, ToggleRow } from "@/components/settings/settings-ui";
 import { updateOwnProfile } from "@/services/chat-service";
 import { markAllNotificationsRead, clearAllNotifications } from "@/services/notification-service";
 import { createClient } from "@/lib/supabase";
@@ -69,72 +70,49 @@ export default function NotificationSettingsPage() {
     <ScreenContainer>
       <div className="app-surface flex flex-col h-full">
         <StatusBar />
-        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
-            <BackIcon />
-          </button>
-          <h1 className="text-title font-bold ml-3">Notifications</h1>
-        </div>
+        <SettingsHeader title="Notifications" />
 
-        <div className="flex-1 overflow-y-auto px-4 pb-8">
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8 space-y-6">
           {message && (
-            <div className="mb-4 px-4 py-3 rounded-2xl text-body" style={{ background: "rgba(52,199,89,0.12)", color: "var(--color-green)" }}>
+            <div className="glass-card px-4 py-3.5 rounded-[20px] text-body font-medium" style={{ background: "rgba(52,199,89,0.14)", color: "var(--color-green)" }}>
               {message}
             </div>
           )}
 
-          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Notify Me About</p>
-          <div className="glass-card rounded-2xl overflow-hidden mb-4">
-            <ToggleRow icon={MessageCircle} label="Messages" checked={profile.notify_messages} onChange={(v) => updateField({ notify_messages: v })} />
-            <ToggleRow icon={UserPlus} label="Spark Requests" checked={profile.notify_spark_requests} onChange={(v) => updateField({ notify_spark_requests: v })} />
-            <ToggleRow icon={BadgeCheck} label="Spark Accepted" checked={profile.notify_spark_accepted} onChange={(v) => updateField({ notify_spark_accepted: v })} />
-            <ToggleRow icon={Phone} label="Voice Calls" checked={profile.notify_voice_calls} onChange={(v) => updateField({ notify_voice_calls: v })} />
-            <ToggleRow icon={Video} label="Video Calls" checked={profile.notify_video_calls} onChange={(v) => updateField({ notify_video_calls: v })} last />
+          <div>
+            <SectionLabel>Notify Me About</SectionLabel>
+            <SettingsCard>
+              <ToggleRow icon={MessageCircle} label="Messages" desc="New messages in your chats" checked={profile.notify_messages} onChange={(v) => updateField({ notify_messages: v })} />
+              <RowDivider />
+              <ToggleRow icon={UserPlus} label="Spark Requests" desc="Someone wants to connect with you" checked={profile.notify_spark_requests} onChange={(v) => updateField({ notify_spark_requests: v })} />
+              <RowDivider />
+              <ToggleRow icon={BadgeCheck} label="Spark Accepted" desc="Your Spark request was accepted" checked={profile.notify_spark_accepted} onChange={(v) => updateField({ notify_spark_accepted: v })} />
+              <RowDivider />
+              <ToggleRow icon={Phone} label="Voice Calls" desc="Incoming voice calls" checked={profile.notify_voice_calls} onChange={(v) => updateField({ notify_voice_calls: v })} />
+              <RowDivider />
+              <ToggleRow icon={Video} label="Video Calls" desc="Incoming video calls" checked={profile.notify_video_calls} onChange={(v) => updateField({ notify_video_calls: v })} />
+            </SettingsCard>
+            <p className="text-caption mt-2 px-2" style={{ color: "var(--color-gray-1)" }}>
+              Turning off a call notification silences its ringtone — the call still shows on screen.
+            </p>
           </div>
 
-          <div className="glass-card rounded-2xl overflow-hidden">
-            <button onClick={handleMarkAllRead} className="w-full flex items-center gap-3 px-4 py-4 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
-                <CheckCheck size={18} color="var(--color-blue)" strokeWidth={1.8} />
-              </div>
-              <span className="text-body font-medium">Mark All as Read</span>
-            </button>
-            <button onClick={handleClearAll} className="w-full flex items-center gap-3 px-4 py-4">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,59,48,0.12)" }}>
-                <Trash2 size={18} color="var(--color-red)" strokeWidth={1.8} />
-              </div>
-              <span className="text-body font-medium" style={{ color: "var(--color-red)" }}>Clear All Notifications</span>
-            </button>
+          <div>
+            <SectionLabel>Manage</SectionLabel>
+            <SettingsCard>
+              <button onClick={handleMarkAllRead} className="pressable w-full flex items-center gap-3 px-4 py-4 text-left">
+                <RowIcon icon={CheckCheck} />
+                <span className="text-body font-medium flex-1">Mark All as Read</span>
+              </button>
+              <RowDivider />
+              <button onClick={handleClearAll} className="pressable w-full flex items-center gap-3 px-4 py-4 text-left">
+                <RowIcon icon={Trash2} tint="rgba(255,59,48,0.12)" color="var(--color-red)" />
+                <span className="text-body font-medium flex-1" style={{ color: "var(--color-red)" }}>Clear All Notifications</span>
+              </button>
+            </SettingsCard>
           </div>
         </div>
       </div>
     </ScreenContainer>
   );
-}
-
-function ToggleRow({
-  icon: Icon, label, checked, onChange, last,
-}: {
-  icon: import("lucide-react").LucideIcon; label: string; checked: boolean; onChange: (v: boolean) => void; last?: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: last ? "none" : "1px solid var(--color-gray-2)" }}>
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
-        <Icon size={18} color="var(--color-blue)" strokeWidth={1.8} />
-      </div>
-      <span className="flex-1 text-body font-medium">{label}</span>
-      <button
-        onClick={() => onChange(!checked)}
-        className="w-11 h-6 rounded-full flex-shrink-0 relative transition-colors"
-        style={{ background: checked ? "var(--color-green)" : "var(--color-gray-3)" }}
-        aria-label={label}
-      >
-        <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform" style={{ transform: checked ? "translateX(22px)" : "translateX(2px)" }} />
-      </button>
-    </div>
-  );
-}
-
-function BackIcon() {
-  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>;
 }

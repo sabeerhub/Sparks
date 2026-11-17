@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Image as ImageIcon, FileText, Mic, HardDrive } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
+import { SettingsHeader, SectionLabel, SettingsCard, RowIcon, RowDivider } from "@/components/settings/settings-ui";
 import { createClient } from "@/lib/supabase";
 
 const supabase = createClient();
@@ -45,32 +46,36 @@ export default function StorageSettingsPage() {
     <ScreenContainer>
       <div className="app-surface flex flex-col h-full">
         <StatusBar />
-        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
-            <BackIcon />
-          </button>
-          <h1 className="text-title font-bold ml-3">Storage and Data</h1>
-        </div>
+        <SettingsHeader title="Storage and Data" />
 
-        <div className="flex-1 overflow-y-auto px-4 pb-8">
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8 space-y-6">
           {loading ? (
             <div className="flex items-center justify-center py-16">
               <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: "var(--color-gray-3)", borderTopColor: "var(--color-blue)" }} />
             </div>
           ) : (
             <>
-              <div className="glass-card rounded-2xl p-5 mb-4 flex flex-col items-center">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: "rgba(0,122,255,0.1)" }}>
-                  <HardDrive size={28} color="var(--color-blue)" strokeWidth={1.8} />
+              {/* Hero — total used, glass tile with sheen. */}
+              <div className="glass-card glass-sheen rounded-[28px] px-5 py-7 flex flex-col items-center text-center">
+                <div className="glass w-[76px] h-[76px] rounded-full flex items-center justify-center mb-4" style={{ background: "rgba(0,122,255,0.12)" }}>
+                  <HardDrive size={34} color="var(--color-blue)" strokeWidth={1.7} />
                 </div>
-                <span className="text-title font-bold">{formatBytes(usage?.total_bytes ?? 0)}</span>
-                <span className="text-body" style={{ color: "var(--color-gray-1)" }}>Total Storage Used</span>
+                <span className="text-title font-bold" style={{ fontSize: 32, lineHeight: "38px" }}>{formatBytes(usage?.total_bytes ?? 0)}</span>
+                <span className="text-body mt-1" style={{ color: "var(--color-gray-1)" }}>Total Storage Used</span>
+                <span className="text-caption mt-2" style={{ color: "var(--color-gray-1)" }}>
+                  Media you uploaded — files others sent you are counted on their side.
+                </span>
               </div>
 
-              <div className="glass-card rounded-2xl overflow-hidden">
-                <UsageRow icon={ImageIcon} label="Images" bytes={usage?.images_bytes ?? 0} barWidth={barWidth(usage?.images_bytes ?? 0)} color="var(--color-blue)" />
-                <UsageRow icon={FileText} label="Files" bytes={usage?.files_bytes ?? 0} barWidth={barWidth(usage?.files_bytes ?? 0)} color="var(--color-orange)" />
-                <UsageRow icon={Mic} label="Voice Notes" bytes={usage?.voice_bytes ?? 0} barWidth={barWidth(usage?.voice_bytes ?? 0)} color="var(--color-green)" last />
+              <div>
+                <SectionLabel>Breakdown</SectionLabel>
+                <SettingsCard>
+                  <UsageRow icon={ImageIcon} label="Images" desc="Photos shared in chats" bytes={usage?.images_bytes ?? 0} barWidth={barWidth(usage?.images_bytes ?? 0)} color="var(--color-blue)" tint="rgba(0,122,255,0.12)" />
+                  <RowDivider />
+                  <UsageRow icon={FileText} label="Files" desc="Documents and other files" bytes={usage?.files_bytes ?? 0} barWidth={barWidth(usage?.files_bytes ?? 0)} color="var(--color-orange)" tint="rgba(255,149,0,0.12)" />
+                  <RowDivider />
+                  <UsageRow icon={Mic} label="Voice Notes" desc="Recorded voice messages" bytes={usage?.voice_bytes ?? 0} barWidth={barWidth(usage?.voice_bytes ?? 0)} color="var(--color-green)" tint="rgba(52,199,89,0.12)" />
+                </SettingsCard>
               </div>
             </>
           )}
@@ -81,26 +86,26 @@ export default function StorageSettingsPage() {
 }
 
 function UsageRow({
-  icon: Icon, label, bytes, barWidth, color, last,
+  icon: Icon, label, desc, bytes, barWidth, color, tint,
 }: {
-  icon: import("lucide-react").LucideIcon; label: string; bytes: number; barWidth: string; color: string; last?: boolean;
+  icon: import("lucide-react").LucideIcon; label: string; desc: string; bytes: number; barWidth: string; color: string; tint: string;
 }) {
   return (
-    <div className="px-4 py-4" style={{ borderBottom: last ? "none" : "1px solid var(--color-gray-2)" }}>
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}20` }}>
-          <Icon size={18} color={color} strokeWidth={1.8} />
+    <div className="px-4 py-4">
+      <div className="flex items-center gap-3">
+        <RowIcon icon={Icon} tint={tint} color={color} />
+        <div className="flex-1 min-w-0">
+          <div className="text-body font-medium">{label}</div>
+          <div className="text-caption mt-0.5" style={{ color: "var(--color-gray-1)" }}>{desc}</div>
         </div>
-        <span className="flex-1 text-body font-medium">{label}</span>
-        <span className="text-body font-semibold" style={{ color: "var(--color-gray-1)" }}>{formatBytes(bytes)}</span>
+        <span className="text-body font-semibold flex-shrink-0">{formatBytes(bytes)}</span>
       </div>
-      <div className="h-1.5 rounded-full ml-12" style={{ background: "var(--color-gray-2)" }}>
-        <div className="h-full rounded-full" style={{ width: barWidth, background: color }} />
+      <div className="h-2 rounded-full ml-[52px] mt-3 overflow-hidden" style={{ background: "rgba(0,0,0,0.06)" }}>
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: barWidth, background: color, boxShadow: `0 0 8px ${color}66` }}
+        />
       </div>
     </div>
   );
-}
-
-function BackIcon() {
-  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>;
 }

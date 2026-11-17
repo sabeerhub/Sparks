@@ -129,82 +129,88 @@ export default function EditProfilePage() {
 
   return (
     <>
-    <div className="app-surface h-full w-full">
-      <div className="app-surface flex flex-col h-full">
+      <div className="app-surface h-full w-full flex flex-col">
         <StatusBar />
 
         {/* Header bar */}
-        <div className="frosted-header flex items-center justify-between px-4 py-3">
-          <button onClick={() => router.back()} className="text-body font-medium" style={{ color: "var(--color-gray-1)" }}>
+        <div className="frosted-header flex items-center justify-between px-4 py-3 flex-shrink-0">
+          <button onClick={() => router.back()} className="glass pressable px-4 py-2 rounded-full text-body font-medium" style={{ color: "var(--color-gray-1)" }}>
             Cancel
           </button>
-          <h1 className="text-title font-semibold">Edit Profile</h1>
+          <h1 className="text-title font-bold">Edit Profile</h1>
           <button
             onClick={handleSave}
             disabled={saving || uploading}
-            className="pressable text-body font-semibold disabled:opacity-40"
-            style={{ color: "var(--color-blue)" }}
+            className="pressable px-4 py-2 rounded-full text-body font-semibold text-white disabled:opacity-40"
+            style={{ background: "var(--color-blue)", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }}
           >
             {saving ? "Saving…" : "Save"}
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {/* Avatar */}
-          <div className="glass flex flex-col items-center py-8">
-            <button onClick={handlePickPhoto} className="relative active:opacity-70 transition-opacity" disabled={uploading}>
-              <Avatar name={fullName || "?"} src={avatarPreview} size={96} />
-              <div
-                className="absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center border-2 border-white"
-                style={{ background: "var(--color-blue)" }}
-              >
-                {uploading ? (
-                  <div className="w-3.5 h-3.5 rounded-full border-2 animate-spin" style={{ borderColor: "rgba(255,255,255,0.4)", borderTopColor: "white" }} />
-                ) : (
-                  <CameraIcon />
-                )}
+          <div className="w-full max-w-md mx-auto px-4 pt-4 pb-8 space-y-4">
+            {/* Avatar hero — glass card with sheen. */}
+            <div className="glass-card glass-sheen rounded-[28px] px-5 py-8 flex flex-col items-center">
+              <button onClick={handlePickPhoto} className="relative pressable" disabled={uploading} aria-label="Change photo">
+                <div className="rounded-full p-1" style={{ background: "rgba(255,255,255,0.9)", boxShadow: "0 8px 24px rgba(0,122,255,0.18)" }}>
+                  <div className="rounded-full ring-4 ring-white/80">
+                    <Avatar name={fullName || "?"} src={avatarPreview} size={112} />
+                  </div>
+                </div>
+                <div
+                  className="absolute bottom-1 right-1 w-9 h-9 rounded-full flex items-center justify-center border-[3px] border-white"
+                  style={{ background: "var(--color-blue)", boxShadow: "0 4px 12px rgba(0,122,255,0.35)" }}
+                >
+                  {uploading ? (
+                    <div className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: "rgba(255,255,255,0.4)", borderTopColor: "white" }} />
+                  ) : (
+                    <CameraIcon />
+                  )}
+                </div>
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+              <button onClick={handlePickPhoto} className="text-body font-semibold mt-4" style={{ color: "var(--color-blue)" }}>
+                Change Photo
+              </button>
+              <p className="text-caption mt-1" style={{ color: "var(--color-gray-1)" }}>Images up to 5MB</p>
+            </div>
+
+            {error && (
+              <div className="glass-card px-4 py-3.5 rounded-[20px] text-body font-medium" style={{ background: "rgba(255,59,48,0.12)", color: "var(--color-red)" }}>
+                {error}
               </div>
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-            <button onClick={handlePickPhoto} className="text-body font-medium mt-3" style={{ color: "var(--color-blue)" }}>
-              Change Photo
-            </button>
-          </div>
+            )}
 
-          {error && (
-            <p className="text-caption text-center mt-3 px-6" style={{ color: "var(--color-red)" }}>
-              {error}
-            </p>
-          )}
-
-          {/* Fields */}
-          <div className="px-4 pt-6 space-y-3">
-            <div className="glass-card rounded-2xl overflow-hidden">
+            {/* Identity fields */}
+            <div className="glass-card rounded-[24px] overflow-hidden">
               <Field label="Name">
                 <input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   maxLength={50}
                   placeholder="Your name"
-                  className="flex-1 text-body outline-none bg-transparent text-right"
+                  className="glass-input flex-1 text-body outline-none px-4 py-2.5 rounded-full text-right min-w-0"
                 />
               </Field>
-              <Field label="Username" last={false} readOnly>
-                <span className="flex-1 text-body text-right" style={{ color: "var(--color-gray-1)" }}>
+              <div className="mx-4" style={{ height: 1, background: "var(--color-gray-2)" }} />
+              <Field label="Username" readOnly>
+                <span className="flex-1 text-body text-right truncate" style={{ color: "var(--color-gray-1)" }}>
                   @{profile?.username}
                 </span>
               </Field>
             </div>
 
-            <div className="glass-card rounded-2xl overflow-hidden p-4">
+            {/* Bio */}
+            <div className="glass-card rounded-[24px] p-5">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-body font-medium">Bio</label>
+                <label className="text-caption font-semibold uppercase tracking-wide" style={{ color: "var(--color-gray-1)" }}>Bio</label>
                 <span className="text-caption" style={{ color: "var(--color-gray-1)" }}>
                   {bio.length}/{MAX_BIO_LENGTH}
                 </span>
@@ -214,13 +220,13 @@ export default function EditProfilePage() {
                 onChange={(e) => setBio(e.target.value.slice(0, MAX_BIO_LENGTH))}
                 placeholder="Tell people a little about yourself"
                 rows={3}
-                className="w-full text-body outline-none bg-transparent resize-none"
+                className="w-full text-body outline-none bg-transparent resize-none leading-relaxed"
               />
             </div>
-            </div>
 
-            <div className="glass-card rounded-2xl overflow-hidden p-4">
-              <label className="text-body font-medium mb-2 block">Location</label>
+            {/* Location */}
+            <div className="glass-card rounded-[24px] p-5">
+              <label className="text-caption font-semibold uppercase tracking-wide block mb-2" style={{ color: "var(--color-gray-1)" }}>Location</label>
               <input
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
@@ -228,10 +234,20 @@ export default function EditProfilePage() {
                 placeholder="City, Country"
                 className="w-full text-body outline-none bg-transparent"
               />
+            </div>
+
+            {/* Bottom save — thumb-reachable, same action as the header. */}
+            <button
+              onClick={handleSave}
+              disabled={saving || uploading}
+              className="pressable w-full py-3.5 rounded-full text-body font-semibold text-white disabled:opacity-40"
+              style={{ background: "var(--color-blue)", boxShadow: "0 6px 20px rgba(0,122,255,0.35)" }}
+            >
+              {saving ? "Saving…" : "Save Changes"}
+            </button>
           </div>
         </div>
       </div>
-    </div>
       {cropSrc && (
         <AvatarCropper
           imageSrc={cropSrc}
@@ -243,13 +259,12 @@ export default function EditProfilePage() {
   );
 }
 
-function Field({ label, children, last, readOnly }: { label: string; children: React.ReactNode; last?: boolean; readOnly?: boolean }) {
+function Field({ label, children, readOnly }: { label: string; children: React.ReactNode; readOnly?: boolean }) {
   return (
     <div
-      className={`flex items-center justify-between px-4 py-4 ${last ? "" : "border-b"} ${readOnly ? "opacity-70" : ""}`}
-      style={{ borderColor: "var(--color-gray-2)" }}
+      className={`flex items-center gap-3 px-4 py-4 ${readOnly ? "opacity-70" : ""}`}
     >
-      <label className="text-body font-medium flex-shrink-0 mr-3">{label}</label>
+      <label className="text-body font-medium flex-shrink-0">{label}</label>
       {children}
     </div>
   );
@@ -257,7 +272,7 @@ function Field({ label, children, last, readOnly }: { label: string; children: R
 
 function CameraIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>

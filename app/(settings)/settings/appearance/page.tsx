@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sun, Type, MessageSquare, Check } from "lucide-react";
+import { Sun, Type, MessageSquare } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
+import { SettingsHeader, SectionLabel, SettingsCard, RowDivider, OptionRow } from "@/components/settings/settings-ui";
 import { updateOwnProfile } from "@/services/chat-service";
 import { createClient } from "@/lib/supabase";
 import type { Profile } from "@/types";
@@ -57,62 +58,87 @@ export default function AppearanceSettingsPage() {
     <ScreenContainer>
       <div className="app-surface flex flex-col h-full">
         <StatusBar />
-        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
-            <BackIcon />
-          </button>
-          <h1 className="text-title font-bold ml-3">Appearance</h1>
-        </div>
+        <SettingsHeader title="Appearance" />
 
-        <div className="flex-1 overflow-y-auto px-4 pb-8">
-          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Theme</p>
-          <div className="glass-card rounded-2xl overflow-hidden mb-4">
-            <OptionRow icon={Sun} label="Light" selected={profile.theme_preference === "light"} onClick={() => updateField({ theme_preference: "light" })} last />
-          </div>
-          <p className="text-caption px-1 mb-4" style={{ color: "var(--color-gray-1)" }}>
-            Sparks is light theme only, by design.
-          </p>
-
-          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Font Size</p>
-          <div className="glass-card rounded-2xl overflow-hidden mb-4">
-            <OptionRow icon={Type} label="Small" selected={profile.font_size === "small"} onClick={() => updateField({ font_size: "small" })} />
-            <OptionRow icon={Type} label="Medium" selected={profile.font_size === "medium"} onClick={() => updateField({ font_size: "medium" })} />
-            <OptionRow icon={Type} label="Large" selected={profile.font_size === "large"} onClick={() => updateField({ font_size: "large" })} last />
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8 space-y-6">
+          <div>
+            <SectionLabel>Theme</SectionLabel>
+            <SettingsCard>
+              <OptionRow
+                icon={Sun}
+                label="Light"
+                preview={<span className="w-8 h-8 rounded-full flex-shrink-0 border" style={{ background: "#fff", borderColor: "var(--color-gray-3)" }} />}
+                selected={profile.theme_preference === "light"}
+                onClick={() => updateField({ theme_preference: "light" })}
+              />
+            </SettingsCard>
+            <p className="text-caption mt-2 px-2" style={{ color: "var(--color-gray-1)" }}>
+              Sparks is light theme only, by design.
+            </p>
           </div>
 
-          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Chat Bubble Size</p>
-          <div className="glass-card rounded-2xl overflow-hidden">
-            <OptionRow icon={MessageSquare} label="Compact" selected={profile.bubble_size === "compact"} onClick={() => updateField({ bubble_size: "compact" })} />
-            <OptionRow icon={MessageSquare} label="Standard" selected={profile.bubble_size === "standard"} onClick={() => updateField({ bubble_size: "standard" })} />
-            <OptionRow icon={MessageSquare} label="Large" selected={profile.bubble_size === "large"} onClick={() => updateField({ bubble_size: "large" })} last />
+          <div>
+            <SectionLabel>Font Size</SectionLabel>
+            <SettingsCard>
+              <OptionRow
+                icon={Type}
+                label="Small"
+                preview={<span className="font-semibold flex-shrink-0" style={{ fontSize: 14 }}>Aa</span>}
+                selected={profile.font_size === "small"}
+                onClick={() => updateField({ font_size: "small" })}
+              />
+              <RowDivider />
+              <OptionRow
+                icon={Type}
+                label="Medium"
+                preview={<span className="font-semibold flex-shrink-0" style={{ fontSize: 16 }}>Aa</span>}
+                selected={profile.font_size === "medium"}
+                onClick={() => updateField({ font_size: "medium" })}
+              />
+              <RowDivider />
+              <OptionRow
+                icon={Type}
+                label="Large"
+                preview={<span className="font-semibold flex-shrink-0" style={{ fontSize: 19 }}>Aa</span>}
+                selected={profile.font_size === "large"}
+                onClick={() => updateField({ font_size: "large" })}
+              />
+            </SettingsCard>
+          </div>
+
+          <div>
+            <SectionLabel>Chat Bubble Size</SectionLabel>
+            <SettingsCard>
+              <OptionRow
+                icon={MessageSquare}
+                label="Compact"
+                preview={<span className="px-3 py-1 rounded-2xl text-caption font-medium flex-shrink-0" style={{ background: "var(--color-blue-light)", color: "var(--color-blue)" }}>Hello</span>}
+                selected={profile.bubble_size === "compact"}
+                onClick={() => updateField({ bubble_size: "compact" })}
+              />
+              <RowDivider />
+              <OptionRow
+                icon={MessageSquare}
+                label="Standard"
+                preview={<span className="px-3.5 py-2 rounded-[20px] text-body font-medium flex-shrink-0" style={{ background: "var(--color-blue-light)", color: "var(--color-blue)" }}>Hello</span>}
+                selected={profile.bubble_size === "standard"}
+                onClick={() => updateField({ bubble_size: "standard" })}
+              />
+              <RowDivider />
+              <OptionRow
+                icon={MessageSquare}
+                label="Large"
+                preview={<span className="px-4 py-2.5 rounded-[22px] font-medium flex-shrink-0" style={{ background: "var(--color-blue-light)", color: "var(--color-blue)", fontSize: 18 }}>Hello</span>}
+                selected={profile.bubble_size === "large"}
+                onClick={() => updateField({ bubble_size: "large" })}
+              />
+            </SettingsCard>
+            <p className="text-caption mt-2 px-2" style={{ color: "var(--color-gray-1)" }}>
+              Changes apply to your chats right away.
+            </p>
           </div>
         </div>
       </div>
     </ScreenContainer>
   );
-}
-
-function OptionRow({
-  icon: Icon, label, selected, onClick, disabled, last,
-}: {
-  icon: import("lucide-react").LucideIcon; label: string; selected: boolean; onClick: () => void; disabled?: boolean; last?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className="w-full flex items-center gap-3 px-4 py-4 disabled:opacity-40"
-      style={{ borderBottom: last ? "none" : "1px solid var(--color-gray-2)" }}
-    >
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
-        <Icon size={18} color="var(--color-blue)" strokeWidth={1.8} />
-      </div>
-      <span className="flex-1 text-body font-medium text-left">{label}</span>
-      {selected && <Check size={18} color="var(--color-blue)" strokeWidth={2.2} />}
-    </button>
-  );
-}
-
-function BackIcon() {
-  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>;
 }

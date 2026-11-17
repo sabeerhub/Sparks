@@ -6,6 +6,7 @@ import { Eye, Radio, CheckCheck, Keyboard, UserCircle, UserPlus, Ban } from "luc
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { Avatar } from "@/components/ui/Avatar";
+import { SettingsHeader, SectionLabel, SettingsCard, RowIcon, RowDivider, ToggleRow } from "@/components/settings/settings-ui";
 import { updateOwnProfile, getBlockedUsers, unblockUser } from "@/services/chat-service";
 import { createClient } from "@/lib/supabase";
 import type { Profile } from "@/types";
@@ -63,69 +64,79 @@ export default function PrivacySettingsPage() {
     <ScreenContainer>
       <div className="app-surface flex flex-col h-full">
         <StatusBar />
-        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
-            <BackIcon />
-          </button>
-          <h1 className="text-title font-bold ml-3">Privacy</h1>
-        </div>
+        <SettingsHeader title="Privacy" />
 
-        <div className="flex-1 overflow-y-auto px-4 pb-8">
-          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Visibility</p>
-          <div className="glass-card rounded-2xl overflow-hidden mb-4">
-            <ToggleRow icon={Eye} label="Last Seen" desc="Let others see when you were last active" checked={profile.last_seen_visible} onChange={(v) => updateField({ last_seen_visible: v })} />
-            <ToggleRow icon={Radio} label="Online Status" desc="Show a green dot when you're online" checked={profile.online_status_visible} onChange={(v) => updateField({ online_status_visible: v })} />
-            <ToggleRow icon={CheckCheck} label="Read Receipts" desc="Let others see when you've read their messages" checked={profile.read_receipts_enabled} onChange={(v) => updateField({ read_receipts_enabled: v })} />
-            <ToggleRow icon={Keyboard} label="Typing Indicator" desc="Show others when you're typing" checked={profile.typing_indicator_enabled} onChange={(v) => updateField({ typing_indicator_enabled: v })} last />
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8 space-y-6">
+          <div>
+            <SectionLabel>Visibility</SectionLabel>
+            <SettingsCard>
+              <ToggleRow icon={Eye} label="Last Seen" desc="Let others see when you were last active" checked={profile.last_seen_visible} onChange={(v) => updateField({ last_seen_visible: v })} />
+              <RowDivider />
+              <ToggleRow icon={Radio} label="Online Status" desc="Show a green dot when you're online" checked={profile.online_status_visible} onChange={(v) => updateField({ online_status_visible: v })} />
+              <RowDivider />
+              <ToggleRow icon={CheckCheck} label="Read Receipts" desc="Let others see when you've read their messages" checked={profile.read_receipts_enabled} onChange={(v) => updateField({ read_receipts_enabled: v })} />
+              <RowDivider />
+              <ToggleRow icon={Keyboard} label="Typing Indicator" desc="Show others when you're typing" checked={profile.typing_indicator_enabled} onChange={(v) => updateField({ typing_indicator_enabled: v })} />
+            </SettingsCard>
           </div>
 
-          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Access</p>
-          <div className="glass-card rounded-2xl overflow-hidden mb-4">
-            <SelectRow
-              icon={UserCircle}
-              label="Profile Visibility"
-              value={profile.profile_visibility}
-              options={[
-                { value: "everyone", label: "Everyone" },
-                { value: "sparks_only", label: "Sparks Only" },
-                { value: "nobody", label: "Nobody" },
-              ]}
-              onChange={(v) => updateField({ profile_visibility: v as Profile["profile_visibility"] })}
-            />
-            <SelectRow
-              icon={UserPlus}
-              label="Who Can Send Sparks"
-              value={profile.who_can_spark}
-              options={[
-                { value: "everyone", label: "Everyone" },
-                { value: "nobody", label: "Nobody" },
-              ]}
-              onChange={(v) => updateField({ who_can_spark: v as Profile["who_can_spark"] })}
-              last
-            />
+          <div>
+            <SectionLabel>Access</SectionLabel>
+            <SettingsCard>
+              <SelectRow
+                icon={UserCircle}
+                label="Profile Visibility"
+                value={profile.profile_visibility}
+                options={[
+                  { value: "everyone", label: "Everyone" },
+                  { value: "sparks_only", label: "Sparks Only" },
+                  { value: "nobody", label: "Nobody" },
+                ]}
+                onChange={(v) => updateField({ profile_visibility: v as Profile["profile_visibility"] })}
+              />
+              <RowDivider />
+              <SelectRow
+                icon={UserPlus}
+                label="Who Can Send Sparks"
+                value={profile.who_can_spark}
+                options={[
+                  { value: "everyone", label: "Everyone" },
+                  { value: "nobody", label: "Nobody" },
+                ]}
+                onChange={(v) => updateField({ who_can_spark: v as Profile["who_can_spark"] })}
+              />
+            </SettingsCard>
           </div>
 
-          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Blocked Users</p>
-          <div className="glass-card rounded-2xl overflow-hidden">
-            {blockedUsers.length === 0 ? (
-              <div className="flex items-center gap-3 px-4 py-4">
-                <Ban size={18} color="var(--color-gray-1)" strokeWidth={1.8} />
-                <span className="text-body" style={{ color: "var(--color-gray-1)" }}>No blocked users</span>
-              </div>
-            ) : (
-              blockedUsers.map((u, i) => (
-                <div key={u.id} className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: i < blockedUsers.length - 1 ? "1px solid var(--color-gray-2)" : "none" }}>
-                  <Avatar name={u.full_name} src={u.avatar_url} size={36} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-body font-medium truncate">{u.full_name}</div>
-                    <div className="text-caption truncate" style={{ color: "var(--color-gray-1)" }}>@{u.username}</div>
+          <div>
+            <SectionLabel>Blocked Users</SectionLabel>
+            <SettingsCard>
+              {blockedUsers.length === 0 ? (
+                <div className="flex items-center gap-3 px-4 py-5">
+                  <RowIcon icon={Ban} tint="rgba(110,110,115,0.12)" color="var(--color-gray-1)" />
+                  <div>
+                    <div className="text-body font-medium">No blocked users</div>
+                    <div className="text-caption mt-0.5" style={{ color: "var(--color-gray-1)" }}>People you block will appear here.</div>
                   </div>
-                  <button onClick={() => handleUnblock(u.id)} className="text-caption font-semibold" style={{ color: "var(--color-blue)" }}>
-                    Unblock
-                  </button>
                 </div>
-              ))
-            )}
+              ) : (
+                blockedUsers.map((u, i) => (
+                  <div key={u.id}>
+                    {i > 0 && <RowDivider />}
+                    <div className="flex items-center gap-3 px-4 py-3.5">
+                      <Avatar name={u.full_name} src={u.avatar_url} size={44} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-body font-medium truncate">{u.full_name}</div>
+                        <div className="text-caption truncate" style={{ color: "var(--color-gray-1)" }}>@{u.username}</div>
+                      </div>
+                      <button onClick={() => handleUnblock(u.id)} className="glass pressable px-3.5 py-1.5 rounded-full text-caption font-semibold flex-shrink-0" style={{ color: "var(--color-blue)" }}>
+                        Unblock
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </SettingsCard>
           </div>
         </div>
       </div>
@@ -133,59 +144,24 @@ export default function PrivacySettingsPage() {
   );
 }
 
-function ToggleRow({
-  icon: Icon, label, desc, checked, onChange, last,
-}: {
-  icon: import("lucide-react").LucideIcon; label: string; desc: string; checked: boolean; onChange: (v: boolean) => void; last?: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: last ? "none" : "1px solid var(--color-gray-2)" }}>
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
-        <Icon size={18} color="var(--color-blue)" strokeWidth={1.8} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-body font-medium">{label}</div>
-        <div className="text-caption" style={{ color: "var(--color-gray-1)" }}>{desc}</div>
-      </div>
-      <button
-        onClick={() => onChange(!checked)}
-        className="w-11 h-6 rounded-full flex-shrink-0 relative transition-colors"
-        style={{ background: checked ? "var(--color-green)" : "var(--color-gray-3)" }}
-        aria-label={label}
-      >
-        <span
-          className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform"
-          style={{ transform: checked ? "translateX(22px)" : "translateX(2px)" }}
-        />
-      </button>
-    </div>
-  );
-}
-
 function SelectRow({
-  icon: Icon, label, value, options, onChange, last,
+  icon: Icon, label, value, options, onChange,
 }: {
   icon: import("lucide-react").LucideIcon; label: string; value: string;
-  options: { value: string; label: string }[]; onChange: (v: string) => void; last?: boolean;
+  options: { value: string; label: string }[]; onChange: (v: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: last ? "none" : "1px solid var(--color-gray-2)" }}>
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
-        <Icon size={18} color="var(--color-blue)" strokeWidth={1.8} />
-      </div>
+    <div className="flex items-center gap-3 px-4 py-4">
+      <RowIcon icon={Icon} />
       <span className="flex-1 text-body font-medium">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="text-body font-medium outline-none bg-transparent text-right"
+        className="glass px-3 py-1.5 rounded-full text-body font-semibold outline-none text-right"
         style={{ color: "var(--color-blue)" }}
       >
         {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
   );
-}
-
-function BackIcon() {
-  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>;
 }

@@ -56,8 +56,8 @@ function NotificationIcon({ type }: { type: AppNotification["type"] }) {
 function NotificationRow({ n, onOpen, onDelete }: { n: AppNotification; onOpen: () => void; onDelete: () => void }) {
   return (
     <div
-      className="glass-row flex items-center gap-3 px-4 py-4 rounded-2xl"
-      style={{ borderColor: "var(--color-gray-2)", background: n.is_read ? "transparent" : "rgba(0,122,255,0.04)" }}
+      className="glass-row flex items-center gap-3 px-4 py-4"
+      style={{ background: n.is_read ? "transparent" : "rgba(0,122,255,0.05)" }}
     >
       <button onClick={onOpen} className="flex items-center gap-3 flex-1 min-w-0 text-left">
         <NotificationIcon type={n.type} />
@@ -80,7 +80,7 @@ function IncomingRow({ request, onRespond }: { request: SparkRequestWithProfile;
   const handle = async (accept: boolean) => { setLoading(true); await onRespond(request.id, accept); setLoading(false); };
 
   return (
-    <div className="flex items-center gap-3 px-4 py-4 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
+    <div className="flex items-center gap-3 px-4 py-4">
       <Avatar name={request.profile.full_name} src={request.profile.avatar_url} size={52} online={request.profile.is_online} />
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-body truncate">{request.profile.full_name}</p>
@@ -113,7 +113,7 @@ function IncomingRow({ request, onRespond }: { request: SparkRequestWithProfile;
 
 function OutgoingRow({ request }: { request: SparkRequestWithProfile }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-4 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
+    <div className="flex items-center gap-3 px-4 py-4">
       <Avatar name={request.profile.full_name} src={request.profile.avatar_url} size={48} online={request.profile.is_online} />
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-body truncate">{request.profile.full_name}</p>
@@ -244,29 +244,57 @@ export default function ActivityPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {loading && <><RowSkeleton /><RowSkeleton /><RowSkeleton /></>}
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-6">
+          {loading && (
+            <div className="glass-card rounded-[24px] overflow-hidden">
+              <RowSkeleton /><RowSkeleton /><RowSkeleton />
+            </div>
+          )}
 
           {!loading && tab === "notifications" && (
             notifications.length === 0
               ? <EmptyState title="No notifications yet" subtitle="New messages, Spark requests, and updates will appear here." />
-              : notifications.map((n) => (
-                  <NotificationRow key={n.id} n={n} onOpen={() => handleOpenNotification(n)} onDelete={() => handleDeleteNotification(n.id)} />
-                ))
+              : (
+                <div className="glass-card rounded-[24px] overflow-hidden">
+                  {notifications.map((n, i) => (
+                    <div key={n.id}>
+                      {i > 0 && <div className="mx-4" style={{ height: 1, background: "var(--color-gray-2)" }} />}
+                      <NotificationRow n={n} onOpen={() => handleOpenNotification(n)} onDelete={() => handleDeleteNotification(n.id)} />
+                    </div>
+                  ))}
+                </div>
+              )
           )}
 
           {!loading && tab === "incoming" && (
             incoming.length === 0
               ? <EmptyState wordmark title="No spark requests" subtitle="When someone sends you a Spark Request, it will appear here." />
-              : incoming.map((r) => <IncomingRow key={r.id} request={r} onRespond={handleRespond} />)
+              : (
+                <div className="glass-card rounded-[24px] overflow-hidden">
+                  {incoming.map((r, i) => (
+                    <div key={r.id}>
+                      {i > 0 && <div className="mx-4" style={{ height: 1, background: "var(--color-gray-2)" }} />}
+                      <IncomingRow request={r} onRespond={handleRespond} />
+                    </div>
+                  ))}
+                </div>
+              )
           )}
 
           {!loading && tab === "outgoing" && (
             outgoing.length === 0
               ? <EmptyState wordmark title="No pending requests" subtitle="Requests you've sent that haven't been accepted yet will appear here." />
-              : outgoing.map((r) => <OutgoingRow key={r.id} request={r} />)
+              : (
+                <div className="glass-card rounded-[24px] overflow-hidden">
+                  {outgoing.map((r, i) => (
+                    <div key={r.id}>
+                      {i > 0 && <div className="mx-4" style={{ height: 1, background: "var(--color-gray-2)" }} />}
+                      <OutgoingRow request={r} />
+                    </div>
+                  ))}
+                </div>
+              )
           )}
-          <div className="h-4" />
         </div>
 
         <div className="md:hidden"><BottomNav /></div>

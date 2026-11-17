@@ -1,8 +1,10 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { Info, ShieldCheck, FileText } from "lucide-react";
 import { SparkWordmark } from "@/components/brand/SparkWordmark";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
+import { SettingsHeader, SectionLabel, SettingsCard, SettingsRow, RowDivider } from "@/components/settings/settings-ui";
 
 export default function AboutPage() {
   const router = useRouter();
@@ -10,17 +12,47 @@ export default function AboutPage() {
     <ScreenContainer>
       <div className="app-surface flex flex-col h-full">
         <StatusBar />
-        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-          </button>
-          <h1 className="text-title font-bold ml-3">About Sparks</h1>
-        </div>
-        <div className="flex-1 flex flex-col items-center pt-10 px-8 text-center">
-          <div className="glass-card rounded-[28px] px-8 py-8 flex flex-col items-center w-full max-w-xs">
+        <SettingsHeader title="About Sparks" />
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8 space-y-6">
+          {/* Brand hero */}
+          <div className="glass-card glass-sheen rounded-[28px] px-6 py-9 flex flex-col items-center text-center">
             <SparkWordmark size="medium" animate />
-            <p className="text-body mt-4" style={{ color: "var(--color-gray-1)" }}>Version 1.3.0</p>
-            <p className="text-body mt-4" style={{ color: "var(--color-gray-1)" }}>Private, secure, real-time messaging.</p>
+            <p className="text-body mt-5 leading-relaxed max-w-[260px]" style={{ color: "var(--color-gray-1)" }}>
+              Private, secure, real-time messaging — one-to-one, by Spark request.
+            </p>
+          </div>
+
+          <div>
+            <SectionLabel>Details</SectionLabel>
+            <SettingsCard>
+              <div className="flex items-center gap-3 px-4 py-4">
+                <div className="glass w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
+                  <Info size={19} color="var(--color-blue)" strokeWidth={1.8} />
+                </div>
+                <span className="flex-1 text-body font-medium">Version</span>
+                <span className="text-body" style={{ color: "var(--color-gray-1)" }}>1.3.1</span>
+              </div>
+              <RowDivider />
+              <SettingsRow
+                icon={ShieldCheck}
+                tint="rgba(52,199,89,0.12)"
+                iconColor="var(--color-green)"
+                label="Privacy Policy"
+                desc="How your data is handled"
+                onClick={() => router.push("/privacy")}
+              />
+              <RowDivider />
+              <SettingsRow
+                icon={FileText}
+                label="Terms of Service"
+                desc="The rules for using Sparks"
+                onClick={() => router.push("/terms")}
+              />
+            </SettingsCard>
+            <p className="text-caption mt-2 px-2 text-center" style={{ color: "var(--color-gray-1)" }}>
+              Messages in this version are protected by login, database rules and HTTPS.
+              End-to-end encryption is planned — not built yet.
+            </p>
           </div>
         </div>
       </div>
