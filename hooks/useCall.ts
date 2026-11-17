@@ -25,6 +25,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createPeerConnection, getLocalMedia, stopMediaStream } from "@/lib/webrtc";
+import { startRingtone, stopRingtone } from "@/lib/ringtone";
+import { createClient } from "@/lib/supabase";
+
+const supabase = createClient();
 import {
   initiateCall,
   acceptCall,
@@ -64,6 +68,7 @@ export function useCall() {
   const [speakerOn, setSpeakerOn] = useState(true);
   const [callDurationSec, setCallDurationSec] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [reconnecting, setReconnecting] = useState(false);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -72,10 +77,18 @@ export function useCall() {
   const durationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const statusUnsubRef = useRef<(() => void) | null>(null);
   const pendingIceRef = useRef<RTCIceCandidateInit[]>([]);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const iceRestartedRef = useRef(false);
+  const ringEnabledRef = useRef(true);
 
   const cleanup = useCallback(() => {
     if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
     if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
+    if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+    reconnectTimerRef.current = null;
+    iceRestartedRef.current = false;
+    stopRingtone();
+    setReconnecting(false);
     statusUnsubRef.current?.();
     statusUnsubRef.current = null;
 
@@ -117,10 +130,32 @@ export function useCall() {
 
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === "connected") {
+        if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+        iceRestartedRef.current = false;
+        stopRingtone();
+        setReconnecting(false);
         setPhase("active");
       } else if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
-        setError("Call connection lost.");
-        reset();
+        // Brief network drop? Give it a 5s grace + one ICE restart before
+        // ending the call, instead of dropping the user mid-sentence.
+        if (reconnectTimerRef.current) return;
+        setReconnecting(true);
+        if (!iceRestartedRef.current) {
+          iceRestartedRef.current = true;
+          try {
+            pc.restartIce();
+          } catch {
+            // restartIce is best-effort; the grace timer still decides.
+          }
+        }
+        reconnectTimerRef.current = setTimeout(() => {
+          reconnectTimerRef.current = null;
+          if (pcRef.current?.connectionState !== "connected") {
+            setError("Call connection lost.");
+            reset();
+          }
+        }, 5000);
       }
     };
 
@@ -138,6 +173,7 @@ export function useCall() {
     setError(null);
     setCallType(type);
     setPhase("outgoing-ringing");
+    startRingtone();
 
     try {
       const call = await initiateCall(calleeId, type);
@@ -163,6 +199,7 @@ export function useCall() {
         onReady: async () => {
           const pc = pcRef.current;
           if (!pc) return;
+          stopRingtone();
           setPhase("connecting");
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
@@ -196,6 +233,31 @@ export function useCall() {
     setCallType(call.call_type);
     setCallId(call.id);
     setPhase("incoming-ringing");
+    // The Voice/Video call notification toggles in Settings are real: the
+    // ringtone only sounds if the user has that call type's notifications
+    // on. The call screen itself still shows, so a silenced call is never
+    // missed silently — it is visible, just quiet.
+    void (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          startRingtone();
+          return;
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data } = await (supabase.from("profiles") as any)
+          .select("notify_voice_calls, notify_video_calls")
+          .eq("id", user.id)
+          .maybeSingle();
+        const row = data as { notify_voice_calls?: boolean; notify_video_calls?: boolean } | null;
+        const enabled =
+          call.call_type === "video" ? row?.notify_video_calls !== false : row?.notify_voice_calls !== false;
+        ringEnabledRef.current = enabled;
+        if (enabled) startRingtone();
+      } catch {
+        startRingtone();
+      }
+    })();
 
     ringTimeoutRef.current = setTimeout(() => { reset(); }, RING_TIMEOUT_MS);
   }, [reset]);
@@ -203,6 +265,7 @@ export function useCall() {
   const acceptIncoming = useCallback(async () => {
     if (!incomingCall) return;
     if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
+    stopRingtone();
     setPhase("connecting");
 
     try {
@@ -301,6 +364,14 @@ export function useCall() {
     }
   }, []);
 
+  /**
+   * Speaker toggle — honest limit: browsers expose NO API to route audio
+   * to the earpiece vs the loudspeaker. What this toggle really does is
+   * switch the remote audio volume between loudspeaker level (1.0) and
+   * earpiece level (0.35); CallScreen applies it to the remote audio /
+   * video element. It is labelled "Speaker" and never claims hardware
+   * routing it cannot do.
+   */
   const toggleSpeaker = useCallback(() => {
     setSpeakerOn((s) => !s);
   }, []);
@@ -322,6 +393,7 @@ export function useCall() {
     speakerOn,
     callDurationSec,
     error,
+    reconnecting,
     startCall,
     setIncoming,
     acceptIncoming,

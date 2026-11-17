@@ -135,11 +135,11 @@ export default function ChatsPage() {
             <div className="px-5 pt-4 pb-3">
               <div className="flex items-center justify-between mb-4">
                 <h1 className="text-2xl font-bold">Sparks</h1>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => router.push("/search")} aria-label="Find people" className="active:opacity-60 transition-opacity">
+                <div className="flex items-center gap-1">
+                  <button onClick={() => router.push("/search")} aria-label="Find people" className="w-11 h-11 rounded-full flex items-center justify-center active:opacity-60 active:scale-95 transition-all duration-200">
                     <SearchIconLucide size={22} color="var(--color-black)" strokeWidth={1.8} />
                   </button>
-                  <button onClick={() => router.push("/activity")} aria-label="Activity" className="active:opacity-60 transition-opacity relative">
+                  <button onClick={() => router.push("/activity")} aria-label="Activity" className="w-11 h-11 rounded-full flex items-center justify-center active:opacity-60 active:scale-95 transition-all duration-200 relative">
                     <Bell size={22} color="var(--color-black)" strokeWidth={1.8} />
                     {unreadNotifs > 0 && (
                       <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: "var(--color-red)" }}>

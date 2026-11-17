@@ -1,26 +1,20 @@
 /**
  * lib/crypto.ts
  * ─────────────────────────────────────────────────────────────────────────
- * Client-side encryption layer. Nothing in this file ever touches the
- * network — it is pure Web Crypto API usage. Supabase never sees plaintext.
+ * Web Crypto helpers (ECDH key pairs, AES-256-GCM encrypt/decrypt).
+ * Nothing in this file ever touches the network — it is pure Web Crypto
+ * API usage.
  *
- * Key exchange model (MVP, 1-to-1 chats):
- *   1. Each user generates an ECDH key pair (P-256) on first login.
- *   2. The PRIVATE key is wrapped (encrypted) with a key derived from the
- *      user's password/session via PBKDF2 and held only in memory at
- *      runtime (see lib/encryption.ts's KeyManager) — it is never sent to
- *      Supabase and never written to IndexedDB, even though decrypted
- *      message text is cached there for offline access.
- *   3. The PUBLIC key (JWK) is stored in profiles.public_key, world-readable
- *      by design (that's how public keys work).
- *   4. To message someone, derive a shared AES-256-GCM key via ECDH using
- *      your private key + their public key (deriveSharedKey below).
- *   5. Encrypt/decrypt with that shared key. A fresh random IV is generated
- *      per message — IVs are never reused with the same key.
- *
- * This is a simplified Signal-style model (no ratcheting/forward secrecy
- * across sessions) — adequate for an MVP, but call this out explicitly if
- * this code is ever positioned as equivalent to the Signal Protocol.
+ * HONEST V1 STATUS: only generateKeyPair + exportPublicKeyJwk are used,
+ * at signup, to store a public key in profiles.public_key (the column is
+ * NOT NULL in the schema, and the key is reserved for a future E2E
+ * version). No private key is generated, stored, or used in V1, and
+ * messages are NOT end-to-end encrypted in V1 — they are plain text,
+ * protected by Supabase Auth + RLS + HTTPS + encryption at rest (see
+ * services/message-service.ts). deriveSharedKey / encrypt / decrypt below
+ * are kept for that future E2E version and are currently unused — do not
+ * describe them as live. True E2E with a proper recovery-key flow is
+ * planned for a future version (V4/V5).
  */
 
 const ECDH_PARAMS: EcKeyGenParams = { name: "ECDH", namedCurve: "P-256" };

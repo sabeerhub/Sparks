@@ -18,6 +18,11 @@ const LOCK_THRESHOLD = 80;
 const CANCEL_THRESHOLD = 100;
 const WAVEFORM_BARS = 28;
 
+const EMOJI_PICKER: string[] = [
+  "😀", "😂", "😊", "😍", "😉", "😎", "🤔", "😢", "😡", "🥳",
+  "👍", "👏", "🙏", "❤️", "🔥", "🎉", "👋", "💯", "😴", "🤝",
+];
+
 export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerProps) {
   const [text, setText] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -28,6 +33,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
   const [dragY, setDragY] = useState(0);
   const [liveLevels, setLiveLevels] = useState<number[]>([]);
   const [error, setError] = useState("");
+  const [showEmoji, setShowEmoji] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,6 +54,12 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
     if (!trimmed) return;
     onSend(trimmed);
     setText("");
+    setShowEmoji(false);
+    inputRef.current?.focus();
+  };
+
+  const handleEmojiPick = (emoji: string) => {
+    setText((t) => t + emoji);
     inputRef.current?.focus();
   };
 
@@ -318,8 +330,24 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
           {error}
         </div>
       )}
+      {showEmoji && (
+        <div className="px-3 pt-2 pb-1 border-t" style={{ borderColor: "var(--color-gray-2)" }}>
+          <div className="flex flex-wrap gap-1">
+            {EMOJI_PICKER.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => handleEmojiPick(emoji)}
+                aria-label={`Insert ${emoji}`}
+                className="w-11 h-11 flex items-center justify-center text-2xl rounded-xl active:bg-gray-100 active:scale-95 transition-transform duration-200"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="px-3 py-2 border-t flex items-end gap-2" style={{ borderColor: "var(--color-gray-2)" }}>
-        <button className="mb-1.5" onClick={handleAttachClick} aria-label="Attach file" disabled={uploading}>
+        <button className="mb-1.5 w-11 h-11 -ml-2 flex items-center justify-center flex-shrink-0" onClick={handleAttachClick} aria-label="Attach file" disabled={uploading}>
           {uploading ? (
             <div className="w-[22px] h-[22px] rounded-full border-2 animate-spin" style={{ borderColor: "var(--color-gray-3)", borderTopColor: "var(--color-blue)" }} />
           ) : (
@@ -350,15 +378,20 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
             className="flex-1 outline-none text-sm bg-transparent"
             style={{ color: "var(--color-black)" }}
           />
-          <button className="ml-2" aria-label="Emoji">
-            <Smile size={20} color="var(--color-gray-1)" strokeWidth={1.8} />
+          <button
+            className="ml-2 w-11 h-11 -mr-2 flex items-center justify-center flex-shrink-0"
+            aria-label="Emoji"
+            aria-expanded={showEmoji}
+            onClick={() => setShowEmoji((s) => !s)}
+          >
+            <Smile size={20} color={showEmoji ? "var(--color-blue)" : "var(--color-gray-1)"} strokeWidth={1.8} />
           </button>
         </div>
 
         {text ? (
           <button
             onClick={handleSend}
-            className="w-10 h-10 rounded-full flex items-center justify-center mb-0.5"
+            className="w-11 h-11 rounded-full flex items-center justify-center mb-0.5 flex-shrink-0 active:scale-95 transition-transform duration-200"
             style={{ background: "var(--color-blue)" }}
             aria-label="Send"
           >
@@ -366,7 +399,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
           </button>
         ) : (
           <button
-            className="mb-1.5 active:scale-110 transition-transform touch-none"
+            className="mb-1.5 w-11 h-11 -mr-2 flex items-center justify-center flex-shrink-0 active:scale-110 transition-transform touch-none"
             aria-label="Record voice note"
             onPointerDown={handleMicPointerDown}
           >

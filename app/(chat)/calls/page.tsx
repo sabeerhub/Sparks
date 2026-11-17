@@ -1,0 +1,126 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Video } from "lucide-react";
+import { StatusBar } from "@/components/layout/StatusBar";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { Avatar } from "@/components/ui/Avatar";
+import { fetchCallHistory, type CallHistoryItem } from "@/services/call-service";
+import { useCallActions } from "@/components/call/CallProvider";
+import { formatChatListTime } from "@/utils/helpers";
+
+function formatCallDuration(item: CallHistoryItem): string {
+  if (!item.answered_at || !item.ended_at) return "";
+  const seconds = Math.max(0, Math.round((new Date(item.ended_at).getTime() - new Date(item.answered_at).getTime()) / 1000));
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m} min ${s} sec` : `${s} sec`;
+}
+
+function callLabel(item: CallHistoryItem): string {
+  if (item.status === "missed") return "Missed call";
+  if (item.status === "declined") return item.isOutgoing ? "Declined" : "Declined call";
+  const duration = formatCallDuration(item);
+  if (item.status === "ended" || item.status === "accepted") return duration || "Call";
+  return "Call";
+}
+
+export default function CallsPage() {
+  const [history, setHistory] = useState<CallHistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { placeCall } = useCallActions();
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchCallHistory(50)
+      .then((items) => {
+        if (!cancelled) setHistory(items);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <div className="h-full w-full bg-white">
+      <div className="flex flex-col h-full">
+        <StatusBar />
+
+        <div className="px-5 pt-4 pb-3">
+          <h1 className="text-2xl font-bold">Calls</h1>
+          <p className="text-sm mt-0.5" style={{ color: "var(--color-gray-1)" }}>
+            Your voice and video call history
+          </p>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {loading && (
+            <div className="px-5 py-4 space-y-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center gap-3 animate-pulse">
+                  <div className="w-12 h-12 rounded-full flex-shrink-0" style={{ background: "var(--color-gray-3)" }} />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-28 rounded-full" style={{ background: "var(--color-gray-3)" }} />
+                    <div className="h-3 w-20 rounded-full" style={{ background: "var(--color-gray-3)" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!loading && history.length === 0 && (
+            <div className="flex flex-col items-center justify-center pt-20 px-8 text-center">
+              <div className="w-16 h-16 rounded-3xl flex items-center justify-center mb-4" style={{ background: "rgba(0,122,255,0.1)" }}>
+                <Phone size={28} color="var(--color-blue)" strokeWidth={1.8} />
+              </div>
+              <p className="font-semibold mb-1">No calls yet</p>
+              <p className="text-sm" style={{ color: "var(--color-gray-1)" }}>
+                Calls you make or receive will show up here.
+              </p>
+            </div>
+          )}
+
+          {history.map((item) => {
+            const missed = item.status === "missed";
+            const DirectionIcon = missed ? PhoneMissed : item.isOutgoing ? PhoneOutgoing : PhoneIncoming;
+            return (
+              <div key={item.id} className="w-full flex items-center gap-3 px-5 py-3 text-left border-b active:bg-gray-50 transition-colors" style={{ borderColor: "var(--color-gray-2)" }}>
+                <Avatar name={item.otherUserName} src={item.otherUserAvatar} size={48} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm truncate">{item.otherUserName}</p>
+                  <p className="text-sm flex items-center gap-1.5 mt-0.5" style={{ color: missed ? "var(--color-red)" : "var(--color-gray-1)" }}>
+                    <DirectionIcon size={14} strokeWidth={2} />
+                    <span className="truncate">{callLabel(item)}</span>
+                    <span aria-hidden>·</span>
+                    <span className="flex-shrink-0">{formatChatListTime(item.started_at)}</span>
+                  </p>
+                </div>
+                <button
+                  onClick={() => placeCall(item.otherUserId, item.otherUserName, item.otherUserAvatar, item.call_type)}
+                  aria-label={`Call ${item.otherUserName} back`}
+                  className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-transform duration-200"
+                  style={{ background: "rgba(0,122,255,0.1)" }}
+                >
+                  {item.call_type === "video" ? (
+                    <Video size={20} color="var(--color-blue)" strokeWidth={1.8} />
+                  ) : (
+                    <Phone size={20} color="var(--color-blue)" strokeWidth={1.8} />
+                  )}
+                </button>
+              </div>
+            );
+          })}
+          <div className="h-4" />
+        </div>
+
+        <div className="md:hidden">
+          <BottomNav />
+        </div>
+      </div>
+    </div>
+  );
+}

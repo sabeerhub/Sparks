@@ -59,6 +59,32 @@ html, body {
   animation: typing-bounce 1.2s infinite ease-in-out;
 }
 
+/* Pulsing ring around the avatar while a call is ringing. */
+@keyframes call-ring-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.45); }
+  70% { box-shadow: 0 0 0 18px rgba(0, 122, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); }
+}
+
+.animate-call-ring {
+  animation: call-ring-pulse 1.6s ease-out infinite;
+  border-radius: 9999px;
+}
+
+/* Reduced motion: no pulsing, no bouncing — content stays still. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-call-ring,
+  .animate-typing-dot {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
 /* ─── Appearance preferences (Settings → Appearance) ────────────────────── */
 :root {
   --font-scale: 1;

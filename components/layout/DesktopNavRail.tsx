@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageCircle, Search, Bell, User, Plus } from "lucide-react";
+import { MessageCircle, Search, Bell, User, Plus, Phone } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { getUnreadCount } from "@/services/notification-service";
 
@@ -11,6 +11,7 @@ const supabase = createClient();
 
 const TABS = [
   { href: "/chats", icon: MessageCircle, label: "Chats" },
+  { href: "/calls", icon: Phone, label: "Calls" },
   { href: "/search", icon: Search, label: "Search" },
   { href: "/activity", icon: Bell, label: "Activity", badge: true },
   { href: "/profile", icon: User, label: "Profile" },

@@ -1,8 +1,12 @@
 # ⚡ Sparks
 
-A privacy-first, end-to-end encrypted messaging app. Light theme only,
-Apple-blue accent, mobile-first. Next.js (App Router) + Supabase + Web
-Crypto API.
+A privacy-first messaging app. Light theme only, Apple-blue accent,
+mobile-first. Next.js (App Router) + Supabase + WebRTC.
+
+> **Honest status (v1.1.0):** messages are **not** end-to-end encrypted
+> in V1 — they are plain text, protected by Supabase Auth + RLS + HTTPS +
+> encryption at rest. True E2E encryption is planned for a future version,
+> not built yet. See [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md).
 
 This README is the single source of truth for getting the project running.
 Read it top to bottom before deploying anything.
@@ -17,13 +21,13 @@ Being direct about scope, since this matters for a security-sensitive app:
 |---|---|
 | UI (all screens) | ✅ Fully built, wired to real hooks/services |
 | Database schema + RLS | ✅ Complete, reviewed for IDOR/auth correctness |
-| Encryption (AES-256-GCM via Web Crypto) | ✅ Real, functional |
+| End-to-end encryption | ❌ **Not built in V1** — messages are plain text in the DB, protected by Auth + RLS + HTTPS + encryption at rest. Planned for a future version. |
 | Rate limiting (client + server) | ✅ Real, functional |
 | Offline cache (IndexedDB) + reconnect sync | ✅ Real, functional |
 | 1:1 messaging, edit/delete/react, typing, receipts | ✅ Real, functional |
 | Email OTP + Google OAuth | ✅ Wired to Supabase Auth |
-| Voice/video calls | ❌ Out of scope — UI shows an honest "not built yet" state, not a fake button |
-| Private-key storage | ⚠️ MVP simplification — see [Security Notes](#6-security-notes-read-before-going-to-production) below |
+| Voice/video calls | ✅ Real — WebRTC peer-to-peer, Supabase Realtime signaling, ringtone, call history, camera-off placeholder, reconnect handling (v1.1.0) |
+| E2E key material | ⚠️ A public key is stored at signup for future E2E (schema requires it); no private key is generated or used in V1 — see [Security Notes](#6-security-notes-read-before-going-to-production) |
 | Group chats | ❌ Out of scope by design — see PRD ("1-to-1 chats only, MVP") |
 
 Nothing here is a mockup with fake data wired to nothing — every screen
@@ -126,7 +130,8 @@ it up as a dedicated `app/api/cron/cleanup/route.ts` using
     /(chat)/chats/[chatId]        → Individual chat thread
     /(chat)/chats/new             → Start a new chat
     /(chat)/search                → Cross-chat search
-    /(chat)/activity              → Calls tab (stub — see scope table)
+    /(chat)/activity              → Notifications + Spark Requests
+    /(chat)/calls                 → Call history (voice/video, tap to call back)
     /(profile)/profile            → Own profile + account actions
     /(settings)/settings          → iOS-style settings list
     /(settings)/security          → Security Center, logout-all-devices
@@ -139,14 +144,16 @@ it up as a dedicated `app/api/cron/cleanup/route.ts` using
 
   /lib
     supabase.ts    → Browser + server Supabase clients
-    crypto.ts       → Raw Web Crypto: ECDH key pairs, AES-256-GCM encrypt/decrypt
-    encryption.ts   → In-memory KeyManager (session-scoped, never persisted)
+    crypto.ts       → Web Crypto helpers; only key-pair generation is used in V1 (public key stored at signup for future E2E — see §6)
+    ringtone.ts     → WebAudio soft ringtone for incoming/outgoing calls (no audio files)
+    webrtc.ts       → Peer connection, ICE servers (STUN + optional TURN), local media
     storage.ts      → IndexedDB-backed offline cache + outbox + reconnect sync
     rateLimit.ts     → Client-side sliding-window throttle (UX only, not the real boundary)
 
   /hooks
-    useAuth.ts       → Session, OTP, Google OAuth, key provisioning
+    useAuth.ts       → Session, OTP, Google OAuth
     useChat.ts        → The seam: cache + services + realtime for one chat screen
+    useCall.ts        → Call state machine: ringing → connecting → active, mute/camera/speaker, ringtone, 5s reconnect grace + ICE restart
     useRealtime.ts    → Supabase Realtime subscriptions (messages, typing, presence, receipts)
 
   /store
@@ -154,7 +161,12 @@ it up as a dedicated `app/api/cron/cleanup/route.ts` using
 
   /services
     chat-service.ts     → Chat CRUD, search, block/mute/pin/archive
-    message-service.ts  → The only place that pairs encrypt/decrypt with a network call
+    call-service.ts     → Call rows, signaling (broadcast), call history
+    message-service.ts  → Send/edit/delete/read receipts (plain text in V1 — see §6)
+
+  /components/call
+    CallProvider.tsx    → App-wide call owner: incoming-call listener + placeCall()
+    CallScreen.tsx      → Full-screen call UI: frosted controls, ringing pulse, camera-off avatar, reconnecting state
 
   /middleware
     auth-middleware.ts  → Session refresh + route protection logic
@@ -190,28 +202,23 @@ Google OAuth client's Authorized redirect URIs.
 
 ## 6. Security notes — read before going to production
 
-This codebase implements real AES-256-GCM encryption with per-message
-random IVs, real RLS-enforced access control, and a real rate-limit
-backstop in the database — these aren't simplified for the demo. Two
-things ARE simplified for MVP scope, flagged explicitly rather than
-glossed over:
+This codebase implements real RLS-enforced access control and a real
+rate-limit backstop in the database. Two things are **not** what an
+older version of this README claimed — corrected here, not glossed over:
 
-1. **Private key storage**: the user's ECDH private key is currently held
-   in `sessionStorage` (wrapped as a JWK) so it survives a page refresh
-   without forcing re-login, and mirrored into an in-memory `KeyManager`
-   (`lib/encryption.ts`) for actual crypto operations. `sessionStorage` is
-   readable by any script running in the page's origin — it is **not**
-   protected against XSS the way a hardware-backed keystore would be. For
-   real production hardening, wrap the private key with a key derived from
-   a user passphrase or device biometric (WebAuthn) before it touches
-   `sessionStorage` at all, or move key custody to the OS keychain via a
-   native wrapper.
-2. **No forward secrecy / ratcheting**: this is a simplified Signal-style
-   model — one shared AES key per chat, derived once via ECDH, reused
-   (with fresh random IVs) for every message. A compromised private key
-   compromises all past and future messages in that chat. Real Signal
-   Protocol-style double-ratcheting is a substantial additional project on
-   top of this foundation, not a small tweak.
+1. **No end-to-end encryption in V1**: messages are stored as plain text
+   in the database. They are protected in transit by HTTPS/TLS, at rest
+   by Supabase's server-side encryption, and in access by Supabase Auth
+   + row-level security — but anyone with database access can read them.
+   Do not describe Sparks as end-to-end encrypted until true E2E (with a
+   proper recovery-key flow, planned for a future version) is actually
+   built. A public key is stored at signup for that future version
+   (`profiles.public_key` is NOT NULL in the schema); no private key is
+   generated, stored, or used in V1.
+2. **No forward secrecy / ratcheting**: there is no E2E key model in V1
+   to ratchet. When E2E is built, Signal Protocol-style double-ratcheting
+   is a substantial additional project on top of that foundation, not a
+   small tweak.
 
 Everything else — RLS policies, the rate-limit transaction, IDOR
 boundaries, soft-delete tombstones — was reviewed specifically for these
@@ -227,4 +234,18 @@ Per the product brief's explicit rules:
 - No AI features
 - No dark mode (not even a `prefers-color-scheme` media query)
 - No group chats (1:1 only, enforced by a DB trigger, not just UI)
-- No voice/video call infrastructure (WebRTC signaling is a separate, large project)
+- No end-to-end encryption yet (see §0 and §6 — planned, not built)
+
+## 8. Docs
+
+Full system documentation lives in [docs/](docs/):
+
+- [PRODUCT_REQUIREMENTS.md](docs/PRODUCT_REQUIREMENTS.md) — what Sparks is, who it is for, what exists
+- [SYSTEM_ARCHITECTURE.md](docs/SYSTEM_ARCHITECTURE.md) — stack, folders, data flow, Realtime, calls
+- [DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) — tables, RLS, triggers
+- [SECURITY_MODEL.md](docs/SECURITY_MODEL.md) — what is protected, what is not, honest limits
+- [CHAT_RULES.md](docs/CHAT_RULES.md) — messaging and call rules
+- [DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) — light theme, tokens, spacing, touch targets
+- [API_CONTRACTS.md](docs/API_CONTRACTS.md) — services, RPCs, Realtime channels, signaling
+- [TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md) — how to verify, including the two-device call test
+- [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) — Supabase, migrations, env vars, Vercel, TURN

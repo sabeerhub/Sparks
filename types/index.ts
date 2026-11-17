@@ -59,8 +59,11 @@ export interface EncryptedMessageRow {
   id: string;
   chat_id: string;
   sender_id: string;
-  ciphertext: string;
-  iv: string;
+  // V1 plain text (migration 0006): content holds the message; ciphertext/iv
+  // are null for V1 rows and kept only for a future E2E version.
+  content: string | null;
+  ciphertext: string | null;
+  iv: string | null;
   content_type: "text" | "image" | "file" | "voice";
   media_path: string | null;
   reply_to_id: string | null;
@@ -195,6 +198,8 @@ export interface Database {
       blocked_users: { Row: BlockedUser; Insert: Partial<BlockedUser>; Update: Partial<BlockedUser>; Relationships: [] };
       typing_status: { Row: TypingStatus; Insert: Partial<TypingStatus>; Update: Partial<TypingStatus>; Relationships: [] };
       spark_requests: { Row: SparkRequest; Insert: Partial<SparkRequest>; Update: Partial<SparkRequest>; Relationships: [] };
+      calls: { Row: { id: string; caller_id: string; callee_id: string; call_type: "voice" | "video"; status: "ringing" | "accepted" | "declined" | "missed" | "ended"; started_at: string; answered_at: string | null; ended_at: string | null }; Insert: Partial<{ id: string; caller_id: string; callee_id: string; call_type: "voice" | "video"; status: "ringing" | "accepted" | "declined" | "missed" | "ended"; started_at: string; answered_at: string | null; ended_at: string | null }>; Update: Partial<{ id: string; caller_id: string; callee_id: string; call_type: "voice" | "video"; status: "ringing" | "accepted" | "declined" | "missed" | "ended"; started_at: string; answered_at: string | null; ended_at: string | null }>; Relationships: [] };
+      notifications: { Row: AppNotification; Insert: Partial<AppNotification>; Update: Partial<AppNotification>; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: {
@@ -202,8 +207,7 @@ export interface Database {
       send_message: {
         Args: {
           p_chat_id: string;
-          p_ciphertext: string;
-          p_iv: string;
+          p_content: string;
           p_content_type?: string;
           p_media_path?: string | null;
           p_reply_to_id?: string | null;

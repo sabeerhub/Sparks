@@ -13,10 +13,11 @@
  * `DecryptedMessage.text`, which is exactly as sensitive as it would be in
  * any local chat app's on-disk cache (WhatsApp, Signal Desktop, etc. all
  * keep decrypted history at rest on-device — that's the accepted trust
- * boundary: protect the device, not just the wire). The user's private key
- * and derived shared AES keys live only in lib/encryption.ts's in-memory
- * KeyManager and are re-derived after each reload — they are never written
- * here, regardless of this module's persistence.
+ * boundary: protect the device, not just the wire). V1 note: there is no
+ * client-side private key in V1 — messages are plain text, protected by
+ * Auth + RLS + HTTPS + encryption at rest (see services/message-service.ts).
+ * What is cached here is message text, exactly as sensitive as any local
+ * chat app's on-disk cache.
  */
 
 import type { DecryptedMessage, QueuedMessage, CachedChatMeta } from "@/types";

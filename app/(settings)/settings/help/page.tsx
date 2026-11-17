@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { Mail, MessageCircleQuestion } from "lucide-react";
+import { Mail } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 
@@ -24,13 +24,6 @@ export default function HelpSupportPage() {
               <div className="text-xs" style={{ color: "var(--color-gray-1)" }}>support@sparkschat.app</div>
             </div>
           </a>
-          <div className="rounded-2xl bg-white p-4 flex items-center gap-3">
-            <MessageCircleQuestion size={20} color="var(--color-blue)" strokeWidth={1.8} />
-            <div>
-              <div className="text-sm font-semibold">FAQ</div>
-              <div className="text-xs" style={{ color: "var(--color-gray-1)" }}>Coming soon</div>
-            </div>
-          </div>
         </div>
       </div>
     </ScreenContainer>

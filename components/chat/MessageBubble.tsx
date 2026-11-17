@@ -39,7 +39,7 @@ export function MessageBubble({ message, isMine, senderName, onEdit, onDelete, o
   const isMedia = message.content_type !== "text" && !!message.media_url;
 
   return (
-    <div className={`flex ${isMine ? "justify-end" : "justify-start"} mb-1 relative`}>
+    <div className={`flex ${isMine ? "justify-end" : "justify-start"} mb-1.5 relative`}>
       <div className="max-w-xs">
         <div
           onContextMenu={(e) => {
@@ -59,7 +59,7 @@ export function MessageBubble({ message, isMine, senderName, onEdit, onDelete, o
             />
           ) : (
             <button
-              className="text-sm text-left w-full"
+              className="text-sm text-left w-full transition-opacity duration-200"
               style={{
                 background: isMine ? "var(--color-blue)" : "var(--color-gray-2)",
                 color: isMine ? "#fff" : "var(--color-black)",

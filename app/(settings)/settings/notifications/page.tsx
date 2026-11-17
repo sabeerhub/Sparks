@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, Zap, BadgeCheck, Phone, Video, Users, CheckCheck, Trash2 } from "lucide-react";
+import { MessageCircle, Zap, BadgeCheck, Phone, Video, CheckCheck, Trash2 } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { updateOwnProfile } from "@/services/chat-service";
@@ -89,8 +89,7 @@ export default function NotificationSettingsPage() {
             <ToggleRow icon={Zap} label="Spark Requests" checked={profile.notify_spark_requests} onChange={(v) => updateField({ notify_spark_requests: v })} />
             <ToggleRow icon={BadgeCheck} label="Spark Accepted" checked={profile.notify_spark_accepted} onChange={(v) => updateField({ notify_spark_accepted: v })} />
             <ToggleRow icon={Phone} label="Voice Calls" checked={profile.notify_voice_calls} onChange={(v) => updateField({ notify_voice_calls: v })} />
-            <ToggleRow icon={Video} label="Video Calls" checked={profile.notify_video_calls} onChange={(v) => updateField({ notify_video_calls: v })} />
-            <ToggleRow icon={Users} label="Group Notifications" checked={profile.notify_groups} onChange={(v) => updateField({ notify_groups: v })} last />
+            <ToggleRow icon={Video} label="Video Calls" checked={profile.notify_video_calls} onChange={(v) => updateField({ notify_video_calls: v })} last />
           </div>
 
           <div className="rounded-2xl overflow-hidden bg-white">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sun, Moon, Type, MessageSquare, Check } from "lucide-react";
+import { Sun, Type, MessageSquare, Check } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { updateOwnProfile } from "@/services/chat-service";
@@ -67,9 +67,11 @@ export default function AppearanceSettingsPage() {
         <div className="flex-1 overflow-y-auto px-5 pb-8">
           <p className="text-xs font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Theme</p>
           <div className="rounded-2xl overflow-hidden bg-white mb-4">
-            <OptionRow icon={Sun} label="Light" selected={profile.theme_preference === "light"} onClick={() => updateField({ theme_preference: "light" })} />
-            <OptionRow icon={Moon} label="Dark (coming soon)" selected={false} disabled onClick={() => {}} last />
+            <OptionRow icon={Sun} label="Light" selected={profile.theme_preference === "light"} onClick={() => updateField({ theme_preference: "light" })} last />
           </div>
+          <p className="text-xs px-1 mb-4" style={{ color: "var(--color-gray-1)" }}>
+            Sparks is light theme only, by design.
+          </p>
 
           <p className="text-xs font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Font Size</p>
           <div className="rounded-2xl overflow-hidden bg-white mb-4">

@@ -6,7 +6,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageCircle, Search, Bell, User, Plus } from "lucide-react";
+import { MessageCircle, Search, Bell, User, Plus, Phone } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { getUnreadCount } from "@/services/notification-service";
 
@@ -14,6 +14,7 @@ const supabase = createClient();
 
 const TABS = [
   { href: "/chats", icon: MessageCircle, label: "Chats" },
+  { href: "/calls", icon: Phone, label: "Calls" },
   { href: "/search", icon: Search, label: "Search" },
   { href: "/chats/new", icon: Plus, label: null, fab: true },
   { href: "/activity", icon: Bell, label: "Activity", badge: true },
@@ -43,8 +44,8 @@ export function BottomNav() {
 
   return (
     <nav
-      className="flex items-center justify-around px-4 py-2 border-t"
-      style={{ background: "rgba(255,255,255,0.95)", borderColor: "var(--color-gray-3)", paddingBottom: 8 }}
+      className="flex items-center justify-around px-4 pt-2 border-t"
+      style={{ background: "rgba(255,255,255,0.95)", borderColor: "var(--color-gray-3)", paddingBottom: "max(8px, env(safe-area-inset-bottom, 0px))" }}
     >
       {TABS.map((tab) =>
         tab.fab ? (
@@ -57,7 +58,7 @@ export function BottomNav() {
             <Plus size={22} color="white" strokeWidth={2} />
           </Link>
         ) : (
-          <Link key={tab.href} href={tab.href} className="relative flex flex-col items-center gap-0.5 py-1 min-w-12">
+          <Link key={tab.href} href={tab.href} className="relative flex flex-col items-center justify-center gap-0.5 py-1 min-w-12 min-h-11">
             <tab.icon
               size={22}
               color={pathname === tab.href ? "var(--color-blue)" : "var(--color-gray-1)"}

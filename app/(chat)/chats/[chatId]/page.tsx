@@ -147,7 +147,7 @@ export default function ChatThreadPage() {
       <StatusBar />
       <div className="flex items-center justify-between px-4 py-2 border-b flex-shrink-0" style={{ borderColor: "var(--color-gray-2)" }}>
         <div className="flex items-center gap-2 min-w-0">
-          <button onClick={() => router.push("/chats")} aria-label="Back" className="flex-shrink-0 md:hidden">
+          <button onClick={() => router.push("/chats")} aria-label="Back" className="w-11 h-11 -ml-2 rounded-full flex items-center justify-center flex-shrink-0 md:hidden active:bg-gray-100 active:scale-95 transition-all duration-200">
             <ArrowLeft size={22} color="var(--color-blue)" strokeWidth={2} />
           </button>
           <button onClick={() => isSelfChat ? router.push("/profile") : router.push(`/profile/${otherUser.id}`)} className="flex items-center gap-2 min-w-0">
@@ -163,9 +163,9 @@ export default function ChatThreadPage() {
           </button>
         </div>
         {!isSelfChat && (
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <button aria-label="Call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "voice")}><Phone size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
-            <button aria-label="Video call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "video")}><Video size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button aria-label="Voice call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "voice")} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-gray-100 active:scale-95 transition-all duration-200"><Phone size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
+            <button aria-label="Video call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "video")} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-gray-100 active:scale-95 transition-all duration-200"><Video size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
           </div>
         )}
 

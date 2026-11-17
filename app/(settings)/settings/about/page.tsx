@@ -20,8 +20,8 @@ export default function AboutPage() {
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "var(--color-blue)" }}>
             <Zap size={28} fill="white" color="white" />
           </div>
-          <h2 className="text-lg font-bold mb-1">Spark Chat</h2>
-          <p className="text-sm" style={{ color: "var(--color-gray-1)" }}>Version 1.0.0</p>
+          <h2 className="text-lg font-bold mb-1">Sparks</h2>
+          <p className="text-sm" style={{ color: "var(--color-gray-1)" }}>Version 1.1.0</p>
           <p className="text-sm mt-4" style={{ color: "var(--color-gray-1)" }}>Private, secure, real-time messaging.</p>
         </div>
       </div>

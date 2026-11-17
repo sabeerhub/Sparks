@@ -85,6 +85,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         speakerOn={call.speakerOn}
         callDurationSec={call.callDurationSec}
         error={call.error}
+        reconnecting={call.reconnecting}
         onAccept={call.acceptIncoming}
         onDecline={call.declineIncoming}
         onHangUp={call.hangUp}

@@ -23,7 +23,6 @@ export default function LanguageSettingsPage() {
               <Check size={18} color="var(--color-blue)" strokeWidth={2.2} />
             </div>
           </div>
-          <p className="text-xs mt-3 px-1" style={{ color: "var(--color-gray-1)" }}>More languages coming soon.</p>
         </div>
       </div>
     </ScreenContainer>
