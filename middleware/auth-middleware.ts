@@ -54,10 +54,12 @@ export async function authMiddleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Redirect logged-in users away from auth pages back into the app.
+  // Redirect logged-in users away from auth pages — and from the
+  // landing page — back into the app. A logged-in user never sees
+  // the landing, the splash, or the login screen: straight to /chats.
   if (
     user &&
-    ["/login", "/signup", "/verify-email", "/forgot-password", "/reset-password"].some(
+    ["/", "/login", "/signup", "/verify-email", "/forgot-password", "/reset-password"].some(
       (p) => path === p
     )
   ) {

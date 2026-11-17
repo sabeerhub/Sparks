@@ -78,7 +78,35 @@ html, body {
    the glass blurs against. */
 
 .app-surface {
-  background: var(--color-gray-2);
+  /* v1.4.0: a whisper of blue at the top so frosted glass has something
+     to blur against on every screen — glass over a perfectly flat grey
+     is invisible. Barely there; the landing gets a richer aurora below. */
+  background:
+    radial-gradient(120% 55% at 50% -5%, rgba(0, 122, 255, 0.05), transparent 60%),
+    var(--color-gray-2);
+}
+
+/* ─── v1.4.0 landing aurora ─────────────────────────────────────────────
+   The ONE allowed colour background: soft light blue-grey tones, never
+   loud. Frosted glass can only be seen when there is something behind
+   it — over the old uniform pale grey the nav and cards looked like
+   flat white. These soft blobs sit behind the landing content so the
+   blur, the hairline edge and the sheen are actually visible. */
+.landing-aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.landing-aurora::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(42% 38% at 12% 6%, rgba(0, 122, 255, 0.10), transparent 70%),
+    radial-gradient(38% 34% at 88% 16%, rgba(120, 170, 255, 0.13), transparent 70%),
+    radial-gradient(52% 44% at 55% 98%, rgba(232, 241, 255, 0.85), transparent 75%),
+    radial-gradient(30% 26% at 80% 60%, rgba(0, 122, 255, 0.06), transparent 70%);
 }
 
 .glass {
@@ -178,68 +206,77 @@ html, body {
   90%, 100% { transform: translateX(130%); }
 }
 
-/* ─── v1.3.2 calligraphic wordmark — ONE calm infinite motion ──────────
-   Diagnosis of the v1.3.0 bug (fixed here — read before touching):
-   1. The old shimmer band was 95% WHITE, and the wordmark sits on white
-      / white-glass surfaces. Every sweep turned each letter white-on-
-      white, so the word visibly flickered and patches of it vanished
-      and came back — it looked broken. The band is now soft Apple BLUE
-      over ink: always visible against white, and the letters can never
-      disappear.
-   2. TWO animations ran on the same element at different periods
-      (shimmer 6s + drop-shadow breathe 4.5s), so the glow peaked at a
-      different moment every cycle and the motion never settled. Worse,
-      animating `filter: drop-shadow` on text painted with
-      `background-clip: text` forces a full text repaint every frame,
-      and framer-motion's per-letter `filter: blur()` springs during
-      entry piled on top of it — jank and flicker, worst on mobile.
-      There is now ONE infinite motion: a single 8s shimmer sweep.
-      No drop-shadow animation anywhere on the wordmark.
-   3. The old loop started at mount, mid-sweep, while the 1.4s entry
-      write-in was still running — the first thing seen was a half-
-      drawn word with a band across it. The loop now waits until the
-      entry finishes (`.wordmark-loop--delayed`, 1.6s delay, fill
-      backwards = solid ink until it starts).
-   Seam: 0% and 100% are both exactly solid ink (band parked off the
-   word at both ends), so the loop restarts invisibly. Under
-   prefers-reduced-motion the wordmark is static solid ink. */
+/* ─── v1.4.0 calligraphic wordmark — TRUE additive highlight ───────────
+   Why v1.3.2 was STILL broken (a real browser measured it on the live
+   site, v1.3.1 build): the shimmer painted the glyphs THEMSELVES with
+   a gradient (`background-clip: text` + `color: transparent`). Where
+   the band passed, the ink was only 62%-opacity blue — the letters
+   turned pale and ~25% of the word vanished for 0.5–1.5s, five times
+   in 16s, then snapped back to full black. The band REPLACED the ink;
+   it did not add light to it. And the write-in faded each letter in
+   at partial opacity, so mid-way the word was a faint grey scribble —
+   while the blue dot sat at full opacity in its final spot, looking
+   like a stray floating dot.
+   The fix, in three parts (read before touching):
+   1. The text is SOLID INK, always: plain `color: #1D1D1F`, no
+      background-clip, no transparency anywhere. The glyphs are 100%
+      opaque at every moment of every animation — they cannot wash out.
+   2. The shine is a SEPARATE layer above the text (`.wordmark-shine`):
+      a narrow soft-white band with `mix-blend-mode: screen`. Screen
+      blend over white stays white; over black ink it only adds a soft
+      light (at most ~35% white, so the darkest the letters ever get
+      is a dark grey, still ~7:1 contrast on white — fully legible).
+      The light passes OVER the ink; it never replaces it.
+   3. The write-in (in SparkWordmark.tsx) reveals each letter with a
+      left-to-right clip wipe at FULL opacity — a pen stroke, never a
+      grey fade — and the dot stays hidden until the last letter lands.
+   One motion only: a single 8s sweep (hold off-word 0–52%, sweep
+   52–80%, hold off-word 80–100%; 0% and 100% are both parked off the
+   word, so the loop seam is invisible). Under prefers-reduced-motion
+   the wordmark is static solid ink. */
 .font-script {
   font-family: var(--font-script);
 }
 
-.wordmark-loop {
-  /* Solid ink by default — the shimmer only applies where
-     background-clip: text is supported, so the word can never vanish. */
-  color: #1D1D1F;
+/* The shine layer: a narrow soft-white band sweeping across the solid
+   ink word. It lives in its own layer above the text and only ADDS
+   light (screen blend) — the ink underneath never drops below full
+   black at any point. */
+.wordmark-shine {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  mix-blend-mode: screen;
 }
-@supports ((background-clip: text) or (-webkit-background-clip: text)) {
-  .wordmark-loop {
-    background-image: linear-gradient(105deg, #1D1D1F 40%, rgba(0, 113, 227, 0.62) 50%, #1D1D1F 60%);
-    background-size: 280% 100%;
-    background-position: 115% 0;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-    animation: wordmark-shimmer 8s ease-in-out infinite;
-  }
-  /* Entry write-in runs first; the loop waits for it. Fill backwards
-     keeps the word solid ink during the delay. */
-  .wordmark-loop--delayed {
-    animation-delay: 1.6s;
-    animation-fill-mode: backwards;
-  }
+.wordmark-shine-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 38%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.35) 50%, transparent);
+  transform: translateX(-110%);
+  animation: wordmark-shine-sweep 8s ease-in-out infinite;
 }
-@keyframes wordmark-shimmer {
-  /* Hold solid ink, sweep the blue band across, hold solid ink again.
-     0% and 100% are identical, so the loop seam is invisible. */
-  0%, 45% { background-position: 115% 0; }
-  75% { background-position: -115% 0; }
-  100% { background-position: 115% 0; }
+/* Entry write-in runs first; the shine waits for it. Fill backwards
+   keeps the band parked off the word during the delay. */
+.wordmark-shine--delayed .wordmark-shine-band {
+  animation-delay: 1.6s;
+  animation-fill-mode: backwards;
+}
+@keyframes wordmark-shine-sweep {
+  /* Hold off-word, sweep across, hold off-word again.
+     0% and 100% are identical (parked off the word), so the loop
+     restarts invisibly — no pop, no snap. */
+  0%, 52% { transform: translateX(-110%); }
+  80%, 100% { transform: translateX(320%); }
 }
 
 /* Plain clean dot that finishes the wordmark lockup (never a bolt).
-   Same 8s rhythm as the shimmer, gentle and cheap (transform only). */
+   Same 8s rhythm as the shine, gentle and cheap (transform only).
+   Its ENTRY visibility is handled in SparkWordmark.tsx — the dot stays
+   hidden until the word has finished drawing. */
 .wordmark-dot {
   display: inline-block;
   width: 0.14em;
@@ -338,14 +375,14 @@ html, body {
     animation: none;
     display: none;
   }
-  .wordmark-loop {
-    animation: none;
-    background-image: none;
-    color: #1D1D1F;
-    -webkit-text-fill-color: #1D1D1F;
-  }
+  /* v1.4.0: the wordmark text is solid ink by default, so nothing to
+     undo here — just stop the shine and the dot pulse. */
+  .wordmark-shine-band,
   .wordmark-dot {
     animation: none;
+  }
+  .wordmark-shine-band {
+    display: none;
   }
   *,
   *::before,

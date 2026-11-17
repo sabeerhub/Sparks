@@ -1,6 +1,6 @@
 {
   "name": "sparks",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "private": true,
   "description": "Sparks — privacy-first, end-to-end encrypted messaging.",
   "scripts": {
