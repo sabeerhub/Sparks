@@ -134,15 +134,15 @@ export default function EditProfilePage() {
         <StatusBar />
 
         {/* Header bar */}
-        <div className="flex items-center justify-between px-4 py-3 bg-white border-b" style={{ borderColor: "var(--color-gray-2)" }}>
-          <button onClick={() => router.back()} className="text-sm font-medium" style={{ color: "var(--color-gray-1)" }}>
+        <div className="frosted-header flex items-center justify-between px-4 py-3">
+          <button onClick={() => router.back()} className="text-body font-medium" style={{ color: "var(--color-gray-1)" }}>
             Cancel
           </button>
-          <h1 className="text-base font-semibold">Edit Profile</h1>
+          <h1 className="text-title font-semibold">Edit Profile</h1>
           <button
             onClick={handleSave}
             disabled={saving || uploading}
-            className="text-sm font-semibold disabled:opacity-40"
+            className="pressable text-body font-semibold disabled:opacity-40"
             style={{ color: "var(--color-blue)" }}
           >
             {saving ? "Saving…" : "Save"}
@@ -172,13 +172,13 @@ export default function EditProfilePage() {
               className="hidden"
               onChange={handleFileChange}
             />
-            <button onClick={handlePickPhoto} className="text-sm font-medium mt-3" style={{ color: "var(--color-blue)" }}>
+            <button onClick={handlePickPhoto} className="text-body font-medium mt-3" style={{ color: "var(--color-blue)" }}>
               Change Photo
             </button>
           </div>
 
           {error && (
-            <p className="text-xs text-center mt-3 px-6" style={{ color: "var(--color-red)" }}>
+            <p className="text-caption text-center mt-3 px-6" style={{ color: "var(--color-red)" }}>
               {error}
             </p>
           )}
@@ -192,11 +192,11 @@ export default function EditProfilePage() {
                   onChange={(e) => setFullName(e.target.value)}
                   maxLength={50}
                   placeholder="Your name"
-                  className="flex-1 text-sm outline-none bg-transparent text-right"
+                  className="flex-1 text-body outline-none bg-transparent text-right"
                 />
               </Field>
               <Field label="Username" last={false} readOnly>
-                <span className="flex-1 text-sm text-right" style={{ color: "var(--color-gray-1)" }}>
+                <span className="flex-1 text-body text-right" style={{ color: "var(--color-gray-1)" }}>
                   @{profile?.username}
                 </span>
               </Field>
@@ -204,8 +204,8 @@ export default function EditProfilePage() {
 
             <div className="rounded-2xl bg-white overflow-hidden p-4">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium">Bio</label>
-                <span className="text-xs" style={{ color: "var(--color-gray-1)" }}>
+                <label className="text-body font-medium">Bio</label>
+                <span className="text-caption" style={{ color: "var(--color-gray-1)" }}>
                   {bio.length}/{MAX_BIO_LENGTH}
                 </span>
               </div>
@@ -214,19 +214,19 @@ export default function EditProfilePage() {
                 onChange={(e) => setBio(e.target.value.slice(0, MAX_BIO_LENGTH))}
                 placeholder="Tell people a little about yourself"
                 rows={3}
-                className="w-full text-sm outline-none bg-transparent resize-none"
+                className="w-full text-body outline-none bg-transparent resize-none"
               />
             </div>
             </div>
 
             <div className="rounded-2xl bg-white overflow-hidden p-4">
-              <label className="text-sm font-medium mb-2 block">Location</label>
+              <label className="text-body font-medium mb-2 block">Location</label>
               <input
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 maxLength={60}
                 placeholder="City, Country"
-                className="w-full text-sm outline-none bg-transparent"
+                className="w-full text-body outline-none bg-transparent"
               />
           </div>
         </div>
@@ -246,10 +246,10 @@ export default function EditProfilePage() {
 function Field({ label, children, last, readOnly }: { label: string; children: React.ReactNode; last?: boolean; readOnly?: boolean }) {
   return (
     <div
-      className={`flex items-center justify-between px-4 py-3.5 ${last ? "" : "border-b"} ${readOnly ? "opacity-70" : ""}`}
+      className={`flex items-center justify-between px-4 py-4 ${last ? "" : "border-b"} ${readOnly ? "opacity-70" : ""}`}
       style={{ borderColor: "var(--color-gray-2)" }}
     >
-      <label className="text-sm font-medium flex-shrink-0 mr-3">{label}</label>
+      <label className="text-body font-medium flex-shrink-0 mr-3">{label}</label>
       {children}
     </div>
   );

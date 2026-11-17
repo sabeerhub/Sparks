@@ -69,21 +69,21 @@ export default function NotificationSettingsPage() {
     <ScreenContainer>
       <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
         <StatusBar />
-        <div className="flex items-center px-5 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back">
+        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
+          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
             <BackIcon />
           </button>
-          <h1 className="text-xl font-bold ml-3">Notifications</h1>
+          <h1 className="text-title font-bold ml-3">Notifications</h1>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 pb-8">
+        <div className="flex-1 overflow-y-auto px-4 pb-8">
           {message && (
-            <div className="mb-4 px-4 py-3 rounded-2xl text-sm" style={{ background: "rgba(52,199,89,0.12)", color: "var(--color-green)" }}>
+            <div className="mb-4 px-4 py-3 rounded-2xl text-body" style={{ background: "rgba(52,199,89,0.12)", color: "var(--color-green)" }}>
               {message}
             </div>
           )}
 
-          <p className="text-xs font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Notify Me About</p>
+          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Notify Me About</p>
           <div className="rounded-2xl overflow-hidden bg-white mb-4">
             <ToggleRow icon={MessageCircle} label="Messages" checked={profile.notify_messages} onChange={(v) => updateField({ notify_messages: v })} />
             <ToggleRow icon={Zap} label="Spark Requests" checked={profile.notify_spark_requests} onChange={(v) => updateField({ notify_spark_requests: v })} />
@@ -93,17 +93,17 @@ export default function NotificationSettingsPage() {
           </div>
 
           <div className="rounded-2xl overflow-hidden bg-white">
-            <button onClick={handleMarkAllRead} className="w-full flex items-center gap-3 px-4 py-3.5 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
+            <button onClick={handleMarkAllRead} className="w-full flex items-center gap-3 px-4 py-4 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
                 <CheckCheck size={18} color="var(--color-blue)" strokeWidth={1.8} />
               </div>
-              <span className="text-sm font-medium">Mark All as Read</span>
+              <span className="text-body font-medium">Mark All as Read</span>
             </button>
-            <button onClick={handleClearAll} className="w-full flex items-center gap-3 px-4 py-3.5">
+            <button onClick={handleClearAll} className="w-full flex items-center gap-3 px-4 py-4">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,59,48,0.12)" }}>
                 <Trash2 size={18} color="var(--color-red)" strokeWidth={1.8} />
               </div>
-              <span className="text-sm font-medium" style={{ color: "var(--color-red)" }}>Clear All Notifications</span>
+              <span className="text-body font-medium" style={{ color: "var(--color-red)" }}>Clear All Notifications</span>
             </button>
           </div>
         </div>
@@ -118,11 +118,11 @@ function ToggleRow({
   icon: import("lucide-react").LucideIcon; label: string; checked: boolean; onChange: (v: boolean) => void; last?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderBottom: last ? "none" : "1px solid var(--color-gray-2)" }}>
+    <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: last ? "none" : "1px solid var(--color-gray-2)" }}>
       <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
         <Icon size={18} color="var(--color-blue)" strokeWidth={1.8} />
       </div>
-      <span className="flex-1 text-sm font-medium">{label}</span>
+      <span className="flex-1 text-body font-medium">{label}</span>
       <button
         onClick={() => onChange(!checked)}
         className="w-11 h-6 rounded-full flex-shrink-0 relative transition-colors"

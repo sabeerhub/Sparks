@@ -129,7 +129,7 @@ export default function ChatThreadPage() {
     return (
       <div className="flex flex-col h-full bg-white">
         <StatusBar />
-        <div className="flex items-center gap-2 px-4 py-2 border-b animate-pulse" style={{ borderColor: "var(--color-gray-2)" }}>
+        <div className="frosted-header flex items-center gap-2 px-4 py-2 animate-pulse">
           <div className="w-8 h-8 rounded-full" style={{ background: "var(--color-gray-3)" }} />
           <div className="w-8 h-8 rounded-full ml-1" style={{ background: "var(--color-gray-3)" }} />
           <div className="flex-1 space-y-1.5">
@@ -145,7 +145,7 @@ export default function ChatThreadPage() {
   return (
     <div className="flex flex-col h-full bg-white">
       <StatusBar />
-      <div className="flex items-center justify-between px-4 py-2 border-b flex-shrink-0" style={{ borderColor: "var(--color-gray-2)" }}>
+      <div className="frosted-header flex items-center justify-between px-4 py-2 flex-shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <button onClick={() => router.push("/chats")} aria-label="Back" className="w-11 h-11 -ml-2 rounded-full flex items-center justify-center flex-shrink-0 md:hidden active:bg-gray-100 active:scale-95 transition-all duration-200">
             <ArrowLeft size={22} color="var(--color-blue)" strokeWidth={2} />
@@ -153,9 +153,9 @@ export default function ChatThreadPage() {
           <button onClick={() => isSelfChat ? router.push("/profile") : router.push(`/profile/${otherUser.id}`)} className="flex items-center gap-2 min-w-0">
             <Avatar name={otherUser.full_name} src={otherUser.avatar_url} size={34} online={!isSelfChat && otherUserOnline} />
             <div className="min-w-0 text-left">
-              <div className="text-sm font-semibold truncate">{isSelfChat ? "Saved Messages" : otherUser.full_name}</div>
+              <div className="text-body font-semibold truncate">{isSelfChat ? "Saved Messages" : otherUser.full_name}</div>
               {!isSelfChat && (
-                <div className="text-xs truncate" style={{ color: otherUserOnline ? "var(--color-green)" : "var(--color-gray-1)" }}>
+                <div className="text-caption truncate" style={{ color: otherUserOnline ? "var(--color-green)" : "var(--color-gray-1)" }}>
                   {otherUserOnline ? "Online" : `Last seen ${formatLastSeen(otherUserLastSeen)}`}
                 </div>
               )}
@@ -200,8 +200,8 @@ export default function ChatThreadPage() {
 
       {replyTo && (
         <div className="px-4 py-2 flex items-center justify-between border-t flex-shrink-0" style={{ borderColor: "var(--color-gray-2)", background: "var(--color-gray-2)" }}>
-          <span className="text-xs" style={{ color: "var(--color-gray-1)" }}>Replying to message</span>
-          <button onClick={() => setReplyTo(null)} className="text-xs font-semibold" style={{ color: "var(--color-blue)" }}>Cancel</button>
+          <span className="text-caption" style={{ color: "var(--color-gray-1)" }}>Replying to message</span>
+          <button onClick={() => setReplyTo(null)} className="text-caption font-semibold" style={{ color: "var(--color-blue)" }}>Cancel</button>
         </div>
       )}
 

@@ -63,15 +63,15 @@ export default function PrivacySettingsPage() {
     <ScreenContainer>
       <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
         <StatusBar />
-        <div className="flex items-center px-5 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back">
+        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
+          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
             <BackIcon />
           </button>
-          <h1 className="text-xl font-bold ml-3">Privacy</h1>
+          <h1 className="text-title font-bold ml-3">Privacy</h1>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 pb-8">
-          <p className="text-xs font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Visibility</p>
+        <div className="flex-1 overflow-y-auto px-4 pb-8">
+          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Visibility</p>
           <div className="rounded-2xl overflow-hidden bg-white mb-4">
             <ToggleRow icon={Eye} label="Last Seen" desc="Let others see when you were last active" checked={profile.last_seen_visible} onChange={(v) => updateField({ last_seen_visible: v })} />
             <ToggleRow icon={Radio} label="Online Status" desc="Show a green dot when you're online" checked={profile.online_status_visible} onChange={(v) => updateField({ online_status_visible: v })} />
@@ -79,7 +79,7 @@ export default function PrivacySettingsPage() {
             <ToggleRow icon={Keyboard} label="Typing Indicator" desc="Show others when you're typing" checked={profile.typing_indicator_enabled} onChange={(v) => updateField({ typing_indicator_enabled: v })} last />
           </div>
 
-          <p className="text-xs font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Access</p>
+          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Access</p>
           <div className="rounded-2xl overflow-hidden bg-white mb-4">
             <SelectRow
               icon={UserCircle}
@@ -105,22 +105,22 @@ export default function PrivacySettingsPage() {
             />
           </div>
 
-          <p className="text-xs font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Blocked Users</p>
+          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Blocked Users</p>
           <div className="rounded-2xl overflow-hidden bg-white">
             {blockedUsers.length === 0 ? (
               <div className="flex items-center gap-3 px-4 py-4">
                 <Ban size={18} color="var(--color-gray-1)" strokeWidth={1.8} />
-                <span className="text-sm" style={{ color: "var(--color-gray-1)" }}>No blocked users</span>
+                <span className="text-body" style={{ color: "var(--color-gray-1)" }}>No blocked users</span>
               </div>
             ) : (
               blockedUsers.map((u, i) => (
                 <div key={u.id} className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: i < blockedUsers.length - 1 ? "1px solid var(--color-gray-2)" : "none" }}>
                   <Avatar name={u.full_name} src={u.avatar_url} size={36} />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{u.full_name}</div>
-                    <div className="text-xs truncate" style={{ color: "var(--color-gray-1)" }}>@{u.username}</div>
+                    <div className="text-body font-medium truncate">{u.full_name}</div>
+                    <div className="text-caption truncate" style={{ color: "var(--color-gray-1)" }}>@{u.username}</div>
                   </div>
-                  <button onClick={() => handleUnblock(u.id)} className="text-xs font-semibold" style={{ color: "var(--color-blue)" }}>
+                  <button onClick={() => handleUnblock(u.id)} className="text-caption font-semibold" style={{ color: "var(--color-blue)" }}>
                     Unblock
                   </button>
                 </div>
@@ -139,13 +139,13 @@ function ToggleRow({
   icon: import("lucide-react").LucideIcon; label: string; desc: string; checked: boolean; onChange: (v: boolean) => void; last?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderBottom: last ? "none" : "1px solid var(--color-gray-2)" }}>
+    <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: last ? "none" : "1px solid var(--color-gray-2)" }}>
       <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
         <Icon size={18} color="var(--color-blue)" strokeWidth={1.8} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium">{label}</div>
-        <div className="text-xs" style={{ color: "var(--color-gray-1)" }}>{desc}</div>
+        <div className="text-body font-medium">{label}</div>
+        <div className="text-caption" style={{ color: "var(--color-gray-1)" }}>{desc}</div>
       </div>
       <button
         onClick={() => onChange(!checked)}
@@ -169,15 +169,15 @@ function SelectRow({
   options: { value: string; label: string }[]; onChange: (v: string) => void; last?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderBottom: last ? "none" : "1px solid var(--color-gray-2)" }}>
+    <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: last ? "none" : "1px solid var(--color-gray-2)" }}>
       <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
         <Icon size={18} color="var(--color-blue)" strokeWidth={1.8} />
       </div>
-      <span className="flex-1 text-sm font-medium">{label}</span>
+      <span className="flex-1 text-body font-medium">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="text-sm font-medium outline-none bg-transparent text-right"
+        className="text-body font-medium outline-none bg-transparent text-right"
         style={{ color: "var(--color-blue)" }}
       >
         {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}

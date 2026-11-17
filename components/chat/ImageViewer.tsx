@@ -106,8 +106,8 @@ export function ImageViewer({ url, senderName, timestamp, caption, onClose }: Im
     >
       <div className="flex items-center justify-between px-4 pt-6 pb-3 relative z-10">
         <div className="text-white">
-          <div className="text-sm font-semibold">{senderName}</div>
-          <div className="text-xs text-white/60">{timestamp}</div>
+          <div className="text-body font-semibold">{senderName}</div>
+          <div className="text-caption text-white/60">{timestamp}</div>
         </div>
         <button onClick={handleClose} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)" }} aria-label="Close">
           <X size={18} color="white" strokeWidth={2} />
@@ -142,7 +142,7 @@ export function ImageViewer({ url, senderName, timestamp, caption, onClose }: Im
 
       {caption && (
         <div className="px-6 pb-8 pt-3 text-center relative z-10">
-          <p className="text-white text-sm">{caption}</p>
+          <p className="text-white text-body">{caption}</p>
         </div>
       )}
     </div>

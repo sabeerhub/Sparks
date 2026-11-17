@@ -114,15 +114,15 @@ export function AvatarCropper({ imageSrc, onCropped, onCancel }: AvatarCropperPr
 
   return (
     <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center" style={{ background: "rgba(0,0,0,0.85)" }}>
-      <div className="flex items-center justify-between w-full max-w-sm px-5 mb-4">
-        <button onClick={onCancel} className="text-white text-sm font-medium flex items-center gap-1">
+      <div className="flex items-center justify-between w-full max-w-sm px-4 mb-4">
+        <button onClick={onCancel} className="text-white text-body font-medium flex items-center gap-1">
           <X size={18} strokeWidth={2} /> Cancel
         </button>
-        <span className="text-white text-sm font-semibold">Move and Scale</span>
+        <span className="text-white text-body font-semibold">Move and Scale</span>
         <button
           onClick={handleUsePhoto}
           disabled={!ready || exporting}
-          className="text-sm font-semibold flex items-center gap-1 disabled:opacity-50"
+          className="text-body font-semibold flex items-center gap-1 disabled:opacity-50"
           style={{ color: "var(--color-blue)" }}
         >
           {exporting ? "..." : <><Check size={18} strokeWidth={2.2} /> Use</>}

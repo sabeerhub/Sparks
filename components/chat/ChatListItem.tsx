@@ -45,22 +45,22 @@ export function ChatListItem({ item, onClick, onLongPress }: ChatListItemProps) 
       onMouseUp={endPress}
       onMouseLeave={endPress}
       onContextMenu={(e) => { e.preventDefault(); onLongPress(); }}
-      className="w-full flex items-center gap-3 px-5 py-3.5 min-h-[72px] text-left hover:bg-gray-50 active:bg-gray-100 transition-colors duration-200"
+      className="w-full flex items-center gap-3 px-4 py-4 min-h-[72px] text-left border-b hover:bg-gray-50 active:bg-gray-100 active:scale-[0.99] transition-all duration-200" style={{ borderColor: "var(--color-gray-2)" }}
     >
-      <Avatar name={item.otherUser.full_name} src={item.otherUser.avatar_url} size={48} online={item.isOnline} badge={item.unreadCount || null} />
+      <Avatar name={item.otherUser.full_name} src={item.otherUser.avatar_url} size={52} online={item.isOnline} badge={item.unreadCount || null} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <span className="font-semibold text-sm truncate" style={{ color: "var(--color-black)" }}>
+          <span className="text-body truncate" style={{ color: "var(--color-black)", fontWeight: item.unreadCount ? 700 : 600 }}>
             {item.otherUser.full_name}
             {item.isPinned && <PinGlyph />}
           </span>
-          <span className="text-xs flex-shrink-0" style={{ color: "var(--color-gray-1)" }}>
+          <span className="text-caption flex-shrink-0" style={{ color: "var(--color-gray-1)" }}>
             {formatChatListTime(item.lastMessageAt)}
           </span>
         </div>
-        <span className="text-sm truncate block" style={{ color: "var(--color-gray-1)" }}>
+        <span className="text-body truncate block" style={{ color: item.unreadCount ? "var(--color-black)" : "var(--color-gray-1)", fontWeight: item.unreadCount ? 500 : 400 }}>
           {item.isMuted && "🔇 "}
-          {truncatePreview(item.lastMessagePreview || "Encrypted message")}
+          {truncatePreview(item.lastMessagePreview || "No messages yet")}
         </span>
       </div>
     </button>

@@ -54,7 +54,7 @@ export function ChatActionSheet({
 
         <button
           onClick={onClose}
-          className="w-full py-3 mt-3 rounded-2xl text-sm font-semibold"
+          className="w-full py-3 mt-3 rounded-2xl text-body font-semibold"
           style={{ background: "var(--color-gray-2)" }}
         >
           Cancel
@@ -77,11 +77,11 @@ function ActionRow({ icon: Icon, label, onClick, destructive, last }: ActionRowP
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3.5 bg-white active:opacity-70 transition-opacity ${last ? "" : "border-b"}`}
+      className={`w-full flex items-center gap-3 px-4 py-4 bg-white active:opacity-70 transition-opacity ${last ? "" : "border-b"}`}
       style={{ borderColor: "var(--color-gray-2)" }}
     >
       <Icon size={19} color={color} strokeWidth={1.8} />
-      <span className="text-sm font-medium" style={{ color }}>{label}</span>
+      <span className="text-body font-medium" style={{ color }}>{label}</span>
     </button>
   );
 }

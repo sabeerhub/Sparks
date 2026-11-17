@@ -45,14 +45,14 @@ export default function StorageSettingsPage() {
     <ScreenContainer>
       <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
         <StatusBar />
-        <div className="flex items-center px-5 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back">
+        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
+          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
             <BackIcon />
           </button>
-          <h1 className="text-xl font-bold ml-3">Storage and Data</h1>
+          <h1 className="text-title font-bold ml-3">Storage and Data</h1>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 pb-8">
+        <div className="flex-1 overflow-y-auto px-4 pb-8">
           {loading ? (
             <div className="flex items-center justify-center py-16">
               <div className="w-6 h-6 rounded-full border-2 animate-spin" style={{ borderColor: "var(--color-gray-3)", borderTopColor: "var(--color-blue)" }} />
@@ -63,8 +63,8 @@ export default function StorageSettingsPage() {
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: "rgba(0,122,255,0.1)" }}>
                   <HardDrive size={28} color="var(--color-blue)" strokeWidth={1.8} />
                 </div>
-                <span className="text-2xl font-bold">{formatBytes(usage?.total_bytes ?? 0)}</span>
-                <span className="text-sm" style={{ color: "var(--color-gray-1)" }}>Total Storage Used</span>
+                <span className="text-title font-bold">{formatBytes(usage?.total_bytes ?? 0)}</span>
+                <span className="text-body" style={{ color: "var(--color-gray-1)" }}>Total Storage Used</span>
               </div>
 
               <div className="rounded-2xl overflow-hidden bg-white">
@@ -86,13 +86,13 @@ function UsageRow({
   icon: import("lucide-react").LucideIcon; label: string; bytes: number; barWidth: string; color: string; last?: boolean;
 }) {
   return (
-    <div className="px-4 py-3.5" style={{ borderBottom: last ? "none" : "1px solid var(--color-gray-2)" }}>
+    <div className="px-4 py-4" style={{ borderBottom: last ? "none" : "1px solid var(--color-gray-2)" }}>
       <div className="flex items-center gap-3 mb-2">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}20` }}>
           <Icon size={18} color={color} strokeWidth={1.8} />
         </div>
-        <span className="flex-1 text-sm font-medium">{label}</span>
-        <span className="text-sm font-semibold" style={{ color: "var(--color-gray-1)" }}>{formatBytes(bytes)}</span>
+        <span className="flex-1 text-body font-medium">{label}</span>
+        <span className="text-body font-semibold" style={{ color: "var(--color-gray-1)" }}>{formatBytes(bytes)}</span>
       </div>
       <div className="h-1.5 rounded-full ml-12" style={{ background: "var(--color-gray-2)" }}>
         <div className="h-full rounded-full" style={{ width: barWidth, background: color }} />

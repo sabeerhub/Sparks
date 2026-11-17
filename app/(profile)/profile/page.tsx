@@ -80,16 +80,16 @@ export default function ProfilePage() {
       <StatusBar />
 
 
-      <div className="flex items-center justify-between px-5 pt-4 relative z-10 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 pt-4 relative z-10 flex-shrink-0">
         <button
           onClick={() => router.back()}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-white"
+          className="pressable w-11 h-11 rounded-full flex items-center justify-center bg-white"
           style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
           aria-label="Back"
         >
           <ChevronLeft size={20} color="#1D1D1F" strokeWidth={2} />
         </button>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setShareOpen(true)}
             className="w-10 h-10 rounded-full flex items-center justify-center bg-white"
@@ -113,9 +113,9 @@ export default function ProfilePage() {
         {loading || !profile ? (
           <ProfileSkeleton />
         ) : (
-          <div className="w-full max-w-md mx-auto px-5">
+          <div className="w-full max-w-md mx-auto px-4">
             <div className="-mx-5 relative" style={{ height: 190 }}>
-              <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, #CFE4FF 0%, #EAF3FF 100%)", borderRadius: "0 0 50% 50% / 0 0 46px 46px" }} />
+              <div className="absolute inset-0" style={{ background: "var(--color-blue-light)", borderRadius: "0 0 50% 50% / 0 0 46px 46px" }} />
               <div className="absolute left-1/2" style={{ bottom: -52, transform: "translateX(-50%)" }}>
                 <Avatar name={profile.full_name ?? "?"} src={profile.avatar_url} size={104} online />
               </div>
@@ -123,15 +123,15 @@ export default function ProfilePage() {
             <div className="flex flex-col items-center pt-14 pb-6 text-center">
 
               <div className="flex items-center gap-1.5 mt-4">
-                <h1 className="text-[21px] font-bold" style={{ color: "#1D1D1F" }}>{profile.full_name ?? "—"}</h1>
+                <h1 className="text-title font-bold" style={{ color: "#1D1D1F" }}>{profile.full_name ?? "—"}</h1>
                 {profile.is_verified && <BadgeCheck size={17} fill="#007AFF" color="white" />}
                 {profile.is_premium && <span className="text-base">💎</span>}
               </div>
 
-              <p className="text-[14px] mt-0.5" style={{ color: "#6E6E73" }}>@{profile.username}</p>
+              <p className="text-body mt-0.5" style={{ color: "#6E6E73" }}>@{profile.username}</p>
 
 
-              <div className="flex items-center gap-2.5 mt-3 text-[13px]" style={{ color: "#6E6E73" }}>
+              <div className="flex items-center gap-2 mt-3 text-caption" style={{ color: "#6E6E73" }}>
                 {profile.location && (
                   <span className="flex items-center gap-1">
                     <MapPin size={12} strokeWidth={1.8} /> {profile.location}
@@ -151,20 +151,20 @@ export default function ProfilePage() {
             >
               <div className="flex flex-col items-center gap-1 flex-1">
                 <Zap size={17} color="#007AFF" fill="#007AFF" />
-                <span className="text-[19px] font-bold" style={{ color: "#1D1D1F" }}>{(profile.spark_count ?? 0).toLocaleString()}</span>
-                <span className="text-[12px]" style={{ color: "#6E6E73" }}>Total Sparks</span>
+                <span className="text-title font-bold" style={{ color: "#1D1D1F" }}>{(profile.spark_count ?? 0).toLocaleString()}</span>
+                <span className="text-caption" style={{ color: "#6E6E73" }}>Total Sparks</span>
               </div>
               <div style={{ width: 1, background: "#E5E5EA" }} />
               <div className="flex flex-col items-center gap-1 flex-1">
                 <Users size={17} color="#007AFF" strokeWidth={1.8} />
-                <span className="text-[19px] font-bold" style={{ color: "#1D1D1F" }}>{sparkConnections.toLocaleString()}</span>
-                <span className="text-[12px]" style={{ color: "#6E6E73" }}>Spark Connections</span>
+                <span className="text-title font-bold" style={{ color: "#1D1D1F" }}>{sparkConnections.toLocaleString()}</span>
+                <span className="text-caption" style={{ color: "#6E6E73" }}>Spark Connections</span>
               </div>
               <div style={{ width: 1, background: "#E5E5EA" }} />
               <div className="flex flex-col items-center gap-1 flex-1">
                 <Calendar size={17} color="#007AFF" strokeWidth={1.8} />
-                <span className="text-[19px] font-bold" style={{ color: "#1D1D1F" }}>{daysActive(profile.created_at)}</span>
-                <span className="text-[12px]" style={{ color: "#6E6E73" }}>Days Active</span>
+                <span className="text-title font-bold" style={{ color: "#1D1D1F" }}>{daysActive(profile.created_at)}</span>
+                <span className="text-caption" style={{ color: "#6E6E73" }}>Days Active</span>
               </div>
             </div>
 
@@ -172,14 +172,14 @@ export default function ProfilePage() {
             <div className="flex gap-3 mb-4">
               <button
                 onClick={handleMessageSelf}
-                className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-full text-[15px] font-medium border bg-white transition-transform active:scale-[0.98]"
+                className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-full text-body font-medium border bg-white transition-transform active:scale-[0.98]"
                 style={{ borderColor: "#E5E5EA", color: "#1D1D1F" }}
               >
                 <MessageCircle size={16} strokeWidth={1.8} /> Message
               </button>
               <button
                 onClick={() => setShareOpen(true)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-full text-[15px] font-semibold text-white transition-transform active:scale-[0.98]"
+                className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-full text-body font-semibold text-white transition-transform active:scale-[0.98]"
                 style={{ background: "#007AFF" }}
               >
                 <Share2 size={16} strokeWidth={2} /> Get Spark
@@ -189,8 +189,8 @@ export default function ProfilePage() {
             {/* About card */}
             {profile.bio && (
               <div className="relative rounded-2xl bg-white p-5 mb-4" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-                <span className="text-[15px] font-semibold" style={{ color: "#1D1D1F" }}>About</span>
-                <p className="text-[14px] mt-2 leading-relaxed max-w-[85%]" style={{ color: "#6E6E73" }}>{profile.bio}</p>
+                <span className="text-body font-semibold" style={{ color: "#1D1D1F" }}>About</span>
+                <p className="text-body mt-2 leading-relaxed max-w-[85%]" style={{ color: "#6E6E73" }}>{profile.bio}</p>
                 <Quote size={26} color="#E8F1FF" fill="#E8F1FF" className="absolute top-5 right-5" />
               </div>
             )}
@@ -198,8 +198,8 @@ export default function ProfilePage() {
             {/* Media */}
             <div className="rounded-2xl bg-white p-5 mb-4" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[15px] font-semibold" style={{ color: "#1D1D1F" }}>Media</span>
-                <button onClick={() => router.push("/profile/media")} className="flex items-center gap-0.5 text-[13px]" style={{ color: "#6E6E73" }}>
+                <span className="text-body font-semibold" style={{ color: "#1D1D1F" }}>Media</span>
+                <button onClick={() => router.push("/profile/media")} className="flex items-center gap-0.5 text-caption" style={{ color: "#6E6E73" }}>
                   View all <ChevronRight size={14} strokeWidth={1.8} />
                 </button>
               </div>
@@ -213,7 +213,7 @@ export default function ProfilePage() {
               ) : (
                 <div className="flex flex-col items-center py-6 text-center">
                   <ImageIcon size={24} color="#E5E5EA" strokeWidth={1.5} />
-                  <p className="text-[13px] mt-2" style={{ color: "#6E6E73" }}>No shared media yet</p>
+                  <p className="text-caption mt-2" style={{ color: "#6E6E73" }}>No shared media yet</p>
                 </div>
               )}
             </div>
@@ -227,7 +227,7 @@ export default function ProfilePage() {
 
             {/* Logout */}
             <div className="flex justify-center pb-8">
-              <button onClick={handleLogout} className="text-[14px] font-medium" style={{ color: "#FF3B30" }}>
+              <button onClick={handleLogout} className="pressable px-4 py-2 text-body font-medium" style={{ color: "#FF3B30" }}>
                 Log Out
               </button>
             </div>
@@ -259,15 +259,15 @@ function SettingsRow({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-4 py-3.5"
+      className="pressable w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50"
       style={{ borderBottom: last ? "none" : "1px solid #F5F5F7" }}
     >
       <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#E8F1FF" }}>
         <Icon size={17} color="#007AFF" strokeWidth={1.8} />
       </div>
       <div className="flex-1 text-left min-w-0">
-        <div className="text-[14px] font-medium" style={{ color: "#1D1D1F" }}>{label}</div>
-        <div className="text-[12px] truncate" style={{ color: "#6E6E73" }}>{desc}</div>
+        <div className="text-body font-medium" style={{ color: "#1D1D1F" }}>{label}</div>
+        <div className="text-caption truncate" style={{ color: "#6E6E73" }}>{desc}</div>
       </div>
       <ChevronRight size={16} color="#C7C7CC" strokeWidth={1.8} />
     </button>

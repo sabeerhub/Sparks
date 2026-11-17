@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Video } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -26,6 +27,7 @@ function callLabel(item: CallHistoryItem): string {
 }
 
 export default function CallsPage() {
+  const router = useRouter();
   const [history, setHistory] = useState<CallHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { placeCall } = useCallActions();
@@ -50,16 +52,16 @@ export default function CallsPage() {
       <div className="flex flex-col h-full">
         <StatusBar />
 
-        <div className="px-5 pt-4 pb-3">
-          <h1 className="text-2xl font-bold">Calls</h1>
-          <p className="text-sm mt-0.5" style={{ color: "var(--color-gray-1)" }}>
+        <div className="frosted-header px-4 pt-4 pb-3">
+          <h1 className="text-title font-bold">Calls</h1>
+          <p className="text-body mt-1" style={{ color: "var(--color-gray-1)" }}>
             Your voice and video call history
           </p>
         </div>
 
         <div className="flex-1 overflow-y-auto">
           {loading && (
-            <div className="px-5 py-4 space-y-3">
+            <div className="px-4 py-4 space-y-3">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="flex items-center gap-3 animate-pulse">
                   <div className="w-12 h-12 rounded-full flex-shrink-0" style={{ background: "var(--color-gray-3)" }} />
@@ -74,13 +76,20 @@ export default function CallsPage() {
 
           {!loading && history.length === 0 && (
             <div className="flex flex-col items-center justify-center pt-20 px-8 text-center">
-              <div className="w-16 h-16 rounded-3xl flex items-center justify-center mb-4" style={{ background: "rgba(0,122,255,0.1)" }}>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: "rgba(0,122,255,0.1)" }}>
                 <Phone size={28} color="var(--color-blue)" strokeWidth={1.8} />
               </div>
-              <p className="font-semibold mb-1">No calls yet</p>
-              <p className="text-sm" style={{ color: "var(--color-gray-1)" }}>
+              <p className="text-body font-semibold mb-1">No calls yet</p>
+              <p className="text-body mb-6" style={{ color: "var(--color-gray-1)" }}>
                 Calls you make or receive will show up here.
               </p>
+              <button
+                onClick={() => router.push("/search")}
+                className="pressable px-4 py-2 rounded-full text-body font-semibold text-white"
+                style={{ background: "var(--color-blue)" }}
+              >
+                Find People to Call
+              </button>
             </div>
           )}
 
@@ -88,11 +97,11 @@ export default function CallsPage() {
             const missed = item.status === "missed";
             const DirectionIcon = missed ? PhoneMissed : item.isOutgoing ? PhoneOutgoing : PhoneIncoming;
             return (
-              <div key={item.id} className="w-full flex items-center gap-3 px-5 py-3 text-left border-b active:bg-gray-50 transition-colors" style={{ borderColor: "var(--color-gray-2)" }}>
+              <div key={item.id} className="w-full flex items-center gap-3 px-4 py-4 text-left border-b active:bg-gray-50 transition-colors" style={{ borderColor: "var(--color-gray-2)" }}>
                 <Avatar name={item.otherUserName} src={item.otherUserAvatar} size={48} />
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{item.otherUserName}</p>
-                  <p className="text-sm flex items-center gap-1.5 mt-0.5" style={{ color: missed ? "var(--color-red)" : "var(--color-gray-1)" }}>
+                  <p className="font-semibold text-body truncate">{item.otherUserName}</p>
+                  <p className="text-body flex items-center gap-1.5 mt-0.5" style={{ color: missed ? "var(--color-red)" : "var(--color-gray-1)" }}>
                     <DirectionIcon size={14} strokeWidth={2} />
                     <span className="truncate">{callLabel(item)}</span>
                     <span aria-hidden>·</span>

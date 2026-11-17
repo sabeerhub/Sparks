@@ -38,8 +38,8 @@ export default function WelcomePage() {
   return (
     <ScreenContainer>
       <StatusBar />
-      <div className="flex justify-end px-5 pt-2">
-        <button onClick={() => router.push("/onboarding/profile-setup")} className="text-sm font-semibold" style={{ color: "var(--color-blue)" }}>
+      <div className="flex justify-end px-4 pt-2">
+        <button onClick={() => router.push("/onboarding/profile-setup")} className="pressable text-body font-semibold" style={{ color: "var(--color-blue)" }}>
           Skip
         </button>
       </div>
@@ -49,8 +49,8 @@ export default function WelcomePage() {
             {slide.icon === "shield" ? <ShieldIcon /> : <BoltIcon />}
           </div>
         </div>
-        <h2 className="text-2xl font-bold mb-4 whitespace-pre-line">{slide.title}</h2>
-        <p className="text-sm leading-relaxed" style={{ color: "var(--color-gray-1)" }}>{slide.desc}</p>
+        <h2 className="text-title font-bold mb-4 whitespace-pre-line">{slide.title}</h2>
+        <p className="text-body leading-relaxed" style={{ color: "var(--color-gray-1)" }}>{slide.desc}</p>
       </div>
       <div className="px-6 pb-10">
         <div className="flex justify-center gap-2 mb-6">

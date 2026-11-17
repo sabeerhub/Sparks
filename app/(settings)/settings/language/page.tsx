@@ -10,16 +10,16 @@ export default function LanguageSettingsPage() {
     <ScreenContainer>
       <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
         <StatusBar />
-        <div className="flex items-center px-5 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back">
+        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
+          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
           </button>
-          <h1 className="text-xl font-bold ml-3">Language</h1>
+          <h1 className="text-title font-bold ml-3">Language</h1>
         </div>
-        <div className="flex-1 px-5">
+        <div className="flex-1 px-4">
           <div className="rounded-2xl overflow-hidden bg-white">
-            <div className="flex items-center gap-3 px-4 py-3.5">
-              <span className="flex-1 text-sm font-medium">English</span>
+            <div className="flex items-center gap-3 px-4 py-4">
+              <span className="flex-1 text-body font-medium">English</span>
               <Check size={18} color="var(--color-blue)" strokeWidth={2.2} />
             </div>
           </div>

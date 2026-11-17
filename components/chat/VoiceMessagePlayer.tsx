@@ -121,7 +121,7 @@ export function VoiceMessagePlayer({ url, isMine }: VoiceMessagePlayerProps) {
 
   return (
     <div
-      className="flex items-center gap-2.5 rounded-3xl px-3 py-2.5"
+      className="flex items-center gap-2 rounded-3xl px-3 py-2"
       style={{ background: trackColor, minWidth: 240 }}
     >
       <button
@@ -171,7 +171,7 @@ export function VoiceMessagePlayer({ url, isMine }: VoiceMessagePlayerProps) {
         >
           {SPEEDS[speedIndex]}×
         </button>
-        <span className="text-[11px] font-medium" style={{ color: isMine ? "rgba(255,255,255,0.85)" : "var(--color-gray-1)" }}>
+        <span className="text-caption font-medium" style={{ color: isMine ? "rgba(255,255,255,0.85)" : "var(--color-gray-1)" }}>
           {formatTime(playing || currentTime > 0 ? currentTime : duration)}
         </span>
       </div>

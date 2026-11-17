@@ -50,12 +50,12 @@ export default function LoginPage() {
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "var(--color-blue)" }}>
             <BoltIcon />
           </div>
-          <h1 className="text-2xl font-bold">Welcome back</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--color-gray-1)" }}>Log in to continue to Sparks</p>
+          <h1 className="text-title font-bold">Welcome back</h1>
+          <p className="text-body mt-1" style={{ color: "var(--color-gray-1)" }}>Log in to continue to Sparks</p>
         </div>
 
         {verified && (
-          <div className="rounded-2xl px-4 py-3 mb-5 text-sm font-medium" style={{ background: "rgba(52,199,89,0.12)", color: "var(--color-green)" }}>
+          <div className="rounded-2xl px-4 py-3 mb-5 text-body font-medium" style={{ background: "rgba(52,199,89,0.12)", color: "var(--color-green)" }}>
             ✓ Email verified — you can now log in.
           </div>
         )}
@@ -81,7 +81,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-caption font-medium"
               style={{ color: "var(--color-blue)" }}
             >
               {showPassword ? "Hide" : "Show"}
@@ -90,7 +90,7 @@ export default function LoginPage() {
         </div>
 
         <div className="flex items-center justify-between mt-4 mb-6">
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <label className="flex items-center gap-2 text-body cursor-pointer">
             <input
               type="checkbox"
               checked={rememberMe}
@@ -100,16 +100,16 @@ export default function LoginPage() {
             />
             <span style={{ color: "var(--color-gray-1)" }}>Remember me</span>
           </label>
-          <Link href="/forgot-password" className="text-sm font-medium" style={{ color: "var(--color-blue)" }}>
+          <Link href="/forgot-password" className="pressable text-body font-medium" style={{ color: "var(--color-blue)" }}>
             Forgot password?
           </Link>
         </div>
 
         <Button fullWidth loading={loading} onClick={handleSignIn}>Log In</Button>
 
-        <p className="text-sm text-center mt-6" style={{ color: "var(--color-gray-1)" }}>
+        <p className="text-body text-center mt-6" style={{ color: "var(--color-gray-1)" }}>
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-semibold" style={{ color: "var(--color-blue)" }}>
+          <Link href="/signup" className="pressable font-semibold" style={{ color: "var(--color-blue)" }}>
             Create Account
           </Link>
         </p>

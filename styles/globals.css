@@ -6,6 +6,7 @@
   /* ─── Design tokens — light theme ONLY, per design system ───────────── */
   --color-blue: #007AFF;
   --color-blue-light: #E8F1FF;
+  --color-blue-pressed: #006AE0;
   --color-green: #34C759;
   --color-red: #FF3B30;
   --color-orange: #FF9500;
@@ -15,6 +16,16 @@
   --color-gray-2: #F5F5F7;
   --color-gray-3: #E5E5EA;
   --color-white: #FFFFFF;
+
+  /* Hairline separator (iOS-style 0.5px look via translucent black). */
+  --hairline: rgba(0, 0, 0, 0.08);
+
+  /* ─── v1.2.0 unified type scale: one size per job ─────────────────────
+     title 24px/30 · body 16px/24 · caption 12px/16. Spacing is 8/16/24px.
+     No gradients anywhere in the app. */
+  --font-title: 24px;
+  --font-body: 16px;
+  --font-caption: 12px;
 
   --radius-sm: 16px;
   --radius-md: 24px;
@@ -48,6 +59,54 @@ html, body {
 ::-webkit-scrollbar {
   width: 0px;
   height: 0px;
+}
+
+/* ─── v1.2.0 shared primitives ────────────────────────────────────────── */
+
+/* Landing hero display size — the single exception to the unified scale. */
+.text-display {
+  font-size: clamp(40px, 8vw, 56px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+
+/* Frosted-glass header: native iOS feel — blurred translucent white,
+   hairline bottom border. Apply to sticky/inline screen headers. */
+.frosted-header {
+  background: rgba(255, 255, 255, 0.82);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* Frosted floating pill (mobile nav). */
+.frosted-pill {
+  background: rgba(255, 255, 255, 0.85);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--hairline);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Press state shared by everything tappable: shrink slightly + fade. */
+.pressable {
+  transition: transform 0.15s ease, opacity 0.15s ease, background-color 0.15s ease;
+}
+.pressable:active {
+  transform: scale(0.97);
+  opacity: 0.7;
+}
+
+/* Visible keyboard focus — Apple blue ring, never removed. */
+:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+}
+
+/* Text selection in brand blue. */
+::selection {
+  background: rgba(0, 122, 255, 0.2);
 }
 
 @keyframes typing-bounce {

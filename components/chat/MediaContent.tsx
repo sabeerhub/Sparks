@@ -100,7 +100,7 @@ export function MediaContent({ contentType, mediaPath, fileName, isMine, senderN
         <FileText size={18} color={isMine ? "white" : "var(--color-blue)"} strokeWidth={1.8} />
       </div>
       <span
-        className="text-sm font-medium truncate"
+        className="text-body font-medium truncate"
         style={{ color: isMine ? "white" : "var(--color-black)" }}
       >
         {fileName}

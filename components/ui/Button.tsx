@@ -12,7 +12,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = "primary", loading = false, fullWidth = false, className, children, disabled, ...props }, ref) => {
-    const base = "rounded-2xl text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2 py-3.5 px-6";
+    const base = "pressable rounded-full text-body font-semibold disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2 py-4 px-6";
 
     const variants: Record<string, string> = {
       primary: "text-white",

@@ -27,7 +27,7 @@ export function MessageBubble({ message, isMine, senderName, onEdit, onDelete, o
     return (
       <div className={`flex ${isMine ? "justify-end" : "justify-start"} mb-1`}>
         <div
-          className="rounded-3xl px-4 py-2.5 text-sm italic"
+          className="rounded-3xl px-4 py-2 text-body italic"
           style={{ background: "var(--color-gray-2)", color: "var(--color-gray-1)" }}
         >
           This message was deleted
@@ -59,7 +59,7 @@ export function MessageBubble({ message, isMine, senderName, onEdit, onDelete, o
             />
           ) : (
             <button
-              className="text-sm text-left w-full transition-opacity duration-200"
+              className="pressable text-body text-left w-full shadow-sm"
               style={{
                 background: isMine ? "var(--color-blue)" : "var(--color-gray-2)",
                 color: isMine ? "#fff" : "var(--color-black)",
@@ -82,11 +82,11 @@ export function MessageBubble({ message, isMine, senderName, onEdit, onDelete, o
 
         <div className={`flex items-center gap-1 mt-0.5 ${isMine ? "justify-end" : "justify-start"}`}>
           {message.edited_at && (
-            <span className="text-xs" style={{ color: "var(--color-gray-1)" }}>
+            <span className="text-caption" style={{ color: "var(--color-gray-1)" }}>
               edited ·
             </span>
           )}
-          <span className="text-xs" style={{ color: "var(--color-gray-1)" }}>
+          <span className="text-caption" style={{ color: "var(--color-gray-1)" }}>
             {message.status === "pending" ? "Sending…" : message.status === "failed" ? "Failed to send" : formatMessageTime(message.created_at)}
           </span>
           {isMine && message.status !== "pending" && message.status !== "failed" && (

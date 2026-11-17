@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircleMore, Bell, Search as SearchIconLucide } from "lucide-react";
+import { MessageCircleMore, Bell, Plus, Search as SearchIconLucide } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -18,7 +18,7 @@ const supabase = createClient();
 
 function ChatRowSkeleton() {
   return (
-    <div className="flex items-center gap-3 px-5 py-3 animate-pulse">
+    <div className="flex items-center gap-3 px-4 py-3 animate-pulse">
       <div className="w-12 h-12 rounded-full flex-shrink-0" style={{ background: "var(--color-gray-3)" }} />
       <div className="flex-1 space-y-2">
         <div className="flex justify-between">
@@ -132,14 +132,15 @@ export default function ChatsPage() {
           <div className="flex flex-col h-full">
             <StatusBar />
 
-            <div className="px-5 pt-4 pb-3">
+            {/* v1.2.0: frosted header. Search + New Chat moved here from the nav. */}
+            <div className="frosted-header px-4 pt-4 pb-3">
               <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold">Sparks</h1>
+                <h1 className="text-title font-bold">Sparks</h1>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => router.push("/search")} aria-label="Find people" className="w-11 h-11 rounded-full flex items-center justify-center active:opacity-60 active:scale-95 transition-all duration-200">
+                  <button onClick={() => router.push("/search")} aria-label="Find people" className="pressable w-11 h-11 rounded-full flex items-center justify-center">
                     <SearchIconLucide size={22} color="var(--color-black)" strokeWidth={1.8} />
                   </button>
-                  <button onClick={() => router.push("/activity")} aria-label="Activity" className="w-11 h-11 rounded-full flex items-center justify-center active:opacity-60 active:scale-95 transition-all duration-200 relative">
+                  <button onClick={() => router.push("/activity")} aria-label="Activity" className="pressable w-11 h-11 rounded-full flex items-center justify-center relative">
                     <Bell size={22} color="var(--color-black)" strokeWidth={1.8} />
                     {unreadNotifs > 0 && (
                       <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: "var(--color-red)" }}>
@@ -147,19 +148,22 @@ export default function ChatsPage() {
                       </span>
                     )}
                   </button>
+                  <button onClick={() => router.push("/chats/new")} aria-label="New chat" className="pressable w-11 h-11 rounded-full flex items-center justify-center" style={{ background: "var(--color-blue)" }}>
+                    <Plus size={22} color="white" strokeWidth={2} />
+                  </button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 rounded-2xl px-4 py-2.5" style={{ background: "var(--color-gray-2)" }}>
+              <div className="flex items-center gap-2 rounded-full px-4 py-2" style={{ background: "var(--color-gray-2)" }}>
                 <SearchIconLucide size={14} color="var(--color-gray-1)" strokeWidth={1.8} />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search chats or users"
-                  className="flex-1 outline-none text-sm bg-transparent"
+                  className="flex-1 outline-none text-body bg-transparent"
                 />
                 {search && (
-                  <button onClick={() => setSearch("")} className="text-xs font-medium" style={{ color: "var(--color-blue)" }}>
+                  <button onClick={() => setSearch("")} className="text-caption font-medium" style={{ color: "var(--color-blue)" }}>
                     Clear
                   </button>
                 )}
@@ -174,18 +178,18 @@ export default function ChatsPage() {
               {!showSkeletons && filtered.length === 0 && (
                 <div className="flex flex-col items-center justify-center pt-20 px-8 text-center">
                   <div className="w-16 h-16 rounded-3xl flex items-center justify-center mb-4" style={{ background: "rgba(0,122,255,0.1)" }}>
-                    <span className="text-2xl">⚡</span>
+                    <span className="text-title">⚡</span>
                   </div>
                   <p className="font-semibold mb-1">
                     {search ? `No chats matching "${search}"` : "No chats yet"}
                   </p>
-                  <p className="text-sm mb-5" style={{ color: "var(--color-gray-1)" }}>
+                  <p className="text-body mb-5" style={{ color: "var(--color-gray-1)" }}>
                     {search ? "Try a different search" : "Search for people and send a Spark Request to connect"}
                   </p>
                   {!search && (
                     <button
                       onClick={() => router.push("/search")}
-                      className="px-5 py-2.5 rounded-2xl text-sm font-semibold text-white"
+                      className="px-4 py-2 rounded-2xl text-body font-semibold text-white"
                       style={{ background: "var(--color-blue)" }}
                     >
                       Find People
@@ -217,10 +221,17 @@ export default function ChatsPage() {
           <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5" style={{ background: "rgba(0,122,255,0.08)" }}>
             <MessageCircleMore size={36} color="var(--color-blue)" strokeWidth={1.5} />
           </div>
-          <p className="text-lg font-semibold mb-1">Select a chat</p>
-          <p className="text-sm max-w-xs" style={{ color: "var(--color-gray-1)" }}>
+          <p className="text-title font-semibold mb-1">Select a chat</p>
+          <p className="text-body max-w-xs mb-6" style={{ color: "var(--color-gray-1)" }}>
             Choose a conversation from the sidebar, or start a new one to begin messaging.
           </p>
+          <button
+            onClick={() => router.push("/chats/new")}
+            className="pressable px-6 py-3 rounded-full text-body font-semibold text-white"
+            style={{ background: "var(--color-blue)" }}
+          >
+            New Chat
+          </button>
         </div>
       </div>
 

@@ -57,30 +57,30 @@ export default function AppearanceSettingsPage() {
     <ScreenContainer>
       <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
         <StatusBar />
-        <div className="flex items-center px-5 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back">
+        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
+          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
             <BackIcon />
           </button>
-          <h1 className="text-xl font-bold ml-3">Appearance</h1>
+          <h1 className="text-title font-bold ml-3">Appearance</h1>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 pb-8">
-          <p className="text-xs font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Theme</p>
+        <div className="flex-1 overflow-y-auto px-4 pb-8">
+          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Theme</p>
           <div className="rounded-2xl overflow-hidden bg-white mb-4">
             <OptionRow icon={Sun} label="Light" selected={profile.theme_preference === "light"} onClick={() => updateField({ theme_preference: "light" })} last />
           </div>
-          <p className="text-xs px-1 mb-4" style={{ color: "var(--color-gray-1)" }}>
+          <p className="text-caption px-1 mb-4" style={{ color: "var(--color-gray-1)" }}>
             Sparks is light theme only, by design.
           </p>
 
-          <p className="text-xs font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Font Size</p>
+          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Font Size</p>
           <div className="rounded-2xl overflow-hidden bg-white mb-4">
             <OptionRow icon={Type} label="Small" selected={profile.font_size === "small"} onClick={() => updateField({ font_size: "small" })} />
             <OptionRow icon={Type} label="Medium" selected={profile.font_size === "medium"} onClick={() => updateField({ font_size: "medium" })} />
             <OptionRow icon={Type} label="Large" selected={profile.font_size === "large"} onClick={() => updateField({ font_size: "large" })} last />
           </div>
 
-          <p className="text-xs font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Chat Bubble Size</p>
+          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>Chat Bubble Size</p>
           <div className="rounded-2xl overflow-hidden bg-white">
             <OptionRow icon={MessageSquare} label="Compact" selected={profile.bubble_size === "compact"} onClick={() => updateField({ bubble_size: "compact" })} />
             <OptionRow icon={MessageSquare} label="Standard" selected={profile.bubble_size === "standard"} onClick={() => updateField({ bubble_size: "standard" })} />
@@ -101,13 +101,13 @@ function OptionRow({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="w-full flex items-center gap-3 px-4 py-3.5 disabled:opacity-40"
+      className="w-full flex items-center gap-3 px-4 py-4 disabled:opacity-40"
       style={{ borderBottom: last ? "none" : "1px solid var(--color-gray-2)" }}
     >
       <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
         <Icon size={18} color="var(--color-blue)" strokeWidth={1.8} />
       </div>
-      <span className="flex-1 text-sm font-medium text-left">{label}</span>
+      <span className="flex-1 text-body font-medium text-left">{label}</span>
       {selected && <Check size={18} color="var(--color-blue)" strokeWidth={2.2} />}
     </button>
   );

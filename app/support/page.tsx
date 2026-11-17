@@ -16,28 +16,28 @@ export default function SupportPage() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-2xl mx-auto px-6 py-12">
-        <Link href="/" className="text-sm font-medium text-[#007AFF]">← Back</Link>
+        <Link href="/" className="pressable text-body font-medium text-[#007AFF]">← Back</Link>
 
-        <h1 className="text-3xl font-bold mt-6 mb-2 text-[#1D1D1F]">Support</h1>
-        <p className="text-[15px] text-[#1D1D1F]/60 mb-8">
+        <h1 className="text-title font-bold mt-6 mb-2 text-[#1D1D1F]">Support</h1>
+        <p className="text-body text-[#1D1D1F]/60 mb-8">
           Need help? Check the questions below, or email us directly at{" "}
           <a href="mailto:support@sparkschat.app" className="text-[#007AFF]">support@sparkschat.app</a>.
         </p>
 
-        <h2 className="text-lg font-semibold text-[#1D1D1F] mb-4">Frequently Asked Questions</h2>
+        <h2 className="text-body font-semibold text-[#1D1D1F] mb-4">Frequently Asked Questions</h2>
         <div className="space-y-5">
           {FAQS.map((faq) => (
             <div key={faq.q}>
-              <h3 className="text-[15px] font-semibold text-[#1D1D1F] mb-1">{faq.q}</h3>
-              <p className="text-[15px] text-[#1D1D1F]/70 leading-relaxed">{faq.a}</p>
+              <h3 className="text-body font-semibold text-[#1D1D1F] mb-1">{faq.q}</h3>
+              <p className="text-body text-[#1D1D1F]/70 leading-relaxed">{faq.a}</p>
             </div>
           ))}
         </div>
 
         <div className="mt-10 p-5 rounded-2xl" style={{ background: "#F5F5F7" }}>
-          <h3 className="text-[15px] font-semibold text-[#1D1D1F] mb-1">Still need help?</h3>
-          <p className="text-sm text-[#1D1D1F]/60 mb-3">Our team typically responds within 24 hours.</p>
-          <a href="mailto:support@sparkschat.app" className="inline-block text-sm font-semibold text-white px-5 py-2.5 rounded-full" style={{ background: "#007AFF" }}>
+          <h3 className="text-body font-semibold text-[#1D1D1F] mb-1">Still need help?</h3>
+          <p className="text-body text-[#1D1D1F]/60 mb-3">Our team typically responds within 24 hours.</p>
+          <a href="mailto:support@sparkschat.app" className="pressable inline-block text-body font-semibold text-white px-4 py-2 rounded-full" style={{ background: "#007AFF" }}>
             Email Support
           </a>
         </div>

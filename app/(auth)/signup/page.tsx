@@ -37,7 +37,7 @@ function PasswordStrengthBar({ password }: { password: string }) {
           />
         ))}
       </div>
-      <p className="text-xs font-medium" style={{ color: STRENGTH_COLORS[strength] }}>
+      <p className="text-caption font-medium" style={{ color: STRENGTH_COLORS[strength] }}>
         {STRENGTH_LABELS[strength]}
       </p>
     </div>
@@ -47,10 +47,10 @@ function PasswordStrengthBar({ password }: { password: string }) {
 type UsernameStatusType = ReturnType<typeof useUsernameAvailability>;
 
 function UsernameStatus({ status }: { status: UsernameStatusType }) {
-  if (status === "checking") return <p className="text-xs mt-1" style={{ color: "var(--color-gray-1)" }}>Checking…</p>;
-  if (status === "available") return <p className="text-xs mt-1 font-medium" style={{ color: "var(--color-green)" }}>✓ Username available</p>;
-  if (status === "taken") return <p className="text-xs mt-1 font-medium" style={{ color: "var(--color-red)" }}>Username already taken</p>;
-  if (status === "invalid") return <p className="text-xs mt-1" style={{ color: "var(--color-gray-1)" }}>3–24 chars, letters/numbers/underscores only</p>;
+  if (status === "checking") return <p className="text-caption mt-1" style={{ color: "var(--color-gray-1)" }}>Checking…</p>;
+  if (status === "available") return <p className="text-caption mt-1 font-medium" style={{ color: "var(--color-green)" }}>✓ Username available</p>;
+  if (status === "taken") return <p className="text-caption mt-1 font-medium" style={{ color: "var(--color-red)" }}>Username already taken</p>;
+  if (status === "invalid") return <p className="text-caption mt-1" style={{ color: "var(--color-gray-1)" }}>3–24 chars, letters/numbers/underscores only</p>;
   return null;
 }
 
@@ -116,8 +116,8 @@ export default function SignupPage() {
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3" style={{ background: "var(--color-blue)" }}>
             <BoltIcon />
           </div>
-          <h1 className="text-2xl font-bold">Create account</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--color-gray-1)" }}>Join Sparks — it&apos;s free</p>
+          <h1 className="text-title font-bold">Create account</h1>
+          <p className="text-body mt-1" style={{ color: "var(--color-gray-1)" }}>Join Sparks — it&apos;s free</p>
         </div>
 
         <div className="space-y-3">
@@ -144,7 +144,7 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-caption font-medium"
                 style={{ color: "var(--color-blue)" }}
               >
                 {showPassword ? "Hide" : "Show"}
@@ -161,7 +161,7 @@ export default function SignupPage() {
         </div>
 
         {error && (
-          <p className="text-sm mt-3 font-medium" style={{ color: "var(--color-red)" }}>{error}</p>
+          <p className="text-body mt-3 font-medium" style={{ color: "var(--color-red)" }}>{error}</p>
         )}
 
         <label className="flex items-start gap-3 mt-5 cursor-pointer">
@@ -172,7 +172,7 @@ export default function SignupPage() {
             className="mt-0.5 w-4 h-4 rounded flex-shrink-0"
             style={{ accentColor: "var(--color-blue)" }}
           />
-          <span className="text-sm" style={{ color: "var(--color-gray-1)" }}>
+          <span className="text-body" style={{ color: "var(--color-gray-1)" }}>
             I agree to the{" "}
             <span style={{ color: "var(--color-blue)" }}>Terms of Service</span> and{" "}
             <span style={{ color: "var(--color-blue)" }}>Privacy Policy</span>
@@ -183,9 +183,9 @@ export default function SignupPage() {
           Create Account
         </Button>
 
-        <p className="text-sm text-center mt-5" style={{ color: "var(--color-gray-1)" }}>
+        <p className="text-body text-center mt-5" style={{ color: "var(--color-gray-1)" }}>
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold" style={{ color: "var(--color-blue)" }}>
+          <Link href="/login" className="pressable font-semibold" style={{ color: "var(--color-blue)" }}>
             Log In
           </Link>
         </p>

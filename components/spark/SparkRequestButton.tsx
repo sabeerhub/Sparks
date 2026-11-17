@@ -97,7 +97,7 @@ export function SparkRequestButton({ targetUserId, currentUserId, compact = fals
           loading={loading}
           variant="primary"
           fullWidth={!compact}
-          className={compact ? "px-4 py-2 text-xs" : ""}
+          className={compact ? "px-4 py-2 text-caption" : ""}
         >
           Message
         </Button>
@@ -107,7 +107,7 @@ export function SparkRequestButton({ targetUserId, currentUserId, compact = fals
             onClick={() => handleRespond(true)}
             loading={loading}
             variant="primary"
-            className={compact ? "px-3 py-2 text-xs flex-1" : "flex-1"}
+            className={compact ? "px-3 py-2 text-caption flex-1" : "flex-1"}
           >
             Accept
           </Button>
@@ -115,7 +115,7 @@ export function SparkRequestButton({ targetUserId, currentUserId, compact = fals
             onClick={() => handleRespond(false)}
             loading={loading}
             variant="secondary"
-            className={compact ? "px-3 py-2 text-xs flex-1" : "flex-1"}
+            className={compact ? "px-3 py-2 text-caption flex-1" : "flex-1"}
           >
             Decline
           </Button>
@@ -123,7 +123,7 @@ export function SparkRequestButton({ targetUserId, currentUserId, compact = fals
       ) : isOutgoing ? (
         <button
           disabled
-          className={`rounded-2xl font-medium text-center ${compact ? "px-4 py-2 text-xs" : "px-5 py-2.5 text-sm w-full"}`}
+          className={`rounded-2xl font-medium text-center ${compact ? "px-4 py-2 text-caption" : "px-4 py-2 text-body w-full"}`}
           style={{ background: "var(--color-gray-2)", color: "var(--color-gray-1)" }}
         >
           Request Sent
@@ -134,14 +134,14 @@ export function SparkRequestButton({ targetUserId, currentUserId, compact = fals
           loading={loading}
           variant="primary"
           fullWidth={!compact}
-          className={compact ? "px-4 py-2 text-xs" : ""}
+          className={compact ? "px-4 py-2 text-caption" : ""}
         >
           ⚡ Send Spark
         </Button>
       )}
 
       {error && (
-        <p className="text-xs text-center" style={{ color: "var(--color-red)" }}>{error}</p>
+        <p className="text-caption text-center" style={{ color: "var(--color-red)" }}>{error}</p>
       )}
     </div>
   );

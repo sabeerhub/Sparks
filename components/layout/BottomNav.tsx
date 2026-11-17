@@ -1,12 +1,16 @@
 /**
  * components/layout/BottomNav.tsx
+ * v1.2.0 — exactly FOUR tabs: Chats, Calls, Activity, Profile.
+ * Search and New Chat left the nav; both now live in the Chats screen
+ * header (mobile + desktop sidebar). Floating liquid-glass pill, refined
+ * from v1.1.0: frosted backdrop blur, hairline border, soft shadow.
  */
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageCircle, Search, Bell, User, Plus, Phone } from "lucide-react";
+import { MessageCircle, Bell, User, Phone } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { getUnreadCount } from "@/services/notification-service";
 
@@ -15,11 +19,15 @@ const supabase = createClient();
 const TABS = [
   { href: "/chats", icon: MessageCircle, label: "Chats" },
   { href: "/calls", icon: Phone, label: "Calls" },
-  { href: "/search", icon: Search, label: "Search" },
-  { href: "/chats/new", icon: Plus, label: null, fab: true },
   { href: "/activity", icon: Bell, label: "Activity", badge: true },
   { href: "/profile", icon: User, label: "Profile" },
 ];
+
+function isActiveTab(href: string, pathname: string): boolean {
+  if (href === "/chats") return pathname === "/chats" || pathname.startsWith("/chats/");
+  if (href === "/profile") return pathname === "/profile" || pathname.startsWith("/profile/");
+  return pathname === href;
+}
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -44,37 +52,39 @@ export function BottomNav() {
 
   return (
     <nav
-      className="flex items-center justify-around px-4 pt-2 border-t"
-      style={{ background: "rgba(255,255,255,0.95)", borderColor: "var(--color-gray-3)", paddingBottom: "max(8px, env(safe-area-inset-bottom, 0px))" }}
+      aria-label="Main navigation"
+      className="frosted-pill mx-4 flex items-center justify-around rounded-full px-2 pt-2"
+      style={{ marginBottom: "max(12px, env(safe-area-inset-bottom, 0px))" }}
     >
-      {TABS.map((tab) =>
-        tab.fab ? (
+      {TABS.map((tab) => {
+        const active = isActiveTab(tab.href, pathname);
+        return (
           <Link
             key={tab.href}
             href={tab.href}
-            className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95"
-            style={{ background: "var(--color-blue)" }}
+            aria-current={active ? "page" : undefined}
+            className="pressable relative flex flex-col items-center justify-center gap-0.5 min-w-16 min-h-11 rounded-full px-3 py-1"
+            style={{ background: active ? "rgba(0,122,255,0.10)" : "transparent" }}
           >
-            <Plus size={22} color="white" strokeWidth={2} />
-          </Link>
-        ) : (
-          <Link key={tab.href} href={tab.href} className="relative flex flex-col items-center justify-center gap-0.5 py-1 min-w-12 min-h-11">
             <tab.icon
               size={22}
-              color={pathname === tab.href ? "var(--color-blue)" : "var(--color-gray-1)"}
-              strokeWidth={1.8}
+              color={active ? "var(--color-blue)" : "var(--color-gray-1)"}
+              strokeWidth={active ? 2 : 1.8}
             />
             {tab.badge && unread > 0 && (
-              <span className="absolute top-0 right-2 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold text-white" style={{ background: "var(--color-red)" }}>
+              <span className="absolute top-0 right-2 min-w-4 h-4 px-1 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: "var(--color-red)" }}>
                 {unread > 9 ? "9+" : unread}
               </span>
             )}
-            <span className="text-xs font-medium" style={{ color: pathname === tab.href ? "var(--color-blue)" : "var(--color-gray-1)" }}>
+            <span
+              className="text-caption font-medium"
+              style={{ color: active ? "var(--color-blue)" : "var(--color-gray-1)" }}
+            >
               {tab.label}
             </span>
           </Link>
-        )
-      )}
+        );
+      })}
     </nav>
   );
 }

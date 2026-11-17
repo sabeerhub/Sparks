@@ -133,10 +133,10 @@ export function CallScreen({
             <Avatar name={otherUserName} src={otherUserAvatar} size={112} />
           </div>
         )}
-        <h1 className="text-white text-2xl font-semibold text-center">{otherUserName}</h1>
-        <p className="text-white/70 text-base mt-1 text-center">{error ?? statusLabel}</p>
+        <h1 className="text-white text-title font-semibold text-center tracking-tight">{otherUserName}</h1>
+        <p className="text-white/70 text-body mt-1 text-center">{error ?? statusLabel}</p>
         {isVideo && isActive && !remoteStream && (
-          <p className="text-white/50 text-sm mt-2">Waiting for video…</p>
+          <p className="text-white/50 text-body mt-2">Waiting for video…</p>
         )}
       </div>
 
@@ -149,7 +149,7 @@ export function CallScreen({
           {cameraOff || !localStream ? (
             <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 px-2">
               <Avatar name="You" src={null} size={40} />
-              <span className="text-white/80 text-[10px] font-medium text-center">Camera off</span>
+              <span className="text-white/80 text-caption font-medium text-center">Camera off</span>
             </div>
           ) : (
             <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
@@ -175,13 +175,13 @@ export function CallScreen({
               <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "#FF3B30" }}>
                 <PhoneOff size={26} color="white" strokeWidth={2} />
               </div>
-              <span className="text-white text-xs font-medium">Decline</span>
+              <span className="text-white text-caption font-medium">Decline</span>
             </button>
             <button onClick={onAccept} className="flex flex-col items-center gap-2 active:scale-95 transition-transform duration-200" aria-label="Accept call">
               <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "#34C759" }}>
                 <Phone size={26} color="white" strokeWidth={2} />
               </div>
-              <span className="text-white text-xs font-medium">Accept</span>
+              <span className="text-white text-caption font-medium">Accept</span>
             </button>
           </div>
         ) : (
@@ -204,7 +204,7 @@ export function CallScreen({
             >
               <PhoneOff size={30} color="white" strokeWidth={2} />
             </button>
-            <span className="text-white/60 text-xs font-medium pb-1">End call</span>
+            <span className="text-white/60 text-caption font-medium pb-1">End call</span>
           </div>
         )}
       </div>
@@ -231,7 +231,7 @@ function CallControlButton({
       >
         <Icon size={22} color={active ? "black" : "white"} strokeWidth={1.8} />
       </div>
-      <span className="text-white text-xs font-medium">{label}</span>
+      <span className="text-white text-caption font-medium">{label}</span>
     </button>
   );
 }

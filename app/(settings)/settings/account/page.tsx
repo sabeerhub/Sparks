@@ -163,17 +163,17 @@ export default function AccountSettingsPage() {
     <ScreenContainer>
       <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
         <StatusBar />
-        <div className="flex items-center px-5 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back">
+        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
+          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
             <BackIcon />
           </button>
-          <h1 className="text-xl font-bold ml-3">Account</h1>
+          <h1 className="text-title font-bold ml-3">Account</h1>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 pb-8">
+        <div className="flex-1 overflow-y-auto px-4 pb-8">
           {message && (
             <div
-              className="mb-4 px-4 py-3 rounded-2xl text-sm"
+              className="mb-4 px-4 py-3 rounded-2xl text-body"
               style={{
                 background: message.type === "success" ? "rgba(52,199,89,0.12)" : "rgba(255,59,48,0.12)",
                 color: message.type === "success" ? "var(--color-green)" : "var(--color-red)",
@@ -184,24 +184,24 @@ export default function AccountSettingsPage() {
           )}
 
           <SettingRow icon={User} label="Full Name" value={fullName} editing={editing === "name"} onEditToggle={() => setEditing(editing === "name" ? null : "name")} lockedMessage={daysRemaining(fullNameLockedUntil) ? `Can change again in ${daysRemaining(fullNameLockedUntil)} day(s)` : null}>
-            <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="flex-1 outline-none text-sm bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
+            <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="flex-1 outline-none text-body bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
             <SaveButton onClick={handleSaveName} saving={saving} />
           </SettingRow>
 
           <SettingRow icon={AtSign} label="Username" value={`@${username}`} editing={editing === "username"} onEditToggle={() => setEditing(editing === "username" ? null : "username")} lockedMessage={daysRemaining(usernameLockedUntil) ? `Can change again in ${daysRemaining(usernameLockedUntil)} day(s)` : null}>
-            <input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoCapitalize="none" autoCorrect="off" className="flex-1 outline-none text-sm bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
+            <input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoCapitalize="none" autoCorrect="off" className="flex-1 outline-none text-body bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
             <SaveButton onClick={handleSaveUsername} saving={saving} />
           </SettingRow>
 
           <SettingRow icon={Mail} label="Email" value={email} editing={editing === "email"} onEditToggle={() => setEditing(editing === "email" ? null : "email")}>
-            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoCapitalize="none" autoCorrect="off" className="flex-1 outline-none text-sm bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
+            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoCapitalize="none" autoCorrect="off" className="flex-1 outline-none text-body bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
             <SaveButton onClick={handleSaveEmail} saving={saving} />
           </SettingRow>
 
           <SettingRow icon={Lock} label="Password" value="••••••••" editing={editing === "password"} onEditToggle={() => setEditing(editing === "password" ? null : "password")}>
             <div className="flex-1 space-y-2">
-              <input value={newPassword} onChange={(e) => setNewPassword(e.target.value)} type="password" placeholder="New password" className="w-full outline-none text-sm bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
-              <input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type="password" placeholder="Confirm new password" className="w-full outline-none text-sm bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
+              <input value={newPassword} onChange={(e) => setNewPassword(e.target.value)} type="password" placeholder="New password" className="w-full outline-none text-body bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
+              <input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type="password" placeholder="Confirm new password" className="w-full outline-none text-body bg-transparent border-b py-1" style={{ borderColor: "var(--color-gray-3)" }} />
             </div>
             <SaveButton onClick={handleSavePassword} saving={saving} />
           </SettingRow>
@@ -209,22 +209,22 @@ export default function AccountSettingsPage() {
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white mt-3 disabled:opacity-60"
+            className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl bg-white mt-3 disabled:opacity-60"
           >
             <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(0,122,255,0.12)" }}>
               <Download size={18} color="var(--color-blue)" strokeWidth={1.8} />
             </div>
-            <span className="text-sm font-medium flex-1 text-left">{exporting ? "Preparing download…" : "Download Account Data"}</span>
+            <span className="text-body font-medium flex-1 text-left">{exporting ? "Preparing download…" : "Download Account Data"}</span>
           </button>
 
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white mt-3"
+            className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl bg-white mt-3"
           >
             <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,59,48,0.12)" }}>
               <Trash2 size={18} color="var(--color-red)" strokeWidth={1.8} />
             </div>
-            <span className="text-sm font-medium flex-1 text-left" style={{ color: "var(--color-red)" }}>Delete Account</span>
+            <span className="text-body font-medium flex-1 text-left" style={{ color: "var(--color-red)" }}>Delete Account</span>
           </button>
         </div>
       </div>
@@ -232,8 +232,8 @@ export default function AccountSettingsPage() {
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(0,0,0,0.5)" }}>
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
-            <h2 className="text-lg font-bold mb-2">Delete your account?</h2>
-            <p className="text-sm mb-4" style={{ color: "var(--color-gray-1)" }}>
+            <h2 className="text-body font-bold mb-2">Delete your account?</h2>
+            <p className="text-body mb-4" style={{ color: "var(--color-gray-1)" }}>
               This permanently deletes your profile, messages, Sparks, and all data. This cannot be undone.
               Type <strong>DELETE</strong> to confirm.
             </p>
@@ -241,13 +241,13 @@ export default function AccountSettingsPage() {
               value={deleteConfirmText}
               onChange={(e) => setDeleteConfirmText(e.target.value)}
               placeholder="DELETE"
-              className="w-full px-4 py-2.5 rounded-2xl text-sm mb-4 outline-none border"
+              className="w-full px-4 py-2 rounded-2xl text-body mb-4 outline-none border"
               style={{ borderColor: "var(--color-gray-3)" }}
             />
             <div className="flex gap-2">
               <button
                 onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
-                className="flex-1 py-2.5 rounded-2xl text-sm font-semibold"
+                className="flex-1 py-2 rounded-2xl text-body font-semibold"
                 style={{ background: "var(--color-gray-2)" }}
               >
                 Cancel
@@ -255,7 +255,7 @@ export default function AccountSettingsPage() {
               <button
                 onClick={handleDelete}
                 disabled={deleteConfirmText !== "DELETE" || deleting}
-                className="flex-1 py-2.5 rounded-2xl text-sm font-semibold text-white disabled:opacity-40"
+                className="flex-1 py-2 rounded-2xl text-body font-semibold text-white disabled:opacity-40"
                 style={{ background: "var(--color-red)" }}
               >
                 {deleting ? "Deleting…" : "Delete"}
@@ -288,17 +288,17 @@ function SettingRow({
   const locked = !!lockedMessage;
   return (
     <div className="rounded-2xl bg-white mt-3 overflow-hidden">
-      <button onClick={locked ? undefined : onEditToggle} disabled={locked} className="w-full flex items-center gap-3 px-4 py-3.5 disabled:opacity-70">
+      <button onClick={locked ? undefined : onEditToggle} disabled={locked} className="w-full flex items-center gap-3 px-4 py-4 disabled:opacity-70">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
           <Icon size={18} color="var(--color-blue)" strokeWidth={1.8} />
         </div>
         <div className="flex-1 text-left min-w-0">
-          <div className="text-xs" style={{ color: "var(--color-gray-1)" }}>{label}</div>
-          <div className="text-sm font-medium truncate">{value || "—"}</div>
-          {locked && <div className="text-xs mt-0.5" style={{ color: "var(--color-orange)" }}>{lockedMessage}</div>}
+          <div className="text-caption" style={{ color: "var(--color-gray-1)" }}>{label}</div>
+          <div className="text-body font-medium truncate">{value || "—"}</div>
+          {locked && <div className="text-caption mt-0.5" style={{ color: "var(--color-orange)" }}>{lockedMessage}</div>}
         </div>
         {!locked && (
-          <span className="text-xs font-semibold" style={{ color: "var(--color-blue)" }}>{editing ? "Cancel" : "Edit"}</span>
+          <span className="text-caption font-semibold" style={{ color: "var(--color-blue)" }}>{editing ? "Cancel" : "Edit"}</span>
         )}
       </button>
       {editing && !locked && (
@@ -315,7 +315,7 @@ function SaveButton({ onClick, saving }: { onClick: () => void; saving: boolean 
     <button
       onClick={onClick}
       disabled={saving}
-      className="px-4 py-2 rounded-xl text-xs font-semibold text-white disabled:opacity-50 flex-shrink-0"
+      className="px-4 py-2 rounded-xl text-caption font-semibold text-white disabled:opacity-50 flex-shrink-0"
       style={{ background: "var(--color-blue)" }}
     >
       {saving ? "Saving…" : "Save"}

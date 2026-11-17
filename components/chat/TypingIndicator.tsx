@@ -20,7 +20,7 @@ export function TypingIndicator({ label }: TypingIndicatorProps) {
         </div>
       </div>
       {label && (
-        <p className="text-xs ml-1" style={{ color: "var(--color-gray-1)" }}>
+        <p className="text-caption ml-1" style={{ color: "var(--color-gray-1)" }}>
           {label} is typing...
         </p>
       )}

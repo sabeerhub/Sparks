@@ -45,13 +45,13 @@ export function ShareProfileSheet({ open, onClose, userId, username }: ShareProf
     <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
       <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.4)" }} />
       <div
-        className="relative w-full bg-white rounded-t-3xl px-5 pt-3 pb-8 max-w-lg mx-auto"
+        className="relative w-full bg-white rounded-t-3xl px-4 pt-3 pb-8 max-w-lg mx-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--color-gray-3)" }} />
 
-        <h2 className="text-base font-semibold text-center mb-1">Share Profile</h2>
-        <p className="text-sm text-center mb-5" style={{ color: "var(--color-gray-1)" }}>
+        <h2 className="text-body font-semibold text-center mb-1">Share Profile</h2>
+        <p className="text-body text-center mb-5" style={{ color: "var(--color-gray-1)" }}>
           @{username}
         </p>
 
@@ -66,15 +66,15 @@ export function ShareProfileSheet({ open, onClose, userId, username }: ShareProf
           className="flex items-center justify-between gap-2 px-4 py-3 rounded-2xl mb-3"
           style={{ background: "var(--color-gray-2)" }}
         >
-          <span className="text-xs truncate" style={{ color: "var(--color-gray-1)" }}>{profileUrl}</span>
-          <button onClick={handleCopy} className="text-xs font-semibold flex-shrink-0" style={{ color: "var(--color-blue)" }}>
+          <span className="text-caption truncate" style={{ color: "var(--color-gray-1)" }}>{profileUrl}</span>
+          <button onClick={handleCopy} className="text-caption font-semibold flex-shrink-0" style={{ color: "var(--color-blue)" }}>
             {copied ? "Copied!" : "Copy"}
           </button>
         </div>
 
         <button
           onClick={handleShare}
-          className="w-full py-3 rounded-2xl text-sm font-semibold text-white"
+          className="w-full py-3 rounded-2xl text-body font-semibold text-white"
           style={{ background: "var(--color-blue)" }}
         >
           Share Profile Link
@@ -82,7 +82,7 @@ export function ShareProfileSheet({ open, onClose, userId, username }: ShareProf
 
         <button
           onClick={onClose}
-          className="w-full py-3 mt-2 rounded-2xl text-sm font-semibold"
+          className="w-full py-3 mt-2 rounded-2xl text-body font-semibold"
           style={{ color: "var(--color-gray-1)" }}
         >
           Close

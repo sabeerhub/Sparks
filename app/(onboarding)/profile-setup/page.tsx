@@ -57,8 +57,8 @@ export default function ProfileSetupPage() {
           <div className="mb-4">
             <Avatar name={fullName || "You"} size={72} />
           </div>
-          <h1 className="text-2xl font-bold mb-1">Set up your profile</h1>
-          <p className="text-sm text-center" style={{ color: "var(--color-gray-1)" }}>
+          <h1 className="text-title font-bold mb-1">Set up your profile</h1>
+          <p className="text-body text-center" style={{ color: "var(--color-gray-1)" }}>
             Tell people a bit about yourself
           </p>
         </div>

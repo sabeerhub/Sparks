@@ -65,20 +65,20 @@ export default function SecurityCenterPage() {
     <ScreenContainer>
       <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
         <StatusBar />
-        <div className="flex items-center px-5 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back">
+        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
+          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
             <BackIcon />
           </button>
-          <h1 className="text-xl font-bold ml-3">Security Center</h1>
+          <h1 className="text-title font-bold ml-3">Security Center</h1>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 pb-6">
+        <div className="flex-1 overflow-y-auto px-4 pb-6">
           <div className="flex flex-col items-center py-8">
             <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4" style={{ background: "#E8F9EF" }}>
               <Shield size={36} color="var(--color-green)" strokeWidth={1.8} />
             </div>
-            <h2 className="text-lg font-bold mb-1">Your account is secure</h2>
-            <p className="text-sm" style={{ color: "var(--color-gray-1)" }}>
+            <h2 className="text-body font-bold mb-1">Your account is secure</h2>
+            <p className="text-body" style={{ color: "var(--color-gray-1)" }}>
               {sessions.length} active {sessions.length === 1 ? "session" : "sessions"}
             </p>
           </div>
@@ -89,38 +89,38 @@ export default function SecurityCenterPage() {
                 <Mail size={18} color={emailVerified ? "var(--color-green)" : "var(--color-orange)"} strokeWidth={1.8} />
               </div>
               <div className="flex-1">
-                <div className="text-sm font-semibold">Email Verification</div>
-                <div className="text-xs" style={{ color: "var(--color-gray-1)" }}>
+                <div className="text-body font-semibold">Email Verification</div>
+                <div className="text-caption" style={{ color: "var(--color-gray-1)" }}>
                   {emailVerified ? "Verified" : "Not verified"}
                 </div>
               </div>
             </div>
           </div>
 
-          <p className="text-xs font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>
+          <p className="text-caption font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: "var(--color-gray-1)" }}>
             Active Devices
           </p>
           <div className="rounded-2xl overflow-hidden mb-4 bg-white">
             {loading ? (
-              <div className="px-4 py-4 text-sm" style={{ color: "var(--color-gray-1)" }}>Loading…</div>
+              <div className="px-4 py-4 text-body" style={{ color: "var(--color-gray-1)" }}>Loading…</div>
             ) : sessions.length === 0 ? (
-              <div className="px-4 py-4 text-sm" style={{ color: "var(--color-gray-1)" }}>No active sessions found.</div>
+              <div className="px-4 py-4 text-body" style={{ color: "var(--color-gray-1)" }}>No active sessions found.</div>
             ) : (
               sessions.map((s, i) => (
-                <div key={s.id} className="flex items-center gap-3 px-4 py-3.5" style={{ borderBottom: i < sessions.length - 1 ? "1px solid var(--color-gray-2)" : "none" }}>
+                <div key={s.id} className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: i < sessions.length - 1 ? "1px solid var(--color-gray-2)" : "none" }}>
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.1)" }}>
                     <DeviceIcon type={s.device_type} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold truncate">
+                    <div className="text-body font-semibold truncate">
                       {s.device_label}{s.isCurrent && <span style={{ color: "var(--color-green)" }}> · This device</span>}
                     </div>
-                    <div className="text-xs truncate" style={{ color: "var(--color-gray-1)" }}>
+                    <div className="text-caption truncate" style={{ color: "var(--color-gray-1)" }}>
                       {[s.location_city, s.location_country].filter(Boolean).join(", ") || "Unknown location"} · Active {formatLastSeen(s.last_active_at)}
                     </div>
                   </div>
                   {!s.isCurrent && (
-                    <button onClick={() => handleRevoke(s.id)} className="text-xs font-semibold flex-shrink-0" style={{ color: "var(--color-red)" }}>
+                    <button onClick={() => handleRevoke(s.id)} className="text-caption font-semibold flex-shrink-0" style={{ color: "var(--color-red)" }}>
                       Log out
                     </button>
                   )}
@@ -138,7 +138,7 @@ export default function SecurityCenterPage() {
             </Button>
             <button
               onClick={handleLogoutCurrent}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-body font-semibold"
               style={{ color: "var(--color-red)" }}
             >
               <LogOut size={16} strokeWidth={1.8} /> Log Out This Device

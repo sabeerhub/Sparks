@@ -59,8 +59,8 @@ export default function ResetPasswordPage() {
           <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6" style={{ background: "rgba(52,199,89,0.1)" }}>
             <CheckIcon />
           </div>
-          <h1 className="text-2xl font-bold mb-3">Password updated</h1>
-          <p className="text-sm mb-8" style={{ color: "var(--color-gray-1)" }}>
+          <h1 className="text-title font-bold mb-3">Password updated</h1>
+          <p className="text-body mb-8" style={{ color: "var(--color-gray-1)" }}>
             Your password has been reset. You can now log in with your new password.
           </p>
           <Button fullWidth onClick={() => router.push("/login")}>Log In</Button>
@@ -72,8 +72,8 @@ export default function ResetPasswordPage() {
   return (
     <ScreenContainer>
       <div className="flex-1 flex flex-col px-6 pt-10">
-        <h1 className="text-2xl font-bold mb-2">Create new password</h1>
-        <p className="text-sm mb-8" style={{ color: "var(--color-gray-1)" }}>
+        <h1 className="text-title font-bold mb-2">Create new password</h1>
+        <p className="text-body mb-8" style={{ color: "var(--color-gray-1)" }}>
           Choose a strong password for your account.
         </p>
 
@@ -89,7 +89,7 @@ export default function ResetPasswordPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-caption font-medium"
                 style={{ color: "var(--color-blue)" }}
               >
                 {showPassword ? "Hide" : "Show"}
@@ -106,7 +106,7 @@ export default function ResetPasswordPage() {
                     />
                   ))}
                 </div>
-                <p className="text-xs font-medium" style={{ color: STRENGTH_COLORS[strength] }}>
+                <p className="text-caption font-medium" style={{ color: STRENGTH_COLORS[strength] }}>
                   {STRENGTH_LABELS[strength]}
                 </p>
               </div>
@@ -122,7 +122,7 @@ export default function ResetPasswordPage() {
         </div>
 
         {error && (
-          <p className="text-sm mt-3 font-medium" style={{ color: "var(--color-red)" }}>{error}</p>
+          <p className="text-body mt-3 font-medium" style={{ color: "var(--color-red)" }}>{error}</p>
         )}
 
         <Button fullWidth loading={loading} onClick={handleReset} className="mt-6">

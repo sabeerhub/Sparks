@@ -285,7 +285,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
           style={{ transform: `translateX(${locked ? 0 : dragX}px)`, transition: dragX === 0 ? "transform 200ms ease-out" : "none" }}
         >
           <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: "var(--color-red)" }} />
-          <span className="text-sm font-medium flex-shrink-0">{formatDuration(recordSeconds)}</span>
+          <span className="text-body font-medium flex-shrink-0">{formatDuration(recordSeconds)}</span>
 
           <div className="flex-1 flex items-center gap-[2px] h-8 overflow-hidden">
             {liveLevels.map((level, i) => (
@@ -298,7 +298,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
           </div>
 
           {!locked && (
-            <span className="text-xs flex items-center gap-1 flex-shrink-0" style={{ color: "var(--color-gray-1)", opacity: cancelOpacity }}>
+            <span className="text-caption flex items-center gap-1 flex-shrink-0" style={{ color: "var(--color-gray-1)", opacity: cancelOpacity }}>
               <ChevronLeft size={14} strokeWidth={2} /> Slide to cancel
             </span>
           )}
@@ -326,7 +326,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
   return (
     <div>
       {error && (
-        <div className="px-4 py-1.5 text-xs text-center" style={{ color: "var(--color-red)", background: "rgba(255,59,48,0.08)" }}>
+        <div className="px-4 py-1.5 text-caption text-center" style={{ color: "var(--color-red)", background: "rgba(255,59,48,0.08)" }}>
           {error}
         </div>
       )}
@@ -338,7 +338,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
                 key={emoji}
                 onClick={() => handleEmojiPick(emoji)}
                 aria-label={`Insert ${emoji}`}
-                className="w-11 h-11 flex items-center justify-center text-2xl rounded-xl active:bg-gray-100 active:scale-95 transition-transform duration-200"
+                className="w-11 h-11 flex items-center justify-center text-title rounded-xl active:bg-gray-100 active:scale-95 transition-transform duration-200"
               >
                 {emoji}
               </button>
@@ -346,8 +346,9 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
           </div>
         </div>
       )}
-      <div className="px-3 py-2 border-t flex items-end gap-2" style={{ borderColor: "var(--color-gray-2)" }}>
-        <button className="mb-1.5 w-11 h-11 -ml-2 flex items-center justify-center flex-shrink-0" onClick={handleAttachClick} aria-label="Attach file" disabled={uploading}>
+      {/* v1.2.0: 8/16px spacing, pill input, safe-area bottom padding. */}
+      <div className="px-4 py-2 border-t flex items-end gap-2" style={{ borderColor: "var(--color-gray-2)", paddingBottom: "max(8px, env(safe-area-inset-bottom, 0px))" }}>
+        <button className="pressable mb-1.5 w-11 h-11 -ml-2 flex items-center justify-center flex-shrink-0" onClick={handleAttachClick} aria-label="Attach file" disabled={uploading}>
           {uploading ? (
             <div className="w-[22px] h-[22px] rounded-full border-2 animate-spin" style={{ borderColor: "var(--color-gray-3)", borderTopColor: "var(--color-blue)" }} />
           ) : (
@@ -363,7 +364,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
         />
 
         <div
-          className="flex-1 flex items-end rounded-3xl border px-3 py-2"
+          className="flex-1 flex items-end rounded-full border px-4 py-2"
           style={{ borderColor: "var(--color-gray-3)", background: "var(--color-gray-2)" }}
         >
           <input
@@ -375,7 +376,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
             }}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder="Message..."
-            className="flex-1 outline-none text-sm bg-transparent"
+            className="flex-1 outline-none text-body bg-transparent"
             style={{ color: "var(--color-black)" }}
           />
           <button

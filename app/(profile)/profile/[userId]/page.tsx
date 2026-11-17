@@ -77,19 +77,19 @@ export default function PublicProfilePage() {
       <StatusBar />
       <div className="flex-1 overflow-y-auto">
         <div className="w-full max-w-4xl mx-auto bg-white min-h-full">
-          <div className="flex items-center px-4 py-3 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
-            <button onClick={() => router.back()} className="text-sm font-medium" style={{ color: "var(--color-blue)" }}>
+          <div className="frosted-header flex items-center px-4 py-3">
+            <button onClick={() => router.back()} className="pressable text-body font-medium" style={{ color: "var(--color-blue)" }}>
               Back
             </button>
           </div>
 
           {/* Banner + avatar */}
           <div className="relative">
-            <div className="h-32 w-full" style={{ background: "linear-gradient(120deg, var(--color-blue), var(--color-orange))" }} />
+            <div className="h-32 w-full" style={{ background: "var(--color-blue-light)" }} />
             <div className="absolute left-5 bottom-0 translate-y-1/2">
               <div
-                className="rounded-full p-1 bg-white"
-                style={profile.is_premium ? { background: "linear-gradient(135deg, var(--color-orange), var(--color-blue))" } : undefined}
+                className="rounded-full p-1"
+                style={{ background: profile.is_premium ? "var(--color-blue)" : "#fff" }}
               >
                 <div className="rounded-full ring-4 ring-white">
                   <Avatar name={profile.full_name ?? "?"} src={profile.avatar_url} size={88} online={profile.is_online} />
@@ -99,9 +99,9 @@ export default function PublicProfilePage() {
           </div>
 
           {/* Identity block */}
-          <div className="px-5 pt-14">
+          <div className="px-4 pt-14">
             <div className="flex items-center gap-1.5">
-              <h2 className="text-xl font-bold">{nickname || profile.full_name}</h2>
+              <h2 className="text-title font-bold">{nickname || profile.full_name}</h2>
               {profile.is_verified && <BadgeCheck size={18} fill="var(--color-blue)" color="white" />}
               {!isSelf && (
                 <button onClick={handleEditNickname} aria-label="Edit nickname" className="ml-0.5 active:opacity-60">
@@ -110,15 +110,15 @@ export default function PublicProfilePage() {
               )}
             </div>
             {nickname && (
-              <p className="text-xs mt-0.5" style={{ color: "var(--color-gray-1)" }}>{profile.full_name}</p>
+              <p className="text-caption mt-0.5" style={{ color: "var(--color-gray-1)" }}>{profile.full_name}</p>
             )}
-            <p className="text-sm" style={{ color: "var(--color-gray-1)" }}>@{profile.username}</p>
+            <p className="text-body" style={{ color: "var(--color-gray-1)" }}>@{profile.username}</p>
 
             {profile.bio && (
-              <p className="text-sm mt-3" style={{ color: "var(--color-black)" }}>{profile.bio}</p>
+              <p className="text-body mt-3" style={{ color: "var(--color-black)" }}>{profile.bio}</p>
             )}
 
-            <div className="flex items-center gap-4 mt-3 text-sm" style={{ color: "var(--color-gray-1)" }}>
+            <div className="flex items-center gap-4 mt-3 text-body" style={{ color: "var(--color-gray-1)" }}>
               {profile.location && (
                 <span className="flex items-center gap-1">
                   <MapPin size={14} strokeWidth={1.8} /> {profile.location}
@@ -127,7 +127,7 @@ export default function PublicProfilePage() {
               <span>Joined {formatJoinDate(profile.created_at)}</span>
             </div>
 
-            <div className="flex items-center gap-4 mt-4 text-sm">
+            <div className="flex items-center gap-4 mt-4 text-body">
               <span className="flex items-center gap-1">
                 <Zap size={15} fill="var(--color-blue)" color="var(--color-blue)" />
                 <span className="font-bold">{profile.spark_count?.toLocaleString() ?? 0}</span>
@@ -159,7 +159,7 @@ export default function PublicProfilePage() {
               )}
               <button
                 onClick={() => setShareOpen(true)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-sm font-medium border"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-2xl text-body font-medium border"
                 style={{ borderColor: "var(--color-gray-3)" }}
               >
                 <Share2 size={16} color="var(--color-blue)" strokeWidth={1.8} /> Share

@@ -3,19 +3,29 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageCircle, Search, Bell, User, Plus, Phone } from "lucide-react";
+import { MessageCircle, Bell, User, Phone } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { getUnreadCount } from "@/services/notification-service";
 
 const supabase = createClient();
 
+/**
+ * v1.2.0 — exactly FOUR tabs, mirroring the mobile pill: Chats, Calls,
+ * Activity, Profile. Search and New Chat left the rail; both now live in
+ * the Chats screen header (desktop sidebar). No New Chat button here.
+ */
 const TABS = [
   { href: "/chats", icon: MessageCircle, label: "Chats" },
   { href: "/calls", icon: Phone, label: "Calls" },
-  { href: "/search", icon: Search, label: "Search" },
   { href: "/activity", icon: Bell, label: "Activity", badge: true },
   { href: "/profile", icon: User, label: "Profile" },
 ];
+
+function isActiveTab(href: string, pathname: string): boolean {
+  if (href === "/chats") return pathname === "/chats" || pathname.startsWith("/chats/");
+  if (href === "/profile") return pathname === "/profile" || pathname.startsWith("/profile/");
+  return pathname === href;
+}
 
 /**
  * Persistent desktop-only (md+) icon rail providing navigation between the
@@ -56,33 +66,26 @@ export function DesktopNavRail() {
       </div>
 
       {TABS.map(({ href, icon: Icon, label, badge }) => {
-        const active = pathname === href || (href === "/chats" && pathname.startsWith("/chats"));
+        const active = isActiveTab(href, pathname);
         return (
           <Link
             key={href}
             href={href}
-            className="relative w-12 h-12 rounded-2xl flex items-center justify-center transition-colors"
+            className="pressable relative w-12 h-12 rounded-2xl flex items-center justify-center transition-colors"
             style={{ background: active ? "rgba(0,122,255,0.12)" : "transparent" }}
             aria-label={label}
+            aria-current={active ? "page" : undefined}
+            title={label}
           >
-            <Icon size={22} color={active ? "var(--color-blue)" : "var(--color-gray-1)"} strokeWidth={1.8} />
+            <Icon size={22} color={active ? "var(--color-blue)" : "var(--color-gray-1)"} strokeWidth={active ? 2 : 1.8} />
             {badge && unread > 0 && (
-              <span className="absolute top-1.5 right-2 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: "var(--color-red)" }}>
+              <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: "var(--color-red)" }}>
                 {unread > 9 ? "9+" : unread}
               </span>
             )}
           </Link>
         );
       })}
-
-      <Link
-        href="/chats/new"
-        className="w-12 h-12 rounded-2xl flex items-center justify-center mt-2"
-        style={{ background: "var(--color-blue)" }}
-        aria-label="New chat"
-      >
-        <Plus size={20} color="white" strokeWidth={2} />
-      </Link>
     </div>
   );
 }

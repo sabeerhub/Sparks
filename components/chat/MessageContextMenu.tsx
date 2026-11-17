@@ -31,7 +31,7 @@ export function MessageContextMenu({ isMine, onClose, onReact, onReply, onEdit, 
       >
         <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
           {EMOJIS.map((emoji) => (
-            <button key={emoji} className="text-2xl" onClick={() => onReact(emoji)}>
+            <button key={emoji} className="text-title" onClick={() => onReact(emoji)}>
               {emoji}
             </button>
           ))}
@@ -40,18 +40,18 @@ export function MessageContextMenu({ isMine, onClose, onReact, onReply, onEdit, 
         {actions.map((action) => (
           <button
             key={action.label}
-            className="w-full flex items-center justify-between px-5 py-3.5 border-b last:border-0"
+            className="w-full flex items-center justify-between px-4 py-4 border-b last:border-0"
             style={{ borderColor: "var(--color-gray-2)" }}
             onClick={action.onClick}
           >
-            <span className="text-sm font-medium" style={{ color: action.danger ? "var(--color-red)" : "var(--color-black)" }}>
+            <span className="text-body font-medium" style={{ color: action.danger ? "var(--color-red)" : "var(--color-black)" }}>
               {action.label}
             </span>
             <action.icon color={action.danger ? "var(--color-red)" : "var(--color-gray-1)"} />
           </button>
         ))}
 
-        <button className="w-full py-4 text-sm font-semibold text-center" style={{ color: "var(--color-blue)" }} onClick={onClose}>
+        <button className="w-full py-4 text-body font-semibold text-center" style={{ color: "var(--color-blue)" }} onClick={onClose}>
           Cancel
         </button>
       </div>

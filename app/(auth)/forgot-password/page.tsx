@@ -43,15 +43,15 @@ export default function ForgotPasswordPage() {
           <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6" style={{ background: "rgba(0,122,255,0.1)" }}>
             <MailIcon />
           </div>
-          <h1 className="text-2xl font-bold mb-3">Check your email</h1>
-          <p className="text-sm leading-relaxed mb-2" style={{ color: "var(--color-gray-1)" }}>
+          <h1 className="text-title font-bold mb-3">Check your email</h1>
+          <p className="text-body leading-relaxed mb-2" style={{ color: "var(--color-gray-1)" }}>
             We sent a password reset link to
           </p>
-          <p className="text-sm font-semibold mb-6">{email}</p>
-          <p className="text-sm leading-relaxed mb-8" style={{ color: "var(--color-gray-1)" }}>
+          <p className="text-body font-semibold mb-6">{email}</p>
+          <p className="text-body leading-relaxed mb-8" style={{ color: "var(--color-gray-1)" }}>
             Click the link in the email to reset your password. The link expires in 1 hour.
           </p>
-          <button onClick={() => router.push("/login")} className="text-sm font-medium" style={{ color: "var(--color-blue)" }}>
+          <button onClick={() => router.push("/login")} className="pressable text-body font-medium" style={{ color: "var(--color-blue)" }}>
             Back to Log In
           </button>
         </div>
@@ -66,8 +66,8 @@ export default function ForgotPasswordPage() {
           <BackIcon />
         </button>
 
-        <h1 className="text-2xl font-bold mb-2">Forgot password?</h1>
-        <p className="text-sm mb-8" style={{ color: "var(--color-gray-1)" }}>
+        <h1 className="text-title font-bold mb-2">Forgot password?</h1>
+        <p className="text-body mb-8" style={{ color: "var(--color-gray-1)" }}>
           Enter your email and we&apos;ll send you a link to reset your password.
         </p>
 
@@ -85,9 +85,9 @@ export default function ForgotPasswordPage() {
           Send Reset Link
         </Button>
 
-        <p className="text-sm text-center mt-6" style={{ color: "var(--color-gray-1)" }}>
+        <p className="text-body text-center mt-6" style={{ color: "var(--color-gray-1)" }}>
           Remembered it?{" "}
-          <Link href="/login" className="font-semibold" style={{ color: "var(--color-blue)" }}>
+          <Link href="/login" className="pressable font-semibold" style={{ color: "var(--color-blue)" }}>
             Log In
           </Link>
         </p>

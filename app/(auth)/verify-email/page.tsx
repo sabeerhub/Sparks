@@ -40,24 +40,24 @@ function VerifyEmailContent() {
       <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6" style={{ background: "rgba(0,122,255,0.1)" }}>
         <MailIcon />
       </div>
-      <h1 className="text-2xl font-bold mb-3">Check your inbox</h1>
-      <p className="text-sm leading-relaxed mb-2" style={{ color: "var(--color-gray-1)" }}>
+      <h1 className="text-title font-bold mb-3">Check your inbox</h1>
+      <p className="text-body leading-relaxed mb-2" style={{ color: "var(--color-gray-1)" }}>
         We sent a verification link to
       </p>
-      {email && <p className="text-sm font-semibold mb-4">{email}</p>}
-      <p className="text-sm leading-relaxed mb-8" style={{ color: "var(--color-gray-1)" }}>
+      {email && <p className="text-body font-semibold mb-4">{email}</p>}
+      <p className="text-body leading-relaxed mb-8" style={{ color: "var(--color-gray-1)" }}>
         Click the link in the email to verify your account, then come back to log in.
       </p>
       {resent && (
-        <div className="rounded-2xl px-4 py-3 mb-4 text-sm font-medium w-full" style={{ background: "rgba(52,199,89,0.12)", color: "var(--color-green)" }}>
+        <div className="rounded-2xl px-4 py-3 mb-4 text-body font-medium w-full" style={{ background: "rgba(52,199,89,0.12)", color: "var(--color-green)" }}>
           ✓ Verification email resent.
         </div>
       )}
-      {error && <p className="text-sm mb-4 font-medium" style={{ color: "var(--color-red)" }}>{error}</p>}
+      {error && <p className="text-body mb-4 font-medium" style={{ color: "var(--color-red)" }}>{error}</p>}
       <Button variant="secondary" fullWidth loading={resending} onClick={handleResend}>
         Resend verification email
       </Button>
-      <button onClick={() => router.push("/login")} className="mt-4 text-sm font-medium" style={{ color: "var(--color-blue)" }}>
+      <button onClick={() => router.push("/login")} className="pressable mt-4 text-body font-medium" style={{ color: "var(--color-blue)" }}>
         Back to Log In
       </button>
     </div>

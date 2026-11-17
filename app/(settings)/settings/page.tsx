@@ -40,11 +40,11 @@ export default function SettingsPage() {
     <ScreenContainer>
       <div className="flex flex-col h-full" style={{ background: "var(--color-gray-2)" }}>
         <StatusBar />
-        <div className="flex items-center px-5 pt-2 pb-3">
-          <button onClick={() => router.back()} aria-label="Back">
+        <div className="frosted-header flex items-center px-4 pt-2 pb-3">
+          <button onClick={() => router.back()} aria-label="Back" className="pressable w-11 h-11 -ml-2 rounded-full flex items-center justify-center">
             <BackIcon />
           </button>
-          <h1 className="text-xl font-bold ml-3">Settings</h1>
+          <h1 className="text-title font-bold ml-3">Settings</h1>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-6">
@@ -54,15 +54,15 @@ export default function SettingsPage() {
                 <button
                   key={row.label}
                   onClick={() => router.push(row.path)}
-                  className="w-full flex items-center gap-3 px-4 py-3.5"
+                  className="pressable w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50"
                   style={{ borderBottom: j < rows.length - 1 ? "1px solid var(--color-gray-2)" : "none" }}
                 >
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${row.color}20` }}>
                     <row.icon size={18} color={row.color} strokeWidth={1.8} />
                   </div>
-                  <span className="flex-1 text-sm font-medium text-left">{row.label}</span>
-                  {row.value && <span className="text-sm" style={{ color: "var(--color-gray-1)" }}>{row.value}</span>}
-                  <ChevronRight size={16} color="var(--color-gray-1)" strokeWidth={1.8} />
+                  <span className="flex-1 text-body font-medium text-left">{row.label}</span>
+                  {row.value && <span className="text-body" style={{ color: "var(--color-gray-1)" }}>{row.value}</span>}
+                  <ChevronRight size={16} color="#C7C7CC" strokeWidth={1.8} />
                 </button>
               ))}
             </div>
@@ -74,12 +74,12 @@ export default function SettingsPage() {
                 await logout();
                 router.push("/");
               }}
-              className="w-full flex items-center gap-3 px-4 py-3.5"
+              className="pressable w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50"
             >
               <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,59,48,0.12)" }}>
                 <LogOut size={18} color="var(--color-red)" strokeWidth={1.8} />
               </div>
-              <span className="text-sm font-medium" style={{ color: "var(--color-red)" }}>Log Out</span>
+              <span className="text-body font-medium" style={{ color: "var(--color-red)" }}>Log Out</span>
             </button>
           </div>
         </div>
