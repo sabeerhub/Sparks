@@ -5,14 +5,16 @@
  * webfont ever fails), finished with a plain clean blue dot. There is
  * no icon next to it and no lightning bolt anywhere in the app.
  *
- * Animation: on entry the letters write themselves in — staggered
- * fade + rise + blur-in on springs (~1.4s, skippable by reduced
- * motion). After entry the loop runs FOREVER: a soft light shimmer
- * sweeps across the letters and the wordmark breathes with a slow
- * blue glow (pure CSS, `.wordmark-loop` / `.wordmark-dot` in
- * globals.css). Calm by design — long pauses, low glow, never flashy.
- * Under prefers-reduced-motion the entry is instant and the loop is
- * off: a static wordmark.
+ * Animation (v1.3.2 — the v1.3.0 motion was broken, see globals.css):
+ * on entry the letters write themselves in — staggered fade + rise on
+ * springs (~1.4s, no blur: blurring every letter while the loop ran
+ * forced constant repaints and flicker). After entry ONE calm infinite
+ * motion runs forever: a slow soft-blue shimmer sweep (pure CSS,
+ * `.wordmark-loop` / `.wordmark-dot` in globals.css), 8s cycle with
+ * long solid-ink pauses, seamless loop seam. The loop waits 1.6s when
+ * an entry plays, so it never starts mid-write-in. Under
+ * prefers-reduced-motion the entry is instant and the loop is off:
+ * a static wordmark.
  */
 "use client";
 
@@ -56,15 +58,15 @@ export function SparkWordmark({ size = "medium", animate = false, className = ""
     >
       <span
         aria-hidden="true"
-        className={`wordmark-loop font-script ${greatVibes.className} ${SIZE_CLASSES[size]}`}
+        className={`wordmark-loop font-script ${greatVibes.className} ${SIZE_CLASSES[size]}${playEntry ? " wordmark-loop--delayed" : ""}`}
       >
         {LETTERS.map((letter, i) =>
           playEntry ? (
             <motion.span
               key={i}
               className="inline-block"
-              initial={{ opacity: 0, y: 12, filter: "blur(6px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{
                 type: "spring",
                 stiffness: 110,

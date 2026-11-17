@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronLeft, BadgeCheck, MapPin, Share2, Pencil, Phone, Video, Users, Calendar } from "lucide-react";
+import { ChevronLeft, Share2, Pencil, Phone, Video } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
-import { Avatar } from "@/components/ui/Avatar";
 import { ShareProfileSheet } from "@/components/profile/ShareProfileSheet";
+import { TikTokProfileHeader } from "@/components/profile/TikTokProfileHeader";
 import { SparkRequestButton } from "@/components/spark/SparkRequestButton";
 import { createClient } from "@/lib/supabase";
 import { getSparkConnectionsCount, getNickname, setNickname } from "@/services/chat-service";
@@ -78,7 +78,8 @@ export default function PublicProfilePage() {
     <div className="app-surface h-full w-full flex flex-col overflow-hidden">
       <StatusBar />
 
-      <div className="flex items-center px-4 pt-4 flex-shrink-0">
+      {/* Top bar — TikTok style: back left, @username centred, share right. */}
+      <div className="flex items-center justify-between px-4 pt-3 flex-shrink-0">
         <button
           onClick={() => router.back()}
           className="glass pressable w-11 h-11 rounded-full flex items-center justify-center"
@@ -86,105 +87,84 @@ export default function PublicProfilePage() {
         >
           <ChevronLeft size={22} color="var(--color-blue)" strokeWidth={2} />
         </button>
+        <span className="text-body font-semibold truncate" style={{ color: "#1D1D1F" }}>
+          @{profile.username}
+        </span>
+        <button
+          onClick={() => setShareOpen(true)}
+          className="glass pressable w-11 h-11 rounded-full flex items-center justify-center"
+          aria-label="Share profile"
+        >
+          <Share2 size={18} color="var(--color-blue)" strokeWidth={1.8} />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="w-full max-w-md mx-auto px-4 pt-4 pb-8 space-y-4">
-          {/* Hero — glass identity card with sheen. */}
-          <div className="glass-card glass-sheen rounded-[28px] px-5 pt-8 pb-6 flex flex-col items-center text-center">
-            <div
-              className="rounded-full p-1 mb-4"
-              style={{
-                background: profile.is_premium ? "var(--color-blue)" : "rgba(255,255,255,0.9)",
-                boxShadow: "0 8px 24px rgba(0,122,255,0.18)",
-              }}
-            >
-              <div className="rounded-full ring-4 ring-white/80">
-                <Avatar name={profile.full_name ?? "?"} src={profile.avatar_url} size={112} online={profile.is_online} />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center gap-1.5 flex-wrap">
-              <h1 className="text-title font-bold" style={{ fontSize: 26, lineHeight: "32px" }}>{nickname || profile.full_name}</h1>
-              {profile.is_verified && <BadgeCheck size={19} fill="var(--color-blue)" color="white" />}
-              {!isSelf && (
-                <button onClick={handleEditNickname} aria-label="Edit nickname" className="glass pressable w-7 h-7 rounded-full flex items-center justify-center ml-0.5">
+        <div className="w-full max-w-[640px] mx-auto pb-8">
+          <TikTokProfileHeader
+            name={nickname || profile.full_name}
+            username={profile.username}
+            verified={profile.is_verified}
+            premium={profile.is_premium}
+            avatarUrl={profile.avatar_url}
+            online={profile.is_online}
+            bio={profile.bio}
+            location={profile.location}
+            joinedLabel={formatJoinDate(profile.created_at)}
+            stats={[
+              { value: (profile.spark_count ?? 0).toLocaleString(), label: "Total Sparks" },
+              { value: sparkConnections.toLocaleString(), label: "Connections" },
+            ]}
+            nameExtra={
+              !isSelf ? (
+                <button
+                  onClick={handleEditNickname}
+                  aria-label="Edit nickname"
+                  className="glass pressable w-7 h-7 rounded-full flex items-center justify-center ml-0.5"
+                >
                   <Pencil size={13} color="var(--color-gray-1)" strokeWidth={1.8} />
                 </button>
-              )}
-            </div>
-            {nickname && (
-              <p className="text-body mt-1" style={{ color: "var(--color-gray-1)" }}>{profile.full_name}</p>
-            )}
-            {profile.is_premium && (
-              <span className="mt-2 px-3 py-1 rounded-full text-caption font-bold" style={{ background: "rgba(0,122,255,0.12)", color: "var(--color-blue)" }}>
-                Premium
-              </span>
-            )}
-            <p className="text-body mt-1" style={{ color: "var(--color-gray-1)" }}>@{profile.username}</p>
-
-            {profile.bio && (
-              <p className="text-body mt-3 leading-relaxed" style={{ color: "var(--color-black)" }}>{profile.bio}</p>
-            )}
-
-            <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
-              {profile.location && (
-                <span className="glass flex items-center gap-1.5 px-3 py-1.5 rounded-full text-caption font-medium">
-                  <MapPin size={12} strokeWidth={1.8} /> {profile.location}
-                </span>
-              )}
-              <span className="glass flex items-center gap-1.5 px-3 py-1.5 rounded-full text-caption font-medium">
-                <Calendar size={12} strokeWidth={1.8} /> Joined {formatJoinDate(profile.created_at)}
-              </span>
-            </div>
-          </div>
-
-          {/* Stats — two glass tiles, real numbers only. */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="glass-card rounded-[20px] px-2 py-4 flex flex-col items-center gap-1">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--color-blue)" }} />
-              <span className="text-title font-bold">{profile.spark_count?.toLocaleString() ?? 0}</span>
-              <span className="text-caption text-center leading-tight" style={{ color: "var(--color-gray-1)" }}>Total Sparks</span>
-            </div>
-            <div className="glass-card rounded-[20px] px-2 py-4 flex flex-col items-center gap-1">
-              <Users size={17} color="var(--color-blue)" strokeWidth={1.8} />
-              <span className="text-title font-bold">{sparkConnections.toLocaleString()}</span>
-              <span className="text-caption text-center leading-tight" style={{ color: "var(--color-gray-1)" }}>Connections</span>
-            </div>
-          </div>
-
-          {/* Actions — one row, one height, one language. */}
-          <div className="flex items-center gap-2.5">
-            {currentUserId && !isSelf && (
-              <div className="flex-1 min-w-0">
-                <SparkRequestButton targetUserId={userId} currentUserId={currentUserId} />
+              ) : undefined
+            }
+            actions={
+              <div className="flex items-center gap-2.5 px-4">
+                {currentUserId && !isSelf && (
+                  <div className="flex-1 min-w-0">
+                    <SparkRequestButton targetUserId={userId} currentUserId={currentUserId} />
+                  </div>
+                )}
+                {canCall && (
+                  <>
+                    <button
+                      onClick={() => placeCall(userId, nickname || profile.full_name, profile.avatar_url, "voice")}
+                      className="glass pressable w-[52px] h-[52px] flex items-center justify-center rounded-full flex-shrink-0"
+                      aria-label="Voice call"
+                    >
+                      <Phone size={20} color="var(--color-blue)" strokeWidth={1.8} />
+                    </button>
+                    <button
+                      onClick={() => placeCall(userId, nickname || profile.full_name, profile.avatar_url, "video")}
+                      className="glass pressable w-[52px] h-[52px] flex items-center justify-center rounded-full flex-shrink-0"
+                      aria-label="Video call"
+                    >
+                      <Video size={20} color="var(--color-blue)" strokeWidth={1.8} />
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={() => setShareOpen(true)}
+                  className="glass pressable h-[52px] px-5 flex items-center justify-center gap-1.5 rounded-full text-body font-semibold flex-shrink-0"
+                >
+                  <Share2 size={17} color="var(--color-blue)" strokeWidth={1.8} /> Share
+                </button>
               </div>
-            )}
-            {canCall && (
-              <>
-                <button
-                  onClick={() => placeCall(userId, nickname || profile.full_name, profile.avatar_url, "voice")}
-                  className="glass pressable w-[52px] h-[52px] flex items-center justify-center rounded-full flex-shrink-0"
-                  aria-label="Voice call"
-                >
-                  <Phone size={20} color="var(--color-blue)" strokeWidth={1.8} />
-                </button>
-                <button
-                  onClick={() => placeCall(userId, nickname || profile.full_name, profile.avatar_url, "video")}
-                  className="glass pressable w-[52px] h-[52px] flex items-center justify-center rounded-full flex-shrink-0"
-                  aria-label="Video call"
-                >
-                  <Video size={20} color="var(--color-blue)" strokeWidth={1.8} />
-                </button>
-              </>
-            )}
-            <button
-              onClick={() => setShareOpen(true)}
-              className="glass pressable h-[52px] px-5 flex items-center justify-center gap-1.5 rounded-full text-body font-semibold flex-shrink-0"
-            >
-              <Share2 size={17} color="var(--color-blue)" strokeWidth={1.8} /> Share
-            </button>
-          </div>
+            }
+          />
+          {nickname && (
+            <p className="text-center text-caption mt-2" style={{ color: "#6E6E73" }}>
+              Real name: {profile.full_name} (nickname only you can see)
+            </p>
+          )}
         </div>
       </div>
 

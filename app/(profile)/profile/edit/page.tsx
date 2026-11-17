@@ -149,9 +149,10 @@ export default function EditProfilePage() {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="w-full max-w-md mx-auto px-4 pt-4 pb-8 space-y-4">
-            {/* Avatar hero — glass card with sheen. */}
-            <div className="glass-card glass-sheen rounded-[28px] px-5 py-8 flex flex-col items-center">
+          <div className="w-full max-w-[640px] mx-auto px-4 pt-4 pb-8 space-y-4">
+            {/* Avatar — TikTok style: open centred avatar with a camera
+                badge, no card around it. */}
+            <div className="px-5 py-6 flex flex-col items-center">
               <button onClick={handlePickPhoto} className="relative pressable" disabled={uploading} aria-label="Change photo">
                 <div className="rounded-full p-1" style={{ background: "rgba(255,255,255,0.9)", boxShadow: "0 8px 24px rgba(0,122,255,0.18)" }}>
                   <div className="rounded-full ring-4 ring-white/80">

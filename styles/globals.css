@@ -155,26 +155,53 @@ html, body {
   position: relative;
   overflow: hidden;
 }
+/* v1.3.2: the sheen layer sits BEHIND the card's content (z-index 0 with
+   children lifted to 1). Before this fix it painted above the text, so
+   the white band briefly washed the text out on every sweep — another
+   source of the flicker the user saw. Band softened 0.55 → 0.28. */
 .glass-sheen::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.55) 50%, transparent 58%);
+  z-index: 0;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.28) 50%, transparent 58%);
   transform: translateX(-130%);
   animation: glass-sheen 7s ease-in-out infinite;
   pointer-events: none;
+}
+.glass-sheen > * {
+  position: relative;
+  z-index: 1;
 }
 @keyframes glass-sheen {
   0%, 55% { transform: translateX(-130%); }
   90%, 100% { transform: translateX(130%); }
 }
 
-/* ─── v1.3.0 calligraphic wordmark — infinite loop ─────────────────────
-   The "Sparks" wordmark writes itself in on entry (framer-motion, in
-   the component), then loops FOREVER, gently: a soft light shimmer
-   sweeps across the letters and the wordmark breathes with a slow blue
-   glow. Calm by design — long pauses between sweeps, low glow. The
-   shimmer is white light over ink, not a colour gradient. Under
+/* ─── v1.3.2 calligraphic wordmark — ONE calm infinite motion ──────────
+   Diagnosis of the v1.3.0 bug (fixed here — read before touching):
+   1. The old shimmer band was 95% WHITE, and the wordmark sits on white
+      / white-glass surfaces. Every sweep turned each letter white-on-
+      white, so the word visibly flickered and patches of it vanished
+      and came back — it looked broken. The band is now soft Apple BLUE
+      over ink: always visible against white, and the letters can never
+      disappear.
+   2. TWO animations ran on the same element at different periods
+      (shimmer 6s + drop-shadow breathe 4.5s), so the glow peaked at a
+      different moment every cycle and the motion never settled. Worse,
+      animating `filter: drop-shadow` on text painted with
+      `background-clip: text` forces a full text repaint every frame,
+      and framer-motion's per-letter `filter: blur()` springs during
+      entry piled on top of it — jank and flicker, worst on mobile.
+      There is now ONE infinite motion: a single 8s shimmer sweep.
+      No drop-shadow animation anywhere on the wordmark.
+   3. The old loop started at mount, mid-sweep, while the 1.4s entry
+      write-in was still running — the first thing seen was a half-
+      drawn word with a band across it. The loop now waits until the
+      entry finishes (`.wordmark-loop--delayed`, 1.6s delay, fill
+      backwards = solid ink until it starts).
+   Seam: 0% and 100% are both exactly solid ink (band parked off the
+   word at both ends), so the loop restarts invisibly. Under
    prefers-reduced-motion the wordmark is static solid ink. */
 .font-script {
   font-family: var(--font-script);
@@ -187,28 +214,32 @@ html, body {
 }
 @supports ((background-clip: text) or (-webkit-background-clip: text)) {
   .wordmark-loop {
-    background-image: linear-gradient(105deg, #1D1D1F 42%, rgba(255, 255, 255, 0.95) 50%, #1D1D1F 58%);
-    background-size: 250% 100%;
-    background-position: 120% 0;
+    background-image: linear-gradient(105deg, #1D1D1F 40%, rgba(0, 113, 227, 0.62) 50%, #1D1D1F 60%);
+    background-size: 280% 100%;
+    background-position: 115% 0;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
-    animation: wordmark-shimmer 6s ease-in-out infinite, wordmark-breathe 4.5s ease-in-out infinite;
+    animation: wordmark-shimmer 8s ease-in-out infinite;
+  }
+  /* Entry write-in runs first; the loop waits for it. Fill backwards
+     keeps the word solid ink during the delay. */
+  .wordmark-loop--delayed {
+    animation-delay: 1.6s;
+    animation-fill-mode: backwards;
   }
 }
 @keyframes wordmark-shimmer {
-  0% { background-position: 120% 0; }
-  55% { background-position: 120% 0; }
-  90% { background-position: -120% 0; }
-  100% { background-position: -120% 0; }
-}
-@keyframes wordmark-breathe {
-  0%, 100% { filter: drop-shadow(0 0 0 rgba(0, 122, 255, 0)); }
-  50% { filter: drop-shadow(0 0 10px rgba(0, 122, 255, 0.28)); }
+  /* Hold solid ink, sweep the blue band across, hold solid ink again.
+     0% and 100% are identical, so the loop seam is invisible. */
+  0%, 45% { background-position: 115% 0; }
+  75% { background-position: -115% 0; }
+  100% { background-position: 115% 0; }
 }
 
-/* Plain clean dot that finishes the wordmark lockup (never a bolt). */
+/* Plain clean dot that finishes the wordmark lockup (never a bolt).
+   Same 8s rhythm as the shimmer, gentle and cheap (transform only). */
 .wordmark-dot {
   display: inline-block;
   width: 0.14em;
@@ -216,11 +247,11 @@ html, body {
   margin-left: 0.1em;
   border-radius: 9999px;
   background: var(--color-blue);
-  animation: wordmark-dot 4.5s ease-in-out infinite;
+  animation: wordmark-dot 8s ease-in-out infinite;
 }
 @keyframes wordmark-dot {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.25); opacity: 0.85; }
+  0%, 45%, 100% { transform: scale(1); opacity: 1; }
+  62% { transform: scale(1.15); opacity: 0.9; }
 }
 
 /* ─── v1.2.0 shared primitives (kept, upgraded to true glass) ────────── */
