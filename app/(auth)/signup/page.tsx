@@ -326,20 +326,31 @@ export default function SignupPage() {
           {/* v1.11.0 terms gate, unchanged: the button is disabled AND
               visibly blurred/greyed while unticked, and handleSignUp
               also refuses to submit without it — no way through unticked. */}
-          <label className="flex items-start gap-3 mt-5 cursor-pointer">
+          {/* v1.12.1 — ROOT CAUSE FIX: the Terms/Privacy links used to live
+              INSIDE this <label>, so on a phone the tap fired the label's
+              activation behaviour (toggle the checkbox) and never
+              navigated — the words looked like links but did nothing.
+              The links are now OUTSIDE any label, so a tap navigates;
+              the plain "I agree to the" text keeps its own small label
+              so tapping it still toggles the checkbox. The links also
+              open in a new tab so the 5-step flow (and everything typed
+              into it) stays alive underneath — navigating away would
+              unmount the flow and lose it. */}
+          <div className="flex items-start gap-3 mt-5">
             <input
+              id="agree-terms"
               type="checkbox"
               checked={agreedToTerms}
               onChange={(e) => setAgreedToTerms(e.target.checked)}
-              className="mt-0.5 w-4 h-4 rounded flex-shrink-0"
+              className="mt-0.5 w-4 h-4 rounded flex-shrink-0 cursor-pointer"
               style={{ accentColor: "var(--color-blue)" }}
             />
             <span className="text-caption leading-relaxed" style={{ color: "var(--color-gray-1)" }}>
-              I agree to the{" "}
-              <Link href="/terms" className="pressable" style={{ color: "var(--color-blue)" }}>Terms of Service</Link> and{" "}
-              <Link href="/privacy" className="pressable" style={{ color: "var(--color-blue)" }}>Privacy Policy</Link>
+              <label htmlFor="agree-terms" className="cursor-pointer">I agree to the</label>{" "}
+              <Link href="/terms" target="_blank" rel="noopener noreferrer" className="pressable" style={{ color: "var(--color-blue)" }}>Terms of Service</Link> and{" "}
+              <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="pressable" style={{ color: "var(--color-blue)" }}>Privacy Policy</Link>
             </span>
-          </label>
+          </div>
         </div>
       )}
 
