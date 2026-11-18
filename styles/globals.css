@@ -416,11 +416,6 @@ html, body {
    a soft inner highlight, so it never reads as a flat white bar,
    whatever is behind it. The blur + saturate are still real. */
 .nav-glass {
-  /* Squircle, not a stadium pill: flatter sides, tighter corners —
-     the Apple app-icon shape (corner-shape where the browser supports
-     it, plain 28px rounding everywhere else). */
-  border-radius: 28px;
-  corner-shape: squircle;
   background:
     radial-gradient(120% 150% at 10% 0%, rgba(0, 122, 255, 0.14), transparent 55%),
     radial-gradient(120% 150% at 90% 100%, rgba(0, 122, 255, 0.10), transparent 55%),
@@ -438,11 +433,12 @@ html, body {
 /* Slow light sheen drifting across the whole nav pill (v1.6.1) —
    one calm pass every 7s, parked off the pill the rest of the time,
    so the nav feels alive and liquid, never flashy. The sheen layer
-   clips itself to the squircle so it never spills outside the bar. */
+   clips itself (its own rounded overflow-hidden box) so the active
+   bubble — which bulges outside the bar — is never cut off. */
 .nav-sheen {
   position: absolute;
   inset: 0;
-  border-radius: 28px;
+  border-radius: 9999px;
   overflow: hidden;
   pointer-events: none;
 }
@@ -476,9 +472,6 @@ html, body {
    never fights the spring glide). The fill is var(--color-blue), so
    dark mode gets #0A84FF automatically. */
 .nav-active-bubble {
-  /* Squircle to match the bar — same shape language, smaller radius. */
-  border-radius: 18px;
-  corner-shape: squircle;
   background: var(--color-blue);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.35),

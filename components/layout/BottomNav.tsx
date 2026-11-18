@@ -12,8 +12,7 @@
  * white translucent, blur + saturate, bright hairline edge, soft
  * Apple-blue aurora inside so it always reads as glass over the pale
  * list. The active indicator is a standard in-bar capsule: same
- * height as the tab content, squircle (flatter sides, tighter
- * corners — the Apple app-icon shape), solid Apple blue with the
+ * height as the tab content, rounded-full, solid Apple blue with the
  * icon + label in white, gliding between tabs on the spring
  * (framer-motion layoutId). No bulge above or below the bar. Inactive
  * tabs are ink/grey. In dark mode the pill follows the dark glass
@@ -80,7 +79,7 @@ export function BottomNav() {
     <MotionConfig reducedMotion="user">
       <nav
         aria-label="Main navigation"
-        className="nav-glass fixed inset-x-4 z-50 mx-auto flex max-w-sm items-center justify-around px-2 py-2 md:hidden"
+        className="nav-glass fixed inset-x-4 z-50 mx-auto flex max-w-sm items-center justify-around rounded-full px-2 py-2 md:hidden"
         style={{ bottom: "max(16px, env(safe-area-inset-bottom, 0px))" }}
       >
         {/* Slow light sheen across the whole pill (first child, so it
@@ -98,7 +97,7 @@ export function BottomNav() {
               {active && (
                 <motion.span
                   layoutId="bottomnav-active-pill"
-                  className="nav-active-bubble absolute inset-0"
+                  className="nav-active-bubble absolute inset-0 rounded-full"
                   transition={{ type: "spring", stiffness: 400, damping: 32 }}
                 />
               )}
