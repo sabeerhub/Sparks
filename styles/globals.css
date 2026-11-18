@@ -88,19 +88,28 @@ html, body {
     var(--color-gray-2);
 }
 
-/* ─── v1.4.0 landing aurora, v1.4.1 STRONGER ──────────────────────────
+/* ─── v1.4.0 landing aurora, v1.4.1 STRONGER, v1.4.3 BEHIND THE CARDS ───
    The ONE allowed colour background: soft light blue-grey tones, never
    loud. Frosted glass can only be seen when there is something behind
    it — over the old uniform pale grey the nav and cards looked like
-   flat white. v1.4.0 added soft blobs, but a real browser looking at
-   the live site (00:51 WAT) found them VERY faint — a pale-blue wash
-   with no visible blobs, and the nav/cards still reading as solid
-   white. v1.4.1 raises the blob opacities ~3x (0.10–0.13 → 0.20–0.34),
-   adds a pale blue-violet blob, makes the bottom wash a real pale blue
-   instead of near-white, and spreads blobs across the WHOLE page height
-   (8% / 14% / 48% / 68% / 98%) so the sticky nav always has colour
-   behind it at any scroll position, not just at the top. Still soft
-   and premium — light tones only, never loud or neon. */
+   flat white. v1.4.1 raised blob opacities ~3x, but a real browser on
+   the live site (00:58–01:03 WAT, v1.4.1 build) found the glass STILL
+   does not read as frosted: the background IS clearly coloured now
+   (strong blue top-left, violet wash bottom-right) — but the colour is
+   almost entirely LOST inside the panels. The cards read near-solid
+   white; the blue outside them is visibly stronger than anything
+   inside them.
+   v1.4.3 diagnosis (verified in this file): the two strongest blobs
+   sat at the very TOP (8% / 14%) — behind the hero, where there are
+   NO big cards. The feature/step cards sit mid-page, where the aurora
+   was only 0.20–0.24 on small ellipses — mostly transparent exactly
+   where the cards are. Then each card painted 0.42–0.45 solid white
+   over that weak backdrop, and the blur averaged it further to white.
+   Fix: strong blobs now sit DIRECTLY behind the card bands — a big
+   centred blue blob at ~58% (behind "How Sparks works" + the feature
+   cards) and a violet-blue blob at ~88% (behind the closing CTA) —
+   plus the old mid blobs strengthened. And the panel fills drop to
+   0.30 white, so the colour behind can actually show through. */
 .landing-aurora {
   position: absolute;
   inset: 0;
@@ -114,17 +123,19 @@ html, body {
   background:
     radial-gradient(40% 30% at 10% 8%, rgba(0, 122, 255, 0.30), transparent 70%),
     radial-gradient(36% 28% at 90% 14%, rgba(120, 170, 255, 0.34), transparent 70%),
-    radial-gradient(44% 32% at 72% 48%, rgba(147, 164, 255, 0.24), transparent 70%),
-    radial-gradient(38% 30% at 18% 68%, rgba(0, 122, 255, 0.20), transparent 70%),
+    radial-gradient(62% 36% at 50% 58%, rgba(0, 122, 255, 0.38), transparent 78%),
+    radial-gradient(44% 32% at 78% 46%, rgba(147, 164, 255, 0.38), transparent 75%),
+    radial-gradient(48% 34% at 16% 70%, rgba(0, 122, 255, 0.36), transparent 75%),
+    radial-gradient(56% 32% at 52% 88%, rgba(147, 164, 255, 0.35), transparent 78%),
     radial-gradient(52% 36% at 55% 98%, rgba(178, 208, 255, 0.60), transparent 75%);
 }
 
 /* v1.4.1: genuinely translucent now — 0.55 white was still reading as
-   solid white over the faint aurora. 0.38 white + stronger blur means
-   the colour behind shows through; if a panel still reads solid white,
-   it is not done. */
+   solid white over the faint aurora. v1.4.3: 0.38 → 0.30 — the browser
+   found the colour behind the panels was still being swallowed by the
+   white fill itself. 0.30 lets the aurora show through. */
 .glass {
-  background: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.30);
   -webkit-backdrop-filter: blur(32px) saturate(200%);
   backdrop-filter: blur(32px) saturate(200%);
   border: 1px solid rgba(255, 255, 255, 0.8);
@@ -145,10 +156,15 @@ html, body {
     0 2px 8px rgba(29, 29, 31, 0.06);
 }
 
+/* v1.4.3: 0.45 → 0.30 white, blur 28 → 32px, saturate 180 → 200%.
+   The feature/step/CTA cards were the worst offenders on the live
+   site — near-solid white — because 0.45 white over a weak backdrop
+   averages to white. With strong aurora colour now sitting directly
+   behind them, 0.30 lets the blue show through, blurred. */
 .glass-card {
-  background: rgba(255, 255, 255, 0.45);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  backdrop-filter: blur(28px) saturate(180%);
+  background: rgba(255, 255, 255, 0.30);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  backdrop-filter: blur(32px) saturate(200%);
   border: 1px solid rgba(255, 255, 255, 0.75);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.85),
@@ -318,9 +334,11 @@ html, body {
 /* Frosted-glass header: native iOS feel — blurred translucent white,
    hairline bottom border. Apply to sticky/inline screen headers.
    v1.4.1: 0.60 → 0.42 white, blur 24 → 32px — the nav was the worst
-   offender on the live site, reading as plain solid white. */
+   offender on the live site, reading as plain solid white.
+   v1.4.3: 0.42 → 0.30 — the nav was still the palest strip on the
+   page; the colour behind it must show through. */
 .frosted-header {
-  background: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.30);
   -webkit-backdrop-filter: blur(32px) saturate(200%);
   backdrop-filter: blur(32px) saturate(200%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.8);

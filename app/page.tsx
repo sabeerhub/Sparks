@@ -132,7 +132,14 @@ export default function LandingPage() {
     <MotionConfig reducedMotion="user">
       {showSplash && <SparkSplash onDone={() => setShowSplash(false)} />}
 
-      <div className="app-surface relative min-h-screen flex flex-col overflow-hidden">
+      {/* v1.4.3: overflow-x-clip, NOT overflow-hidden — `overflow: hidden`
+          on this wrapper made it the scroll container, so the nav's
+          `sticky top-0` never stuck while the page scrolled (a real
+          browser saw the nav vanish after ~0.35 screen of scrolling).
+          `clip` still trims the horizontal overflow from the floating
+          cards (-left-24 / -right-10) and the aurora, but it does NOT
+          create a scroll container, so sticky works again. */}
+      <div className="app-surface relative min-h-screen flex flex-col overflow-x-clip">
         {/* Rich aurora behind everything — this is what makes the glass
             visible. Frosted panels over a uniform pale grey looked like
             flat white; over these soft blue-grey tones the blur, the
