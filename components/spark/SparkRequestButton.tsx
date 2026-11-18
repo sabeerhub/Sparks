@@ -30,7 +30,7 @@ export function SparkRequestButton({ targetUserId, currentUserId, compact = fals
   if (request === undefined) {
     return (
       <div
-        className="h-9 rounded-2xl animate-pulse"
+        className={compact ? "h-9 rounded-full animate-pulse" : "h-12 rounded-full animate-pulse"}
         style={{ background: "var(--color-gray-3)", width: compact ? 100 : 140 }}
       />
     );
@@ -96,8 +96,8 @@ export function SparkRequestButton({ targetUserId, currentUserId, compact = fals
           onClick={handleMessage}
           loading={loading}
           variant="primary"
+          size={compact ? "sm" : "md"}
           fullWidth={!compact}
-          className={compact ? "px-4 py-2 text-caption" : ""}
         >
           Message
         </Button>
@@ -107,7 +107,8 @@ export function SparkRequestButton({ targetUserId, currentUserId, compact = fals
             onClick={() => handleRespond(true)}
             loading={loading}
             variant="primary"
-            className={compact ? "px-3 py-2 text-caption flex-1" : "flex-1"}
+            size={compact ? "sm" : "md"}
+            className="flex-1"
           >
             Accept
           </Button>
@@ -115,7 +116,8 @@ export function SparkRequestButton({ targetUserId, currentUserId, compact = fals
             onClick={() => handleRespond(false)}
             loading={loading}
             variant="secondary"
-            className={compact ? "px-3 py-2 text-caption flex-1" : "flex-1"}
+            size={compact ? "sm" : "md"}
+            className="flex-1"
           >
             Decline
           </Button>
@@ -123,7 +125,7 @@ export function SparkRequestButton({ targetUserId, currentUserId, compact = fals
       ) : isOutgoing ? (
         <button
           disabled
-          className={`glass rounded-2xl font-medium text-center ${compact ? "px-4 py-2 text-caption" : "px-4 py-2 text-body w-full"}`}
+          className={`glass rounded-full font-medium text-center flex items-center justify-center whitespace-nowrap ${compact ? "h-9 px-4 text-caption" : "h-12 px-4 text-body w-full"}`}
           style={{ color: "var(--color-gray-1)" }}
         >
           Request Sent
@@ -133,8 +135,8 @@ export function SparkRequestButton({ targetUserId, currentUserId, compact = fals
           onClick={handleSendSpark}
           loading={loading}
           variant="primary"
+          size={compact ? "sm" : "md"}
           fullWidth={!compact}
-          className={compact ? "px-4 py-2 text-caption" : ""}
         >
           Send Spark
         </Button>

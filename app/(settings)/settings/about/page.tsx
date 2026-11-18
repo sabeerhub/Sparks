@@ -30,7 +30,7 @@ export default function AboutPage() {
                   <Info size={19} color="var(--color-blue)" strokeWidth={1.8} />
                 </div>
                 <span className="flex-1 text-body font-medium">Version</span>
-                <span className="text-body" style={{ color: "var(--color-gray-1)" }}>1.8.0</span>
+                <span className="text-body" style={{ color: "var(--color-gray-1)" }}>1.8.1</span>
               </div>
               <RowDivider />
               <SettingsRow

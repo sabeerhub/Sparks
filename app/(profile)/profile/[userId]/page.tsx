@@ -1,9 +1,25 @@
 /**
  * app/(profile)/profile/[userId]/page.tsx
- * v1.8.0 — a friend's profile, rebuilt to the same premium Apple level
- * as your own TikTok-style profile: big centred avatar, name +
- * username, About, real-number stats ONLY, a real shared-media grid,
- * and only actions that are real.
+ * v1.8.1 — Apple-level minimalist rebuild. The v1.8.0 rebuild looked
+ * right in code but not on his phone: the blue "Message" pill was too
+ * small for its label ("Message" burst out of both sides) and the
+ * Block row's description was cut off. Both are fixed here, and the
+ * whole page is restyled to the Apple standard: open space, one clear
+ * hierarchy (avatar → name → handle → stats → actions → tabs →
+ * content), hairline dividers instead of heavy cards, one 48px action
+ * height, nothing clipped, nothing cramped.
+ *
+ * ACTION ROW WIDTHS, measured at a 360px viewport (the narrowest
+ * phone this must fit — worst case is the accepted state, Message +
+ * voice + video + Share):
+ *   360 − 32 (header px-4) − 24 (3 × 8px gaps) − 144 (3 × 48px
+ *   circles) = 160px for the Message slot. "Message" at 16px semibold
+ *   is ~67px + 40px (md px-5) = ~107px, so ~53px spare. At 320px the
+ *   slot is 120px — still fits with ~13px spare. The old row left
+ *   only ~80px for Message (two 52px circles + a ~112px Share pill)
+ *   against ~115px needed — that is why the label burst out.
+ *   Share is an icon circle now (the WhatsApp/Instagram pattern);
+ *   the header already has a Share button too.
  *
  * Honest rules kept here:
  * - "Message" is NOT a separate button: the SparkRequestButton below
@@ -79,10 +95,15 @@ function TabButton({
 function AboutRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-3.5">
-      <span className="text-body" style={{ color: "#6E6E73" }}>{label}</span>
+      <span className="text-body flex-shrink-0" style={{ color: "#6E6E73" }}>{label}</span>
       <span className="text-body font-medium text-right truncate" style={{ color: "var(--color-black)" }}>{value}</span>
     </div>
   );
+}
+
+/** Inset hairline between grouped-list rows — the iOS separator. */
+function Hairline() {
+  return <div className="ml-4" style={{ height: 1, background: "var(--hairline)" }} />;
 }
 
 export default function PublicProfilePage() {
@@ -254,11 +275,15 @@ export default function PublicProfilePage() {
             }
             actions={
               blocked ? (
-                <p className="text-center text-body px-4" style={{ color: "var(--color-gray-1)" }}>
+                <p className="text-center text-body" style={{ color: "var(--color-gray-1)" }}>
                   You blocked {firstName}. Unblock below to message or call them again.
                 </p>
               ) : (
-                <div className="flex items-center gap-2.5 px-4">
+                /* One 48px action height, one row, nothing squeezed:
+                   Message flexes, voice / video / Share are 48px icon
+                   circles. The header already pads px-4, so this row
+                   adds none — everything aligns to the same 16px edge. */
+                <div className="flex items-center gap-2">
                   {currentUserId && !isSelf && (
                     <div className="flex-1 min-w-0">
                       <SparkRequestButton targetUserId={userId} currentUserId={currentUserId} />
@@ -268,14 +293,14 @@ export default function PublicProfilePage() {
                     <>
                       <button
                         onClick={() => placeCall(userId, nickname || profile.full_name, profile.avatar_url, "voice")}
-                        className="glass pressable w-[52px] h-[52px] flex items-center justify-center rounded-full flex-shrink-0"
+                        className="glass pressable w-12 h-12 flex items-center justify-center rounded-full flex-shrink-0"
                         aria-label="Voice call"
                       >
                         <Phone size={20} color="var(--color-blue)" strokeWidth={1.8} />
                       </button>
                       <button
                         onClick={() => placeCall(userId, nickname || profile.full_name, profile.avatar_url, "video")}
-                        className="glass pressable w-[52px] h-[52px] flex items-center justify-center rounded-full flex-shrink-0"
+                        className="glass pressable w-12 h-12 flex items-center justify-center rounded-full flex-shrink-0"
                         aria-label="Video call"
                       >
                         <Video size={20} color="var(--color-blue)" strokeWidth={1.8} />
@@ -284,9 +309,10 @@ export default function PublicProfilePage() {
                   )}
                   <button
                     onClick={() => setShareOpen(true)}
-                    className="glass pressable h-[52px] px-5 flex items-center justify-center gap-1.5 rounded-full text-body font-semibold flex-shrink-0"
+                    className="glass pressable w-12 h-12 flex items-center justify-center rounded-full flex-shrink-0"
+                    aria-label="Share profile"
                   >
-                    <Share2 size={17} color="var(--color-blue)" strokeWidth={1.8} /> Share
+                    <Share2 size={19} color="var(--color-blue)" strokeWidth={1.8} />
                   </button>
                 </div>
               )
@@ -300,7 +326,7 @@ export default function PublicProfilePage() {
 
           {/* Tab bar — same as your own profile: Media / About. */}
           <div
-            className="flex mt-6 sticky top-0 z-10"
+            className="flex mt-8 sticky top-0 z-10"
             style={{ background: "color-mix(in srgb, var(--color-gray-2) 85%, transparent)", backdropFilter: "blur(24px) saturate(180%)" }}
           >
             <TabButton
@@ -361,63 +387,70 @@ export default function PublicProfilePage() {
               )}
             </div>
           ) : (
-            <div className="px-4 pt-4 space-y-3">
-              <div className="glass-card rounded-[24px] p-5">
+            /* About — Apple grouped-list style: plain bio text, then
+               hairline-separated rows. No card around either; the page
+               surface is the background, the hairlines do the work. */
+            <div className="pt-5">
+              <div className="px-4">
                 <span className="text-caption font-semibold uppercase tracking-wide" style={{ color: "#6E6E73" }}>About</span>
                 <p className="text-body mt-2 leading-relaxed" style={{ color: "var(--color-black)" }}>
                   {profile.bio || "No bio yet."}
                 </p>
               </div>
-              <div className="glass-card rounded-[24px] overflow-hidden">
+              <div className="mt-6 border-t" style={{ borderColor: "var(--hairline)" }}>
                 <AboutRow label="Username" value={`@${profile.username}`} />
-                <div className="mx-4" style={{ height: 1, background: "var(--color-gray-2)" }} />
+                <Hairline />
                 <AboutRow label="Joined" value={formatJoinDate(profile.created_at)} />
                 {profile.location && (
                   <>
-                    <div className="mx-4" style={{ height: 1, background: "var(--color-gray-2)" }} />
+                    <Hairline />
                     <AboutRow label="Location" value={profile.location} />
                   </>
                 )}
-                <div className="mx-4" style={{ height: 1, background: "var(--color-gray-2)" }} />
+                <Hairline />
                 <AboutRow label="Days active" value={String(daysActive(profile.created_at))} />
               </div>
+              <div className="border-t" style={{ borderColor: "var(--hairline)" }} />
             </div>
           )}
 
           {/* Block — the one real safety action. Two taps to block, so
-              it can never happen by accident; tap again to unblock. */}
+              it can never happen by accident; tap again to unblock.
+              An iOS-style destructive row: hairlines top and bottom,
+              no card. The description wraps in full (explicit
+              whitespace-normal + comfortable line height) — the old
+              card cut it off. The armed label is the short "Confirm":
+              "Tap again to block" was so long it squeezed the row. */}
           {!isSelf && (
-            <div className="px-4 pt-5">
-              <div className="glass-card rounded-[24px] overflow-hidden">
-                <button
-                  onClick={handleBlockToggle}
-                  disabled={blockBusy}
-                  className="pressable w-full flex items-center gap-3 px-4 py-3.5 text-left disabled:opacity-50"
+            <div className="mt-8 border-t border-b" style={{ borderColor: "var(--hairline)" }}>
+              <button
+                onClick={handleBlockToggle}
+                disabled={blockBusy}
+                className="pressable w-full flex items-center gap-3 px-4 py-4 text-left disabled:opacity-50"
+              >
+                <span
+                  className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(255,59,48,0.12)" }}
                 >
-                  <span
-                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: "rgba(255,59,48,0.12)" }}
-                  >
-                    <Ban size={19} color="#FF3B30" strokeWidth={1.8} />
+                  <Ban size={19} color="#FF3B30" strokeWidth={1.8} />
+                </span>
+                <span className="flex-1 min-w-0">
+                  <span className="block text-body font-medium whitespace-normal" style={{ color: "var(--color-black)" }}>
+                    {blocked ? `Unblock ${firstName}` : `Block ${firstName}`}
                   </span>
-                  <span className="flex-1 min-w-0">
-                    <span className="block text-body font-medium" style={{ color: "var(--color-black)" }}>
-                      {blocked ? `Unblock ${firstName}` : `Block ${firstName}`}
-                    </span>
-                    <span className="block text-caption" style={{ color: "#6E6E73" }}>
-                      {blocked
-                        ? "They can't message or call you right now."
-                        : "They won't be able to message or call you."}
-                    </span>
+                  <span className="block text-caption whitespace-normal break-words" style={{ color: "#6E6E73", lineHeight: "18px" }}>
+                    {blocked
+                      ? "They can't message or call you right now."
+                      : "They won't be able to message or call you."}
                   </span>
-                  <span
-                    className="text-body font-semibold flex-shrink-0"
-                    style={{ color: blockArmed ? "#FF3B30" : "var(--color-blue)" }}
-                  >
-                    {blocked ? "Unblock" : blockArmed ? "Tap again to block" : "Block"}
-                  </span>
-                </button>
-              </div>
+                </span>
+                <span
+                  className="text-body font-semibold flex-shrink-0 whitespace-nowrap"
+                  style={{ color: blockArmed ? "#FF3B30" : "var(--color-blue)" }}
+                >
+                  {blocked ? "Unblock" : blockArmed ? "Confirm" : "Block"}
+                </span>
+              </button>
             </div>
           )}
         </div>
