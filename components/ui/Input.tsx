@@ -22,7 +22,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           className={classNames(
-            "glass-input w-full px-4 py-4 rounded-full outline-none text-body transition-all placeholder:text-[#1D1D1F]/40",
+            "glass-input w-full px-4 py-4 rounded-full outline-none text-body transition-all placeholder:text-ink/40",
             className
           )}
           style={{ borderColor: error ? "var(--color-red)" : undefined, color: "var(--color-black)" }}

@@ -91,7 +91,7 @@ export default function ProfilePage() {
         >
           <ChevronLeft size={22} color="var(--color-blue)" strokeWidth={2} />
         </button>
-        <span className="text-body font-semibold truncate" style={{ color: "#1D1D1F" }}>
+        <span className="text-body font-semibold truncate" style={{ color: "var(--color-black)" }}>
           @{profile?.username ?? ""}
         </span>
         <div className="flex items-center gap-2">
@@ -137,7 +137,7 @@ export default function ProfilePage() {
                   <button
                     onClick={() => router.push("/profile/edit")}
                     className="glass pressable flex-1 flex items-center justify-center gap-1.5 py-3 rounded-full text-body font-semibold"
-                    style={{ color: "#1D1D1F" }}
+                    style={{ color: "var(--color-black)" }}
                   >
                     <Pencil size={16} strokeWidth={1.8} /> Edit profile
                   </button>
@@ -189,7 +189,7 @@ export default function ProfilePage() {
                         <button
                           key={url}
                           onClick={() => router.push("/profile/media")}
-                          className="pressable overflow-hidden rounded-[10px] bg-white/60"
+                          className="pressable overflow-hidden rounded-[10px] row-overlay"
                           aria-label="Open shared media"
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -210,7 +210,7 @@ export default function ProfilePage() {
                     <div className="glass w-14 h-14 rounded-full flex items-center justify-center mb-3">
                       <ImageIcon size={22} color="#C7C7CC" strokeWidth={1.5} />
                     </div>
-                    <p className="text-body font-medium" style={{ color: "#1D1D1F" }}>No shared media yet</p>
+                    <p className="text-body font-medium" style={{ color: "var(--color-black)" }}>No shared media yet</p>
                     <p className="text-caption mt-1" style={{ color: "#6E6E73" }}>Photos you share in chats will appear here.</p>
                   </div>
                 )}
@@ -219,7 +219,7 @@ export default function ProfilePage() {
               <div className="px-4 pt-4 space-y-3">
                 <div className="glass-card rounded-[24px] p-5">
                   <span className="text-caption font-semibold uppercase tracking-wide" style={{ color: "#6E6E73" }}>About</span>
-                  <p className="text-body mt-2 leading-relaxed" style={{ color: "#1D1D1F" }}>
+                  <p className="text-body mt-2 leading-relaxed" style={{ color: "var(--color-black)" }}>
                     {profile.bio || "No bio yet — add one from Edit profile."}
                   </p>
                 </div>
@@ -286,10 +286,10 @@ function TabButton({
       aria-selected={active}
       role="tab"
     >
-      <span style={{ color: active ? "#1D1D1F" : "#8E8E93" }}>{icon}</span>
+      <span style={{ color: active ? "var(--color-black)" : "var(--color-gray-1)" }}>{icon}</span>
       <span
         className="text-caption font-semibold"
-        style={{ color: active ? "#1D1D1F" : "#8E8E93" }}
+        style={{ color: active ? "var(--color-black)" : "var(--color-gray-1)" }}
       >
         {label}
       </span>
@@ -307,7 +307,7 @@ function AboutRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-3.5">
       <span className="text-body" style={{ color: "#6E6E73" }}>{label}</span>
-      <span className="text-body font-medium text-right truncate" style={{ color: "#1D1D1F" }}>{value}</span>
+      <span className="text-body font-medium text-right truncate" style={{ color: "var(--color-black)" }}>{value}</span>
     </div>
   );
 }
@@ -326,7 +326,7 @@ function SettingsRow({
         <Icon size={19} color="#007AFF" strokeWidth={1.8} />
       </div>
       <div className="flex-1 text-left min-w-0">
-        <div className="text-body font-medium" style={{ color: "#1D1D1F" }}>{label}</div>
+        <div className="text-body font-medium" style={{ color: "var(--color-black)" }}>{label}</div>
         <div className="text-caption truncate mt-0.5" style={{ color: "#6E6E73" }}>{desc}</div>
       </div>
       <ChevronRight size={17} color="#C7C7CC" strokeWidth={1.8} />

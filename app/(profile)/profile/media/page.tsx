@@ -45,7 +45,7 @@ export default function SharedMediaPage() {
                 {/* TikTok-style grid: 3 columns, tall 3:4 covers, 2px gaps. */}
                 <div className="grid grid-cols-3 gap-[2px] px-0.5">
                   {thumbs.map((url) => (
-                    <div key={url} className="rounded-[10px] overflow-hidden bg-white/60">
+                    <div key={url} className="rounded-[10px] overflow-hidden row-overlay">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={url}

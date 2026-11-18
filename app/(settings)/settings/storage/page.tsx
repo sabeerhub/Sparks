@@ -100,7 +100,7 @@ function UsageRow({
         </div>
         <span className="text-body font-semibold flex-shrink-0">{formatBytes(bytes)}</span>
       </div>
-      <div className="h-2 rounded-full ml-[52px] mt-3 overflow-hidden" style={{ background: "rgba(0,0,0,0.06)" }}>
+      <div className="h-2 rounded-full ml-[52px] mt-3 overflow-hidden" style={{ background: "var(--color-track)" }}>
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ width: barWidth, background: color, boxShadow: `0 0 8px ${color}66` }}

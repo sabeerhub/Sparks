@@ -230,7 +230,7 @@ export default function ActivityPage() {
                   key={key}
                   onClick={() => setTab(key)}
                   className="pressable flex items-center gap-1.5 px-4 py-1.5 rounded-full text-body font-medium transition-all flex-shrink-0"
-                  style={active ? { background: "#fff", color: "var(--color-black)", boxShadow: "0 1px 4px rgba(0,0,0,0.12)" } : { background: "transparent", color: "var(--color-gray-1)" }}
+                  style={active ? { background: "var(--color-surface)", color: "var(--color-black)", boxShadow: "0 1px 4px rgba(0,0,0,0.12)" } : { background: "transparent", color: "var(--color-gray-1)" }}
                 >
                   {label}
                   {count > 0 && (

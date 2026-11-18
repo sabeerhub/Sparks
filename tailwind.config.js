@@ -1,20 +1,28 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  // Dark mode deliberately NOT enabled — design system mandates light theme only.
+  // v1.7.0: dark mode is real and opt-in (Settings → Appearance). It is
+  // driven by `html[data-theme="dark"]` redefining the CSS variables in
+  // globals.css — NOT by Tailwind's dark: variant, so no per-component
+  // dark: classes exist anywhere. Every semantic colour below is a
+  // variable reference, so flipping the theme flips the whole app.
+  // `white` and `black` stay literal: white text on blue buttons and
+  // switch knobs must stay white in both themes.
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        blue: "#007AFF",
-        "blue-light": "#E8F1FF",
-        "blue-pressed": "#006AE0",
-        green: "#34C759",
-        red: "#FF3B30",
-        orange: "#FF9500",
-        ink: "#1D1D1F",
-        "gray-1": "#6E6E73",
-        "gray-2": "#F5F5F7",
-        "gray-3": "#E5E5EA",
+        blue: "var(--color-blue)",
+        "blue-light": "var(--color-blue-light)",
+        "blue-pressed": "var(--color-blue-pressed)",
+        green: "var(--color-green)",
+        red: "var(--color-red)",
+        orange: "var(--color-orange)",
+        ink: "rgb(var(--color-black-rgb) / <alpha-value>)",
+        "gray-1": "var(--color-gray-1)",
+        "gray-2": "var(--color-gray-2)",
+        "gray-3": "var(--color-gray-3)",
+        surface: "var(--color-surface)",
+        background: "var(--color-background)",
       },
       // ─── v1.2.0 unified type scale ─────────────────────────────────────
       // One size per job, used everywhere: title for screen/section titles,
@@ -39,8 +47,8 @@ module.exports = {
         script: ["Great Vibes", "Snell Roundhand", "Segoe Script", "Brush Script MT", "cursive"],
       },
       boxShadow: {
-        sm: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
-        md: "0 4px 16px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)",
+        sm: "var(--shadow-sm)",
+        md: "var(--shadow-md)",
       },
     },
   },

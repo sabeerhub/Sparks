@@ -143,7 +143,7 @@ function ActionRow({ icon: Icon, label, onClick, destructive, last }: ActionRowP
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-4 bg-white/50 hover:bg-white/70 active:opacity-70 transition-opacity ${last ? "" : "border-b"}`}
+      className={`w-full flex items-center gap-3 px-4 py-4 row-overlay active:opacity-70 transition-opacity ${last ? "" : "border-b"}`}
       style={{ borderColor: "var(--color-gray-2)" }}
     >
       <Icon size={19} color={color} strokeWidth={1.8} />

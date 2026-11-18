@@ -87,7 +87,7 @@ export default function PublicProfilePage() {
         >
           <ChevronLeft size={22} color="var(--color-blue)" strokeWidth={2} />
         </button>
-        <span className="text-body font-semibold truncate" style={{ color: "#1D1D1F" }}>
+        <span className="text-body font-semibold truncate" style={{ color: "var(--color-black)" }}>
           @{profile.username}
         </span>
         <button

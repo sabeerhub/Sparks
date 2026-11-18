@@ -52,7 +52,7 @@ export function SparkSplash({ onDone }: { onDone: () => void }) {
     <div
       aria-hidden="true"
       onClick={finish}
-      className="fixed inset-0 z-50 flex cursor-pointer flex-col items-center justify-center gap-6 bg-white transition-opacity duration-300"
+      className="fixed inset-0 z-50 flex cursor-pointer flex-col items-center justify-center gap-6 bg-background transition-opacity duration-300"
       style={{ opacity: leaving ? 0 : 1 }}
     >
       <SparkWordmark size="hero" animate />

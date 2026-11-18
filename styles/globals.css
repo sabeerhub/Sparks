@@ -3,7 +3,14 @@
 @tailwind utilities;
 
 :root {
-  /* ─── Design tokens — light theme ONLY, per design system ───────────── */
+  /* ─── Design tokens ────────────────────────────────────────────────────
+     Light theme values live here; the dark theme overrides them under
+     `html[data-theme="dark"]` at the bottom of this file. Every colour
+     in the app flows through these variables (Tailwind maps to them too),
+     so flipping the theme flips the whole app at once. Two tokens never
+     change: --color-white is always true white (text on blue buttons,
+     switch knobs, the call screen), and the dark nav is dark in both
+     themes by design. */
   --color-blue: #007AFF;
   --color-blue-light: #E8F1FF;
   --color-blue-pressed: #006AE0;
@@ -12,10 +19,37 @@
   --color-orange: #FF9500;
 
   --color-black: #1D1D1F;
+  /* RGB triplet of the ink above, for Tailwind opacity modifiers
+     (text-ink/60 etc.). A plain var() colour cannot take an opacity
+     modifier — Tailwind silently drops the class — so `ink` in the
+     Tailwind config points at this triplet with <alpha-value>. */
+  --color-black-rgb: 29 29 31;
   --color-gray-1: #6E6E73;
   --color-gray-2: #F5F5F7;
   --color-gray-3: #E5E5EA;
   --color-white: #FFFFFF;
+
+  /* Solid surfaces: page background vs cards. On light both are white;
+     on dark the page goes true black and cards go dark grey, so the
+     layers still read. */
+  --color-background: #FFFFFF;
+  --color-surface: #FFFFFF;
+
+  /* The other person's message bubble: frosted white on light, dark
+     grey glass on dark. Own bubbles stay blue in both themes. */
+  --color-bubble-theirs: rgba(255, 255, 255, 0.75);
+
+  /* Thin track behind the storage usage bar. */
+  --color-track: rgba(0, 0, 0, 0.06);
+
+  /* Static translucent row fills (action-sheet rows, media tiles):
+     white on light, a faint white wash on dark. */
+  --color-row-overlay: rgba(255, 255, 255, 0.5);
+  --color-row-overlay-hover: rgba(255, 255, 255, 0.7);
+
+  /* Bright edge on small glass pills (media captions): strong white on
+     light, softer on dark so it never glares. */
+  --color-glass-edge: rgba(255, 255, 255, 0.7);
 
   /* Hairline separator (iOS-style 0.5px look via translucent black). */
   --hairline: rgba(0, 0, 0, 0.08);
@@ -46,15 +80,14 @@
 html, body {
   font-family: var(--font-system);
   color: var(--color-black);
-  background: var(--color-white);
+  background: var(--color-background);
   -webkit-font-smoothing: antialiased;
 }
 
-/*
- * Dark mode is explicitly NOT supported — per design system rule. This is
- * deliberate, not an oversight: no `@media (prefers-color-scheme: dark)`
- * block exists anywhere in this file or in Tailwind config.
- */
+/* Dark mode (v1.7.0) — opt-in only, Light is the default. The theme is
+   chosen in Settings → Appearance and applied by `lib/theme.ts` before
+   first paint, so there is no white flash. All overrides live in one
+   `html[data-theme="dark"]` block at the bottom of this file. */
 
 * {
   -webkit-tap-highlight-color: transparent;
@@ -606,3 +639,149 @@ html[data-font-size="large"] { --font-scale: 1.15; }
 html[data-bubble-size="compact"] { --bubble-pad-x: 12px; --bubble-pad-y: 7px; --bubble-radius: 18px; }
 html[data-bubble-size="standard"] { --bubble-pad-x: 16px; --bubble-pad-y: 10px; --bubble-radius: 24px; }
 html[data-bubble-size="large"] { --bubble-pad-x: 20px; --bubble-pad-y: 14px; --bubble-radius: 28px; }
+
+/* ─── v1.7.0 dark theme — opt-in, Light stays the default ───────────────
+   One block, one mechanism: `html[data-theme="dark"]` redefines the
+   design tokens, and every surface that paints its own fill gets a dark
+   version here. Nothing in the light theme changes — these rules only
+   apply under data-theme="dark".
+   Palette (iOS dark, tuned to Sparks): page true black #000000, cards
+   dark grey #1C1C1E, fills #2C2C2E, ink near-white #F5F5F7, secondary
+   text #98989D, blue brightened to #0A84FF so it still pops on black.
+   Glass stays real glass on dark: dark translucent fills + blur +
+   saturate + bright hairline edges — never flat paint. The aurora
+   blobs run a little stronger on dark so the glass still has colour
+   to blur against. */
+
+/* Static translucent row fills (action-sheet rows, media tiles). */
+.row-overlay {
+  background: var(--color-row-overlay);
+}
+.row-overlay:hover {
+  background: var(--color-row-overlay-hover);
+}
+
+html[data-theme="dark"] {
+  --color-blue: #0A84FF;
+  --color-blue-light: rgba(10, 132, 255, 0.18);
+  --color-blue-pressed: #0066CC;
+  --color-green: #30D158;
+  --color-red: #FF453A;
+  --color-orange: #FF9F0A;
+
+  --color-black: #F5F5F7;
+  --color-black-rgb: 245 245 247;
+  --color-gray-1: #98989D;
+  --color-gray-2: #1C1C1E;
+  --color-gray-3: #2C2C2E;
+
+  --color-background: #000000;
+  --color-surface: #1C1C1E;
+  --color-bubble-theirs: rgba(44, 44, 46, 0.85);
+  --color-track: rgba(255, 255, 255, 0.14);
+  --color-row-overlay: rgba(255, 255, 255, 0.07);
+  --color-row-overlay-hover: rgba(255, 255, 255, 0.12);
+  --color-glass-edge: rgba(255, 255, 255, 0.25);
+
+  --hairline: rgba(255, 255, 255, 0.12);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Dark glass — same blur + saturate as light, dark translucent fills,
+   bright hairline edges. */
+html[data-theme="dark"] .glass {
+  background: rgba(28, 28, 30, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+html[data-theme="dark"] .glass-strong {
+  background: rgba(28, 28, 30, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+}
+html[data-theme="dark"] .glass-card {
+  background: rgba(28, 28, 30, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    0 1px 4px rgba(0, 0, 0, 0.3);
+}
+html[data-theme="dark"] .glass-input {
+  background: rgba(28, 28, 30, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+html[data-theme="dark"] .glass-input:focus-within {
+  border-color: var(--color-blue);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 4px rgba(10, 132, 255, 0.25);
+}
+html[data-theme="dark"] .glass-input.no-focus-ring:focus-within {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+html[data-theme="dark"] .glass-row:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+html[data-theme="dark"] .frosted-header {
+  background: rgba(0, 0, 0, 0.55);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 16px rgba(0, 0, 0, 0.4);
+}
+html[data-theme="dark"] .frosted-pill {
+  background: rgba(28, 28, 30, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* App surface + landing aurora on dark: true black base, blobs a touch
+   stronger so the glass still has colour to blur against. */
+html[data-theme="dark"] .app-surface {
+  background:
+    radial-gradient(120% 55% at 50% -5%, rgba(10, 132, 255, 0.22), transparent 60%),
+    #000000;
+}
+html[data-theme="dark"] .landing-aurora::before {
+  background:
+    radial-gradient(40% 30% at 10% 8%, rgba(10, 132, 255, 0.42), transparent 70%),
+    radial-gradient(36% 28% at 90% 14%, rgba(120, 170, 255, 0.44), transparent 70%),
+    radial-gradient(62% 36% at 50% 58%, rgba(10, 132, 255, 0.46), transparent 78%),
+    radial-gradient(44% 32% at 78% 46%, rgba(147, 164, 255, 0.46), transparent 75%),
+    radial-gradient(48% 34% at 16% 70%, rgba(10, 132, 255, 0.44), transparent 75%),
+    radial-gradient(56% 32% at 52% 88%, rgba(147, 164, 255, 0.42), transparent 78%),
+    radial-gradient(52% 36% at 55% 98%, rgba(120, 170, 255, 0.55), transparent 75%);
+}
+
+/* Sheen is softer on dark so it never glares. */
+html[data-theme="dark"] .glass-sheen::after {
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.16) 50%, transparent 58%);
+}
+
+/* Wordmark shine on dark: the letters are white, so a white screen-blend
+   band would be invisible. On dark the sweep is a soft blue wash at
+   normal blend instead — the word stays legible, the motion stays. */
+html[data-theme="dark"] .wordmark-shine {
+  mix-blend-mode: normal;
+}
+html[data-theme="dark"] .wordmark-shine-band {
+  background: linear-gradient(105deg, transparent, rgba(10, 132, 255, 0.45) 50%, transparent);
+}
+
+/* The dark nav and the call screen are dark in both themes already —
+   nothing to override there. */

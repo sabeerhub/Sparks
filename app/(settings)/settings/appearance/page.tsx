@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sun, Type, MessageSquare } from "lucide-react";
+import { Sun, Moon, Smartphone, Type, MessageSquare } from "lucide-react";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { SettingsHeader, SectionLabel, SettingsCard, RowDivider, OptionRow } from "@/components/settings/settings-ui";
 import { updateOwnProfile } from "@/services/chat-service";
+import { applyTheme, getStoredThemePreference, type ThemePreference } from "@/lib/theme";
 import { createClient } from "@/lib/supabase";
 import type { Profile } from "@/types";
 
@@ -17,6 +18,9 @@ export default function AppearanceSettingsPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  // The theme lives in localStorage (lib/theme.ts) — the server profile
+  // has no theme column yet, so the page reads the device's own choice.
+  const [themePref, setThemePref] = useState<ThemePreference>("light");
 
   useEffect(() => {
     (async () => {
@@ -27,9 +31,24 @@ export default function AppearanceSettingsPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase.from("profiles") as any).select("*").eq("id", user.id).maybeSingle();
       setProfile(data as Profile);
+      setThemePref(getStoredThemePreference());
       setLoading(false);
     })();
   }, [router]);
+
+  /** Theme switch: applies instantly, remembers the choice on this
+      device, and best-effort syncs Light/Dark to the server profile
+      (System is local-only — the profile type has no System value). */
+  const setTheme = async (preference: ThemePreference) => {
+    setThemePref(preference);
+    applyTheme(preference);
+    if (preference !== "system" && userId) {
+      await updateOwnProfile(userId, { theme_preference: preference }).catch(() => {
+        // The profiles table has no theme column yet — the theme still
+        // works from this device's storage; nothing to revert.
+      });
+    }
+  };
 
   const updateField = async (patch: Partial<Profile>) => {
     if (!userId || !profile) return;
@@ -38,7 +57,6 @@ export default function AppearanceSettingsPage() {
     // Apply instantly, don't wait for the round trip
     if (patch.font_size) document.documentElement.setAttribute("data-font-size", patch.font_size);
     if (patch.bubble_size) document.documentElement.setAttribute("data-bubble-size", patch.bubble_size);
-    if (patch.theme_preference) document.documentElement.setAttribute("data-theme", patch.theme_preference);
 
     await updateOwnProfile(userId, patch).catch(() => setProfile(profile));
   };
@@ -68,12 +86,28 @@ export default function AppearanceSettingsPage() {
                 icon={Sun}
                 label="Light"
                 preview={<span className="w-8 h-8 rounded-full flex-shrink-0 border" style={{ background: "#fff", borderColor: "var(--color-gray-3)" }} />}
-                selected={profile.theme_preference === "light"}
-                onClick={() => updateField({ theme_preference: "light" })}
+                selected={themePref === "light"}
+                onClick={() => setTheme("light")}
+              />
+              <RowDivider />
+              <OptionRow
+                icon={Moon}
+                label="Dark"
+                preview={<span className="w-8 h-8 rounded-full flex-shrink-0 border" style={{ background: "#1C1C1E", borderColor: "var(--color-gray-3)" }} />}
+                selected={themePref === "dark"}
+                onClick={() => setTheme("dark")}
+              />
+              <RowDivider />
+              <OptionRow
+                icon={Smartphone}
+                label="System"
+                preview={<span className="w-8 h-8 rounded-full flex-shrink-0 border" style={{ background: "linear-gradient(90deg, #FFFFFF 50%, #1C1C1E 50%)", borderColor: "var(--color-gray-3)" }} />}
+                selected={themePref === "system"}
+                onClick={() => setTheme("system")}
               />
             </SettingsCard>
             <p className="text-caption mt-2 px-2" style={{ color: "var(--color-gray-1)" }}>
-              Sparks is light theme only, by design.
+              Light is the default. Dark is your choice — or System follows your phone.
             </p>
           </div>
 

@@ -62,7 +62,7 @@ function CharacterRow({ className = "" }: { className?: string }) {
         {LANDING_CHARACTERS.map((character, index) => (
           <span
             key={character.src}
-            className={`relative h-10 w-10 shrink-0 overflow-hidden rounded-full shadow-[0_2px_10px_rgba(29,29,31,0.14)] ring-2 ring-white sm:h-11 sm:w-11 ${
+            className={`relative h-10 w-10 shrink-0 overflow-hidden rounded-full shadow-[0_2px_10px_rgba(29,29,31,0.14)] ring-2 ring-surface sm:h-11 sm:w-11 ${
               index > 0 ? "-ml-2.5" : ""
             }`}
           >
@@ -76,7 +76,7 @@ function CharacterRow({ className = "" }: { className?: string }) {
           </span>
         ))}
       </div>
-      <span className="text-caption font-medium text-[#1D1D1F]/50">
+      <span className="text-caption font-medium text-ink/50">
         Made for real conversations
       </span>
     </div>
@@ -111,7 +111,7 @@ export default function LandingPage() {
   }, [isMobile]);
 
   if (isMobile === null) {
-    return <div className="min-h-screen bg-white" aria-hidden="true" />;
+    return <div className="min-h-screen bg-background" aria-hidden="true" />;
   }
 
   // MOBILE FLOW: the landing page is the animation ONLY. When it ends
@@ -154,18 +154,18 @@ export default function LandingPage() {
             </Link>
 
             <div className="flex items-center gap-6">
-              <Link href="#how-it-works" className="pressable text-body text-[#1D1D1F]/70 hover:text-[#1D1D1F] transition-colors hidden md:block">
+              <Link href="#how-it-works" className="pressable text-body text-ink/70 hover:text-ink transition-colors hidden md:block">
                 How it works
               </Link>
-              <Link href="/support" className="pressable text-body text-[#1D1D1F]/70 hover:text-[#1D1D1F] transition-colors hidden sm:block">
+              <Link href="/support" className="pressable text-body text-ink/70 hover:text-ink transition-colors hidden sm:block">
                 Support
               </Link>
-              <Link href="/login" className="pressable text-body text-[#1D1D1F] font-medium hover:opacity-70 transition-opacity">
+              <Link href="/login" className="pressable text-body text-ink font-medium hover:opacity-70 transition-opacity">
                 Log In
               </Link>
               <Link
                 href="/signup"
-                className="pressable text-body font-medium text-white bg-[#007AFF] px-4 py-2 rounded-full hover:bg-[#006AE0] transition-colors"
+                className="pressable text-body font-medium text-white bg-blue px-4 py-2 rounded-full hover:bg-blue-pressed transition-colors"
               >
                 Sign Up
               </Link>
@@ -183,12 +183,12 @@ export default function LandingPage() {
                 className="text-center lg:text-left"
               >
                 <SparkWordmark size="display" animate />
-                <h1 className="font-semibold tracking-tight text-[#1D1D1F] mt-6 text-[44px] leading-[1.05] md:text-[60px] lg:text-[68px]">
+                <h1 className="font-semibold tracking-tight text-ink mt-6 text-[44px] leading-[1.05] md:text-[60px] lg:text-[68px]">
                   Messaging.
                   <br />
                   Designed for humans.
                 </h1>
-                <p className="mt-6 text-body md:text-[18px] md:leading-[28px] text-[#1D1D1F]/60 max-w-lg mx-auto lg:mx-0">
+                <p className="mt-6 text-body md:text-[18px] md:leading-[28px] text-ink/60 max-w-lg mx-auto lg:mx-0">
                   Private, real-time conversations with an elegant
                   Apple-inspired experience. Nobody can message you until you
                   accept their Spark — every chat starts with your yes.
@@ -197,14 +197,14 @@ export default function LandingPage() {
                 <div className="mt-9 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
                   <Link
                     href="/signup"
-                    className="pressable text-body font-medium text-white bg-[#007AFF] px-7 py-4 rounded-full hover:bg-[#006AE0] transition-colors text-center"
+                    className="pressable text-body font-medium text-white bg-blue px-7 py-4 rounded-full hover:bg-blue-pressed transition-colors text-center"
                     style={{ boxShadow: "0 8px 24px rgba(0,122,255,0.35)" }}
                   >
                     Create Account
                   </Link>
                   <Link
                     href="/login"
-                    className="pressable glass text-body font-medium text-[#1D1D1F] px-7 py-4 rounded-full text-center"
+                    className="pressable glass text-body font-medium text-ink px-7 py-4 rounded-full text-center"
                   >
                     Log In
                   </Link>
@@ -213,7 +213,7 @@ export default function LandingPage() {
                 {/* Detail strip — real features only */}
                 <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3 justify-center lg:justify-start">
                   {HERO_DETAILS.map((detail) => (
-                    <span key={detail.label} className="inline-flex items-center gap-2 text-caption font-medium text-[#1D1D1F]/60">
+                    <span key={detail.label} className="inline-flex items-center gap-2 text-caption font-medium text-ink/60">
                       <span className="glass w-7 h-7 rounded-full flex items-center justify-center">
                         <detail.icon size={14} color="var(--color-blue)" strokeWidth={2} />
                       </span>
@@ -240,20 +240,20 @@ export default function LandingPage() {
                       <UserPlus size={18} color="var(--color-blue)" strokeWidth={1.8} />
                     </span>
                     <span>
-                      <span className="block text-body font-semibold text-[#1D1D1F]">Spark accepted</span>
-                      <span className="block text-caption text-[#1D1D1F]/50">You can now message each other</span>
+                      <span className="block text-body font-semibold text-ink">Spark accepted</span>
+                      <span className="block text-caption text-ink/50">You can now message each other</span>
                     </span>
                   </div>
                   {/* Floating pill: a real voice call */}
                   <div className="hidden lg:flex glass rounded-full px-4 py-2.5 items-center gap-2 absolute -right-10 bottom-28 z-10">
                     <Phone size={15} color="var(--color-blue)" strokeWidth={2} />
-                    <span className="text-caption font-medium text-[#1D1D1F]">Voice call · 04:32</span>
+                    <span className="text-caption font-medium text-ink">Voice call · 04:32</span>
                   </div>
 
                   <div className="relative w-[280px] h-[580px] lg:w-[330px] lg:h-[680px] rounded-[46px] p-3 glass-strong" style={{ background: "rgba(29,29,31,0.92)" }}>
-                    <div className="w-full h-full bg-white rounded-[34px] overflow-hidden relative">
+                    <div className="w-full h-full bg-surface rounded-[34px] overflow-hidden relative">
                       {/* Notch */}
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-[#1D1D1F] rounded-b-2xl z-10" />
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-ink rounded-b-2xl z-10" />
 
                       {/* Honest preview: the real empty state of the app, not
                           invented people or messages. Labelled as a preview. */}
@@ -262,13 +262,13 @@ export default function LandingPage() {
                           <SparkWordmark size="small" />
                         </div>
                         <div className="glass-input flex items-center gap-2 rounded-full px-4 py-2">
-                          <span className="text-caption text-[#1D1D1F]/40">Search chats or users</span>
+                          <span className="text-caption text-ink/40">Search chats or users</span>
                         </div>
                         <div className="flex flex-col items-center justify-center pt-12 px-4 text-center">
                           <div className="glass-card rounded-[24px] px-5 py-6 flex flex-col items-center w-full">
                             <SparkWordmark size="medium" />
-                            <p className="text-body font-semibold text-[#1D1D1F] mt-3">No chats yet</p>
-                            <p className="text-caption text-[#1D1D1F]/50 mt-1">
+                            <p className="text-body font-semibold text-ink mt-3">No chats yet</p>
+                            <p className="text-caption text-ink/50 mt-1">
                               Search for people and send a Spark Request to connect
                             </p>
                           </div>
@@ -276,7 +276,7 @@ export default function LandingPage() {
                       </div>
 
                       <div className="absolute bottom-6 left-4 right-4 text-center">
-                        <span className="text-caption font-medium text-[#1D1D1F]/40">Preview of the real app</span>
+                        <span className="text-caption font-medium text-ink/40">Preview of the real app</span>
                       </div>
                     </div>
                   </div>
@@ -293,7 +293,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
                 transition={spring}
-                className="text-title font-semibold tracking-tight text-[#1D1D1F] text-center"
+                className="text-title font-semibold tracking-tight text-ink text-center"
               >
                 How Sparks works
               </motion.h2>
@@ -307,12 +307,12 @@ export default function LandingPage() {
                     transition={{ ...spring, delay: i * 0.1 }}
                     className="glass-card glass-sheen rounded-[28px] p-6 flex gap-4"
                   >
-                    <span className="shrink-0 w-10 h-10 rounded-full bg-[#007AFF] text-white text-body font-semibold flex items-center justify-center">
+                    <span className="shrink-0 w-10 h-10 rounded-full bg-blue text-white text-body font-semibold flex items-center justify-center">
                       {step.step}
                     </span>
                     <span>
-                      <span className="block text-body font-semibold text-[#1D1D1F]">{step.title}</span>
-                      <span className="block mt-1 text-body leading-relaxed text-[#1D1D1F]/60">{step.body}</span>
+                      <span className="block text-body font-semibold text-ink">{step.title}</span>
+                      <span className="block mt-1 text-body leading-relaxed text-ink/60">{step.body}</span>
                     </span>
                   </motion.div>
                 ))}
@@ -328,7 +328,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
                 transition={spring}
-                className="text-title font-semibold tracking-tight text-[#1D1D1F] text-center"
+                className="text-title font-semibold tracking-tight text-ink text-center"
               >
                 What makes Sparks different
               </motion.h2>
@@ -337,7 +337,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
                 transition={{ ...spring, delay: 0.08 }}
-                className="mt-3 text-body text-[#1D1D1F]/60 text-center max-w-xl mx-auto"
+                className="mt-3 text-body text-ink/60 text-center max-w-xl mx-auto"
               >
                 Not another copy of the big chat apps. Three things, done properly.
               </motion.p>
@@ -355,11 +355,11 @@ export default function LandingPage() {
                     <div className="glass w-11 h-11 rounded-2xl flex items-center justify-center mb-4">
                       <feature.icon size={20} color="var(--color-blue)" strokeWidth={1.8} />
                     </div>
-                    <h3 className="text-body font-semibold text-[#1D1D1F]">{feature.title}</h3>
-                    <p className="mt-2 text-body leading-relaxed text-[#1D1D1F]/60">{feature.body}</p>
+                    <h3 className="text-body font-semibold text-ink">{feature.title}</h3>
+                    <p className="mt-2 text-body leading-relaxed text-ink/60">{feature.body}</p>
                     <ul className="mt-4 space-y-2">
                       {feature.points.map((point) => (
-                        <li key={point} className="flex items-start gap-2 text-body text-[#1D1D1F]/70">
+                        <li key={point} className="flex items-start gap-2 text-body text-ink/70">
                           <Check size={16} color="var(--color-blue)" strokeWidth={2.5} className="shrink-0 mt-0.5" />
                           {point}
                         </li>
@@ -381,12 +381,12 @@ export default function LandingPage() {
               className="w-full max-w-7xl mx-auto glass-card rounded-[32px] px-6 py-10 flex flex-col items-center text-center"
             >
               <SparkWordmark size="large" />
-              <p className="text-body text-[#1D1D1F]/60 mt-3 max-w-md">
+              <p className="text-body text-ink/60 mt-3 max-w-md">
                 Your people, your yes. Start a conversation that starts with you.
               </p>
               <Link
                 href="/signup"
-                className="pressable mt-6 text-body font-medium text-white bg-[#007AFF] px-7 py-4 rounded-full hover:bg-[#006AE0] transition-colors"
+                className="pressable mt-6 text-body font-medium text-white bg-blue px-7 py-4 rounded-full hover:bg-blue-pressed transition-colors"
               >
                 Create Account — it&apos;s free
               </Link>
@@ -394,12 +394,12 @@ export default function LandingPage() {
           </section>
 
           {/* Footer */}
-          <footer className="px-6 md:px-12 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-caption text-[#1D1D1F]/40">
+          <footer className="px-6 md:px-12 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-caption text-ink/40">
             <span>© {new Date().getFullYear()} Sparks</span>
             <div className="flex gap-5">
-              <Link href="/privacy" className="hover:text-[#1D1D1F]/70 transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-[#1D1D1F]/70 transition-colors">Terms</Link>
-              <Link href="/support" className="hover:text-[#1D1D1F]/70 transition-colors">Support</Link>
+              <Link href="/privacy" className="hover:text-ink/70 transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-ink/70 transition-colors">Terms</Link>
+              <Link href="/support" className="hover:text-ink/70 transition-colors">Support</Link>
             </div>
           </footer>
         </div>

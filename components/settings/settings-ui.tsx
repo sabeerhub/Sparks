@@ -4,7 +4,7 @@
  * from these pieces so no page is left looking like a form dumped on a
  * white page: a glass header with a real 44px back button, section
  * labels, glass cards with iOS-style rows, and a proper glass switch.
- * Light only, Apple blue #007AFF, ink #1D1D1F, system font, no colour
+ * Light + dark (v1.7.0, opt-in), Apple blue #007AFF, ink #1D1D1F, system font, no colour
  * gradients, no bolt icons anywhere.
  */
 "use client";

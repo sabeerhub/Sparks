@@ -1,25 +1,33 @@
 # Sparks — Design System
 
-> Light theme **only**. Apple-inspired, minimal. If a design choice is
+> Light by default, Dark opt-in (v1.7.0). Apple-inspired, minimal. If a design choice is
 > not in this document, it is not approved — do not invent new colours,
 > fonts, radii, or components.
 
 ## 1. Tokens (`styles/globals.css`, `tailwind.config.js`)
 
-| Token | Value |
-|---|---|
-| Blue (accent) | `#007AFF` |
-| Blue light (tint) | `#E8F1FF` |
-| Green (success / online / accept) | `#34C759` |
-| Red (danger / decline / end call) | `#FF3B30` |
-| Orange (warning) | `#FF9500` |
-| Ink (text) | `#1D1D1F` |
-| Grey 1 (secondary text) | `#6E6E73` |
-| Grey 2 (fills) | `#F5F5F7` |
-| Grey 3 (borders) | `#E5E5EA` |
-| White | `#FFFFFF` |
+| Token | Light | Dark (v1.7.0, `html[data-theme="dark"]`) |
+|---|---|---|
+| Blue (accent) | `#007AFF` | `#0A84FF` |
+| Blue light (tint) | `#E8F1FF` | `rgba(10,132,255,0.18)` |
+| Green (success / online / accept) | `#34C759` | `#30D158` |
+| Red (danger / decline / end call) | `#FF3B30` | `#FF453A` |
+| Orange (warning) | `#FF9500` | `#FF9F0A` |
+| Ink (text) | `#1D1D1F` | `#F5F5F7` |
+| Grey 1 (secondary text) | `#6E6E73` | `#98989D` |
+| Grey 2 (fills) | `#F5F5F7` | `#1C1C1E` |
+| Grey 3 (borders) | `#E5E5EA` | `#2C2C2E` |
+| White | `#FFFFFF` | `#FFFFFF` (never changes — text on blue, switch knobs) |
+| Background (page) | `#FFFFFF` | `#000000` |
+| Surface (solid cards) | `#FFFFFF` | `#1C1C1E` |
 
-- **No dark mode.** No `prefers-color-scheme` block anywhere, by design.
+- **Dark mode (v1.7.0, opt-in).** Settings → Appearance offers Light /
+  Dark / System. The choice lives in localStorage (`sparks-theme`) and
+  is painted by a blocking script in the root layout before first
+  paint — no white flash. Dark is a `html[data-theme="dark"]` override
+  of the tokens above plus dark glass fills in `styles/globals.css`;
+  there are no per-component `dark:` classes anywhere. Light stays the
+  default — nothing changes until the user flips the switch.
 - **No gradients.** Flat colour only.
 - **No new colours.** Everything uses the tokens above.
 - **Font:** system stack — `-apple-system, BlinkMacSystemFont,
@@ -111,7 +119,7 @@ Sparks is not a WhatsApp/Telegram clone. Its identity is:
 
 ## 7. Rules for new screens
 
-1. Light theme only. Check every new screen in a light viewport.
+1. Light is the default; Dark is opt-in. Check every new screen in a light AND a dark viewport.
 2. Use the tokens — no hex values invented on the spot.
 3. 44pt minimum touch targets on every interactive element.
 4. Every list needs a skeleton + an empty state + an error state.

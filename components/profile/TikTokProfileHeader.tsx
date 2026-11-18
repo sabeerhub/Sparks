@@ -77,7 +77,7 @@ export function TikTokProfileHeader({
       <div className="flex items-center justify-center gap-1.5">
         <h1
           className="font-bold"
-          style={{ color: "#1D1D1F", fontSize: 21, lineHeight: "26px", letterSpacing: "-0.01em" }}
+          style={{ color: "var(--color-black)", fontSize: 21, lineHeight: "26px", letterSpacing: "-0.01em" }}
         >
           {name || "—"}
         </h1>
@@ -104,7 +104,7 @@ export function TikTokProfileHeader({
             <div key={stat.label} className="flex items-baseline gap-1.5">
               <span
                 className="font-bold"
-                style={{ color: "#1D1D1F", fontSize: 16, lineHeight: "20px" }}
+                style={{ color: "var(--color-black)", fontSize: 16, lineHeight: "20px" }}
               >
                 {stat.value}
               </span>
@@ -123,7 +123,7 @@ export function TikTokProfileHeader({
       {bio && (
         <p
           className="mt-4 leading-relaxed"
-          style={{ color: "#1D1D1F", fontSize: 15, lineHeight: "21px" }}
+          style={{ color: "var(--color-black)", fontSize: 15, lineHeight: "21px" }}
         >
           {bio}
         </p>

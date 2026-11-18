@@ -171,8 +171,8 @@ export function MessageBubble({
             <div
               className="rounded-[24px] px-4 py-3"
               style={{
-                background: isMine ? "var(--color-blue)" : "rgba(255,255,255,0.75)",
-                border: isMine ? "none" : "1px solid rgba(255,255,255,0.7)",
+                background: isMine ? "var(--color-blue)" : "var(--color-bubble-theirs)",
+                border: isMine ? "none" : "1px solid var(--color-glass-edge)",
                 borderBottomRightRadius: isMine ? 4 : 24,
                 borderBottomLeftRadius: isMine ? 24 : 4,
               }}
@@ -220,11 +220,11 @@ export function MessageBubble({
             <button
               className="pressable text-body text-left w-full shadow-sm"
               style={{
-                background: isMine ? "var(--color-blue)" : "rgba(255,255,255,0.75)",
+                background: isMine ? "var(--color-blue)" : "var(--color-bubble-theirs)",
                 backdropFilter: isMine ? undefined : "blur(12px) saturate(160%)",
                 WebkitBackdropFilter: isMine ? undefined : "blur(12px) saturate(160%)",
-                border: isMine ? "none" : "1px solid rgba(255,255,255,0.7)",
-                boxShadow: isMine ? undefined : "inset 0 1px 0 rgba(255,255,255,0.7), 0 2px 8px rgba(29,29,31,0.05)",
+                border: isMine ? "none" : "1px solid var(--color-glass-edge)",
+                boxShadow: isMine ? undefined : "inset 0 1px 0 var(--color-glass-edge), 0 2px 8px rgba(29,29,31,0.05)",
                 color: isMine ? "#fff" : "var(--color-black)",
                 paddingLeft: "var(--bubble-pad-x)",
                 paddingRight: "var(--bubble-pad-x)",
@@ -279,10 +279,10 @@ export function MessageBubble({
                 aria-label={info.mine ? `Remove your ${emoji} reaction` : `React with ${emoji}`}
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-caption font-medium"
                 style={{
-                  background: info.mine ? "rgba(0,122,255,0.12)" : "rgba(255,255,255,0.75)",
+                  background: info.mine ? "rgba(0,122,255,0.12)" : "var(--color-bubble-theirs)",
                   border: info.mine
                     ? "1px solid rgba(0,122,255,0.35)"
-                    : "1px solid rgba(255,255,255,0.7)",
+                    : "1px solid var(--color-glass-edge)",
                   boxShadow: "0 1px 4px rgba(29,29,31,0.06)",
                   color: "var(--color-black)",
                 }}

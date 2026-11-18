@@ -6,10 +6,10 @@
   <a href="https://sparkes.vercel.app">sparkes.vercel.app</a>
 </p>
 
-A privacy-first messaging app. Light theme only, Apple-blue accent,
+A privacy-first messaging app. Light by default with opt-in Dark mode, Apple-blue accent,
 mobile-first. Next.js (App Router) + Supabase + WebRTC.
 
-> **Honest status (v1.6.1):** messages are **not** end-to-end encrypted
+> **Honest status (v1.7.0):** messages are **not** end-to-end encrypted
 > in V1 — they are plain text, protected by Supabase Auth + RLS + HTTPS +
 > encryption at rest. True E2E encryption is planned for a future version,
 > not built yet. See [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md).
@@ -183,7 +183,7 @@ it up as a dedicated `app/api/cron/cleanup/route.ts` using
 
   /types/index.ts          → Shared types, including the hand-written `Database` type
   /utils/helpers.ts         → Pure formatting/validation helpers
-  /styles/globals.css        → Design tokens, light-theme-only, no dark mode block
+  /styles/globals.css        → Design tokens, Light default + Dark opt-in (v1.7.0)
 ```
 
 ---
@@ -238,7 +238,6 @@ review before handling real users' real conversations.
 
 Per the product brief's explicit rules:
 - No AI features
-- No dark mode (not even a `prefers-color-scheme` media query)
 - No group chats (1:1 only, enforced by a DB trigger, not just UI)
 - No end-to-end encryption yet (see §0 and §6 — planned, not built)
 

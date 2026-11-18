@@ -71,7 +71,7 @@ export function SparkWordmark({ size = "medium", animate = false, className = ""
         <span
           aria-hidden="true"
           className={`font-script ${greatVibes.className} ${SIZE_CLASSES[size]}`}
-          style={{ color: "#1D1D1F" }}
+          style={{ color: "var(--color-black)" }}
         >
           {LETTERS.map((letter, i) =>
             playEntry ? (
