@@ -22,6 +22,17 @@ interface ChatStoreState {
   setChatList: (chats: ChatListItem[]) => void;
   upsertChatListItem: (item: ChatListItem) => void;
 
+  /**
+   * Pending thread search (v1.6.1) — transient only, never persisted.
+   * The Chats screen's unified search sets this before navigating to
+   * a thread, so the thread opens with its in-chat search already
+   * running for that text and jumps to the match. The thread consumes
+   * it on mount and clears it; any other navigation leaves it stale
+   * and the thread clears it without acting on it.
+   */
+  pendingThreadSearch: { chatId: string; query: string } | null;
+  setPendingThreadSearch: (pending: { chatId: string; query: string } | null) => void;
+
   unreadTotal: () => number;
 }
 
@@ -44,6 +55,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       next.splice(idx, 1);
       return { chatList: [item, ...next] };
     }),
+
+  pendingThreadSearch: null,
+  setPendingThreadSearch: (pending) => set({ pendingThreadSearch: pending }),
 
   unreadTotal: () => get().chatList.reduce((sum, c) => sum + c.unreadCount, 0),
 }));

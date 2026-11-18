@@ -244,7 +244,7 @@ export default function ActivityPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-6">
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-24">
           {loading && (
             <div className="glass-card rounded-[24px] overflow-hidden">
               <RowSkeleton /><RowSkeleton /><RowSkeleton />

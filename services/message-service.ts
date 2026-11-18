@@ -210,6 +210,60 @@ export async function editMessage(messageId: string, newPlaintext: string) {
   if (error) throw error;
 }
 
+/**
+ * Global message search (v1.6.1) — the Chats screen's one search.
+ * Same matching as the per-chat searchMessages (case-insensitive
+ * substring on `content`, media file names included because media
+ * rows store the file name in `content`), but across ALL of the
+ * caller's chats at once. RLS scopes it to chats the caller belongs
+ * to — no extra filtering is needed, and no other user's chats can
+ * leak in. Deleted messages never match. Returns at most 20 rows,
+ * newest first, so the results list stays short and fast. The
+ * caller shows "20+" honestly if the cap is hit — never a fake total.
+ */
+export interface GlobalMessageHit {
+  id: string;
+  chatId: string;
+  senderId: string;
+  text: string;
+  contentType: string;
+  createdAt: string;
+}
+
+export async function searchAllMessages(query: string): Promise<GlobalMessageHit[]> {
+  const q = query.trim();
+  if (!q) return [];
+
+  // Escape the LIKE wildcards so a query like "100%" matches literally.
+  const escaped = q.replace(/[%_\\]/g, (c) => `\\${c}`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from("messages") as any)
+    .select("id, chat_id, sender_id, content, content_type, created_at")
+    .is("deleted_at", null)
+    .ilike("content", `%${escaped}%`)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error) throw error;
+  if (!data?.length) return [];
+
+  return (data as Array<{
+    id: string;
+    chat_id: string;
+    sender_id: string;
+    content: string | null;
+    content_type: string;
+    created_at: string;
+  }>).map((row): GlobalMessageHit => ({
+    id: row.id,
+    chatId: row.chat_id,
+    senderId: row.sender_id,
+    text: row.content ?? "",
+    contentType: row.content_type,
+    createdAt: row.created_at,
+  }));
+}
+
 /** Soft-delete: wipes content, keeps the row as a tombstone for "message deleted" UI. */
 export async function deleteMessage(messageId: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -104,7 +104,7 @@ export default function HiddenChatsPage() {
   };
 
   const list = (
-    <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
+    <div className="flex-1 overflow-y-auto px-2 pt-2 pb-24 space-y-1">
       {loading && archived.length === 0 ? (
         <div className="flex items-center gap-3 px-4 py-3 animate-pulse">
           <div className="w-12 h-12 rounded-full flex-shrink-0" style={{ background: "var(--color-gray-3)" }} />
@@ -151,9 +151,11 @@ export default function HiddenChatsPage() {
               </div>
             </div>
             {list}
-            <BottomNav />
           </div>
         </ScreenContainer>
+        {/* v1.6.1: fixed nav — kept out of ScreenContainer's .glass
+            frame (see chats/page.tsx) so it pins to the viewport. */}
+        <BottomNav />
       </div>
 
       {/* Desktop: the hidden list fills the right panel. */}

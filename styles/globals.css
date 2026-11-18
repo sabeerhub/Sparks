@@ -371,6 +371,115 @@ html, body {
     0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+/* Dark liquid-glass bottom nav (v1.6.1) — the reference picture:
+   a near-black translucent bar, blur + saturate, a bright thin edge
+   on top so the bar reads as glass over whatever scrolls behind it.
+   Kept separate from .frosted-pill (light) on purpose: the nav is
+   dark while the rest of the app stays light.
+   v1.6.1 (always glass): real glass is only visible when there is
+   something to blur, and the chat list behind the pill is mostly flat
+   pale grey — so the pill carries its OWN faint aurora inside it
+   (deep blue-violet tints layered over the translucent dark fill) plus
+   a soft inner highlight along the bottom edge. The blur + saturate
+   are still real; the internal aurora just means the pill never reads
+   as a flat dark bar, whatever is behind it. */
+.nav-glass-dark {
+  background:
+    radial-gradient(120% 150% at 10% 0%, rgba(0, 122, 255, 0.30), transparent 55%),
+    radial-gradient(120% 150% at 90% 100%, rgba(147, 164, 255, 0.24), transparent 55%),
+    radial-gradient(90% 130% at 50% 130%, rgba(0, 122, 255, 0.16), transparent 60%),
+    rgba(18, 18, 22, 0.72);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+    0 12px 32px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Slow light sheen drifting across the whole nav pill (v1.6.1) —
+   one calm pass every 7s, parked off the pill the rest of the time,
+   so the nav feels alive and liquid, never flashy. The sheen layer
+   clips itself (its own rounded overflow-hidden box) so the active
+   bubble — which bulges outside the bar — is never cut off. */
+.nav-sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.nav-sheen::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.14), transparent);
+  transform: translateX(-120%) skewX(-12deg);
+  will-change: transform;
+  animation: nav-sheen-drift 7s ease-in-out infinite;
+}
+
+@keyframes nav-sheen-drift {
+  0%, 40% { transform: translateX(-120%) skewX(-12deg); }
+  65%, 100% { transform: translateX(280%) skewX(-12deg); }
+}
+
+/* The active tab's bubble (v1.6.1) — a bigger capsule than the bar,
+   lighter glass with a bright glowing edge, clearly lifted above the
+   bar. It is positioned -inset-y-4 on the tab button, so it bulges
+   above and below the bar exactly like the picture. The bubble glides
+   between tabs via the framer-motion layoutId on the element that
+   carries this class. It also breathes gently (glow only — never
+   transform, so it never fights the spring glide). */
+.nav-active-bubble {
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(160, 200, 255, 0.28), transparent 60%),
+    rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.35);
+  animation: nav-bubble-breathe 4s ease-in-out infinite;
+}
+
+@keyframes nav-bubble-breathe {
+  0%, 100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+      0 4px 16px rgba(0, 0, 0, 0.35);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.65),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+      0 4px 16px rgba(0, 0, 0, 0.35),
+      0 0 24px rgba(120, 170, 255, 0.35);
+  }
+}
+
+/* Reduced motion: the nav is static glass — no sheen drift, no
+   bubble breathing. The spring glide is already reduced-motion safe
+   via MotionConfig in BottomNav. */
+@media (prefers-reduced-motion: reduce) {
+  .nav-sheen::after {
+    animation: none;
+    display: none;
+  }
+  .nav-active-bubble {
+    animation: none;
+  }
+}
+
 /* Press state shared by everything tappable: shrink slightly + fade. */
 .pressable {
   transition: transform 0.15s ease, opacity 0.15s ease, background-color 0.15s ease;

@@ -61,7 +61,7 @@ export default function CallsPage() {
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-6 relative">
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-24 relative">
           {/* Light aurora behind the list (v1.6.0): the glass history card
               only reads as glass because real blue sits behind it. */}
           <div

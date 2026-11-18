@@ -116,7 +116,7 @@ export default function ProfilePage() {
         {loading || !profile ? (
           <ProfileSkeleton />
         ) : (
-          <div className="w-full max-w-[640px] mx-auto pb-8">
+          <div className="w-full max-w-[640px] mx-auto pb-24">
             <TikTokProfileHeader
               name={profile.full_name ?? "—"}
               username={profile.username}

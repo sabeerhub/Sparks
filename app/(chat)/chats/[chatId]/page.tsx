@@ -284,6 +284,22 @@ export default function ChatThreadPage() {
     setSearchIndex((i) => (i + dir + searchResults.length) % searchResults.length);
   };
 
+  // Deep link from the Chats screen's unified search (v1.6.1): if the
+  // user tapped a message result, the search arrives pre-filled and
+  // the thread jumps to the first match (the in-chat search effect
+  // above does the lookup + scroll). Consumed once, then cleared —
+  // a stale entry for another chat is cleared without acting on it.
+  useEffect(() => {
+    const pending = useChatStore.getState().pendingThreadSearch;
+    if (!pending) return;
+    useChatStore.getState().setPendingThreadSearch(null);
+    if (pending.chatId === chatId && pending.query.trim()) {
+      setSearchOpen(true);
+      setSearchQuery(pending.query);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatId]);
+
   useReceiptUpdates(chatId, async () => {
     if (!currentUserId) return;
     const myMessageIds = messages.filter((m) => m.sender_id === currentUserId).map((m) => m.id);
