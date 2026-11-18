@@ -120,3 +120,26 @@ export async function getRecentMediaThumbnails(limit = 4): Promise<{ id: string;
   if (error || !data) return [];
   return data.map((row: { id: string; media_path: string }) => ({ id: row.id, mediaPath: row.media_path }));
 }
+
+/**
+ * v1.8.0 — photos shared in ONE chat, either side. Used for a friend's
+ * profile Media tab: only media that actually exists in the chat with
+ * them, newest first. No sender filter (unlike getRecentMediaThumbnails,
+ * which is the current user's own sends) — a photo they sent you is
+ * shared media too. RLS already scopes messages to chats the caller
+ * is a member of; an empty chat simply returns an empty list.
+ */
+export async function getChatMedia(chatId: string, limit = 9): Promise<{ id: string; mediaPath: string }[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from("messages") as any)
+    .select("id, media_path")
+    .eq("chat_id", chatId)
+    .eq("content_type", "image")
+    .not("media_path", "is", null)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data.map((row: { id: string; media_path: string }) => ({ id: row.id, mediaPath: row.media_path }));
+}

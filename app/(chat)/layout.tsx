@@ -10,7 +10,7 @@ import { DesktopNavRail } from "@/components/layout/DesktopNavRail";
  */
 export default function ChatGroupLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="h-screen w-full flex">
+    <div className="app-shell w-full flex">
       <DesktopNavRail />
       <div className="flex-1 flex flex-col min-w-0">{children}</div>
     </div>

@@ -232,6 +232,49 @@ export async function unblockUser(blockedId: string) {
   if (error) throw error;
 }
 
+/**
+ * v1.8.0 — has the current user blocked this person? Used for the
+ * friend profile's Block row, so it shows the true state.
+ */
+export async function isUserBlocked(blockedId: string): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase.from("blocked_users") as any)
+    .select("blocked_id")
+    .eq("blocker_id", user.id)
+    .eq("blocked_id", blockedId)
+    .maybeSingle();
+  return !!data;
+}
+
+/**
+ * v1.8.0 — the existing 1-to-1 chat with someone, if there is one.
+ * Unlike startDirectChat this never creates a chat: viewing a profile
+ * must not silently open a conversation. Returns null when the two
+ * of you have never chatted.
+ */
+export async function findDirectChatId(otherUserId: string): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || user.id === otherUserId) return null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: theirChats } = await (supabase.from("chat_members") as any)
+    .select("chat_id")
+    .eq("user_id", otherUserId);
+  const ids = (theirChats ?? []).map((r: { chat_id: string }) => r.chat_id);
+  if (!ids.length) return null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: shared } = await (supabase.from("chat_members") as any)
+    .select("chat_id")
+    .eq("user_id", user.id)
+    .in("chat_id", ids)
+    .limit(1);
+  return (shared ?? [])[0]?.chat_id ?? null;
+}
+
 export async function searchUsers(query: string): Promise<Profile[]> {
   if (!query.trim()) return [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

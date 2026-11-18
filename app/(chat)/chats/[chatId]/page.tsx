@@ -4,9 +4,12 @@
  * care: real persisted reactions (they used to live only in memory and
  * vanish on reload), date separators, a premium empty state, reply
  * quotes that actually show, WhatsApp-style image navigation, and
- * auto-scroll that only follows when you are already near the bottom
- * (reading history never gets yanked away). Glass bubbles sit over a
- * soft tinted message area, so the frost is real, not white on white.
+ * v1.8.0 — the composer is stable now: the chat shell tracks the
+ * dynamic viewport (100dvh) so the keyboard no longer shoves the
+ * placeholder around, the keyboard resizes the viewport instead of
+ * overlaying it, auto-scroll is instant and only follows new messages
+ * (typing no longer yanks the list), and the composer pill re-measures
+ * after every text change.
  */
 "use client";
 
@@ -319,6 +322,11 @@ export default function ChatThreadPage() {
 
   // Auto-scroll follows new messages only when you are already near the
   // bottom — reading older history is never yanked away.
+  // v1.8.0: instant, not smooth, and only on new messages — the old
+  // smooth scroll also fired every time the typing indicator appeared
+  // or vanished, so the list drifted under the reader while the other
+  // person typed, and smooth scrolling fought the keyboard animation
+  // whenever a message landed while the composer was open.
   const handleScroll = () => {
     const el = scrollRef.current;
     if (!el) return;
@@ -331,9 +339,9 @@ export default function ChatThreadPage() {
     // Never yank the view while the user is jumping between search matches.
     if (searchOpen && searchQuery.trim()) return;
     if (nearBottomRef.current) {
-      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
     }
-  }, [messages, typingUserIds, searchOpen, searchQuery]);
+  }, [messages, searchOpen, searchQuery]);
 
   const isOtherTyping = otherUser ? typingUserIds.includes(otherUser.id) : false;
   const isSelfChat = otherUser && currentUserId ? otherUser.id === currentUserId : false;
@@ -450,7 +458,7 @@ export default function ChatThreadPage() {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 py-4"
+        className="flex-1 overflow-y-auto overscroll-contain px-4 py-4"
         style={{
           // A whisper of blue at the top of the message area, so the
           // glass bubbles and the frosted header blur something real

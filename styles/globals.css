@@ -121,6 +121,18 @@ html, body {
     var(--color-gray-2);
 }
 
+/* v1.8.0 — full-height app shell that tracks the DYNAMIC viewport.
+   Plain `h-screen` (100vh) is the large viewport: it does NOT shrink
+   when the phone keyboard opens, so the keyboard overlays the bottom
+   of the page and the browser shoves the focused input into view —
+   the composer and its placeholder visibly jump. 100dvh shrinks with
+   the keyboard, so the composer stays anchored above it. The 100vh
+   line is the fallback for browsers without dvh. */
+.app-shell {
+  height: 100vh;
+  height: 100dvh;
+}
+
 /* ─── v1.4.0 landing aurora, v1.4.1 STRONGER, v1.4.3 BEHIND THE CARDS ───
    The ONE allowed colour background: soft light blue-grey tones, never
    loud. Frosted glass can only be seen when there is something behind

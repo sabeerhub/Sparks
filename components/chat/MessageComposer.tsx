@@ -66,6 +66,15 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
     el.style.height = `${Math.min(el.scrollHeight, 132)}px`;
   };
 
+  // v1.8.0 — re-measure after every text change, not just keystrokes:
+  // picking an emoji and sending both change the text without a
+  // keystroke, and the old code left the pill at the previous height
+  // until the next typed character — the placeholder sat in a pill
+  // that was the wrong size.
+  useEffect(() => {
+    if (inputRef.current) autoGrow(inputRef.current);
+  }, [text]);
+
   const handleEmojiPick = (emoji: string) => {
     setText((t) => t + emoji);
     inputRef.current?.focus();
@@ -418,7 +427,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
         {text ? (
           <button
             onClick={handleSend}
-            className="w-11 h-11 rounded-full flex items-center justify-center mb-0.5 flex-shrink-0 active:scale-95 transition-transform duration-200"
+            className="w-11 h-11 rounded-full flex items-center justify-center mb-1.5 flex-shrink-0 active:scale-95 transition-transform duration-200"
             style={{ background: "var(--color-blue)" }}
             aria-label="Send"
           >

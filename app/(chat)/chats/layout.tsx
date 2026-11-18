@@ -12,7 +12,7 @@ import { DesktopSidebar } from "@/components/chat/DesktopSidebar";
  */
 export default function ChatsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="h-screen w-full flex">
+    <div className="app-shell w-full flex">
       <aside
         className="hidden md:flex md:flex-col md:w-[380px] lg:w-[400px] flex-shrink-0 border-r relative"
         style={{ borderColor: "var(--color-gray-2)" }}
