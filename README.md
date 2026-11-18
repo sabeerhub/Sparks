@@ -1,9 +1,15 @@
-# Sparks
+<p align="center">
+  <img src="public/wordmark-animated.svg" width="320" alt="Sparks">
+</p>
+
+<p align="center">
+  <a href="https://sparkes.vercel.app">sparkes.vercel.app</a>
+</p>
 
 A privacy-first messaging app. Light theme only, Apple-blue accent,
 mobile-first. Next.js (App Router) + Supabase + WebRTC.
 
-> **Honest status (v1.5.0):** messages are **not** end-to-end encrypted
+> **Honest status (v1.5.1):** messages are **not** end-to-end encrypted
 > in V1 — they are plain text, protected by Supabase Auth + RLS + HTTPS +
 > encryption at rest. True E2E encryption is planned for a future version,
 > not built yet. See [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md).

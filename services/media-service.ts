@@ -78,6 +78,7 @@ export async function sendMediaMessage({
     content_type: contentType,
     media_url: path,
     reply_to_id: replyToId,
+    is_forwarded: false,
     edited_at: null,
     deleted_at: null,
     created_at: new Date().toISOString(),

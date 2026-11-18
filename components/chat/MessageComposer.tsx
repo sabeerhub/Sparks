@@ -372,7 +372,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
         />
 
         <div
-          className="glass-input flex-1 flex items-end rounded-full px-4 py-2"
+          className="glass-input no-focus-ring flex-1 flex items-end rounded-full px-4 py-2"
         >
           <textarea
             ref={inputRef}
@@ -392,8 +392,18 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
             }}
             placeholder="Message..."
             aria-label="Message"
-            className="flex-1 outline-none text-body bg-transparent resize-none overflow-y-auto"
-            style={{ color: "var(--color-black)", maxHeight: 132, lineHeight: "24px" }}
+            className="composer-textarea flex-1 outline-none text-body bg-transparent resize-none overflow-y-auto"
+            style={{
+              color: "var(--color-black)",
+              maxHeight: 132,
+              lineHeight: "24px",
+              // Belt and braces with the globals.css input rule: no
+              // border, no outline, no shadow on the typing area itself
+              // — the text sits directly in the clean pill.
+              outline: "none",
+              border: "none",
+              boxShadow: "none",
+            }}
           />
           <button
             className="ml-2 w-11 h-11 -mr-2 flex items-center justify-center flex-shrink-0"

@@ -35,6 +35,24 @@ export async function markNotificationRead(id: string) {
   await (supabase.from("notifications") as any).update({ is_read: true }).eq("id", id);
 }
 
+/**
+ * Marks every notification about one chat as read for the current user.
+ * The thread calls this when it opens, so a notification only stays
+ * unread while you are NOT looking at that chat — the "not looking"
+ * rule is enforced here, in the client, because the database cannot
+ * know which screen you have open.
+ */
+export async function markChatNotificationsRead(chatId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase.from("notifications") as any)
+    .update({ is_read: true })
+    .eq("user_id", user.id)
+    .eq("related_chat_id", chatId)
+    .eq("is_read", false);
+}
+
 export async function markAllNotificationsRead() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase.from("notifications") as any).update({ is_read: true }).eq("is_read", false);

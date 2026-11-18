@@ -1,7 +1,7 @@
 # Sparks — Database Schema
 
 > Source of truth: `supabase/migrations/0001_init_schema.sql` through
-> `0006_align_v1_plaintext.sql`. Apply in order. This document mirrors those
+> `0007_chat_finishing.sql`. Apply in order. This document mirrors those
 > files; if they disagree, the migration files win.
 >
 > ✅ **Fixed by migration 0006** (`0006_align_v1_plaintext.sql`): the
@@ -14,6 +14,15 @@
 > notification trigger, and defines `get_storage_usage()`. There is no
 > known live Sparks Supabase project, so 0006 is written for a fresh
 > database only — no data backfill.
+>
+> ✅ **Added by migration 0007** (`0007_chat_finishing.sql`, v1.5.1 —
+> run it in the Supabase SQL Editor before the label and the
+> notifications work live): `messages.is_forwarded` for the
+> "Forwarded" label; a `notify_new_message` trigger that creates a
+> notification row for the other member on every message (skips muted
+> chats, blocked senders, and self-chats; body is a short preview
+> only); and an auto-unarchive trigger that brings an archived chat
+> back to the main list when a new message arrives.
 
 ## 1. Tables (0001–0006)
 
@@ -57,7 +66,7 @@ PK `(chat_id, user_id)`. Columns: `joined_at`, `is_pinned`,
 ### `blocked_users` (0001)
 Blocker → blocked user pairs. Blocked users cannot message you.
 
-### `messages` (0001, aligned by 0006)
+### `messages` (0001, aligned by 0006, extended by 0007)
 | Column | Notes |
 |---|---|
 | `id` uuid PK | |
@@ -68,6 +77,7 @@ Blocker → blocked user pairs. Blocked users cannot message you.
 | `content_type` text | `text` / `image` / `file` / `voice` |
 | `media_path` text, nullable | Supabase Storage object path |
 | `reply_to_id` → messages, nullable | on delete set null |
+| `is_forwarded` boolean, default false | **Added by 0007.** True when the message was forwarded from another chat — drives the "Forwarded" label. |
 | `edited_at`, `deleted_at` | soft delete → "This message was deleted" tombstone |
 | `created_at` | |
 

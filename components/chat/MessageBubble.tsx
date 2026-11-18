@@ -1,8 +1,10 @@
 /**
  * components/chat/MessageBubble.tsx
- * v1.5.0 — one message bubble: quote strip for replies (replies used to
- * send but never show), inline edit (no more window.prompt), reactions
- * as real glass pills (tap your own to remove it), generous spacing.
+ * v1.5.1 — forwarded messages show an honest "Forwarded" label (only
+ * when the row is actually flagged forwarded — see migration 0007), and
+ * in-thread search can highlight the query and ring the current match.
+ * Everything from v1.5.0 stays: quote strips, inline edit, real
+ * reaction pills, generous spacing.
  */
 "use client";
 
@@ -18,6 +20,36 @@ export interface ReplyQuote {
   text: string;
 }
 
+/** Renders `text` with every case-insensitive match of `query` tinted. */
+function HighlightedText({ text, query }: { text: string; query: string }) {
+  if (!query.trim()) return <>{text}</>;
+  const lower = text.toLowerCase();
+  const needle = query.trim().toLowerCase();
+  const parts: { text: string; match: boolean }[] = [];
+  let from = 0;
+  let at = lower.indexOf(needle, from);
+  while (at !== -1) {
+    if (at > from) parts.push({ text: text.slice(from, at), match: false });
+    parts.push({ text: text.slice(at, at + needle.length), match: true });
+    from = at + needle.length;
+    at = lower.indexOf(needle, from);
+  }
+  if (from < text.length) parts.push({ text: text.slice(from), match: false });
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.match ? (
+          <span key={i} style={{ background: "rgba(0,122,255,0.25)", borderRadius: 3, padding: "0 1px" }}>
+            {p.text}
+          </span>
+        ) : (
+          <span key={i}>{p.text}</span>
+        )
+      )}
+    </>
+  );
+}
+
 interface MessageBubbleProps {
   senderName: string;
   message: DecryptedMessage;
@@ -27,6 +59,7 @@ interface MessageBubbleProps {
   onReact: (emoji: string) => void;
   onRemoveReaction: () => void;
   onReply: () => void;
+  onForward: () => void;
   /** The message this one replies to, if any — shown as a quote strip. */
   replyTo?: ReplyQuote | null;
   /** All reactions on this message (persisted server-side). */
@@ -37,6 +70,10 @@ interface MessageBubbleProps {
   viewerImages?: ViewerImage[];
   /** This message's image position inside viewerImages. */
   viewerIndex?: number;
+  /** In-thread search: the query to highlight inside this bubble. */
+  highlight?: string;
+  /** In-thread search: true when this is the match the user is on. */
+  isSearchMatch?: boolean;
 }
 
 export function MessageBubble({
@@ -48,11 +85,14 @@ export function MessageBubble({
   onReact,
   onRemoveReaction,
   onReply,
+  onForward,
   replyTo,
   reactions = [],
   currentUserId,
   viewerImages,
   viewerIndex = 0,
+  highlight = "",
+  isSearchMatch = false,
 }: MessageBubbleProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -90,7 +130,25 @@ export function MessageBubble({
 
   return (
     <div className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2 relative`}>
-      <div className="max-w-[78%] sm:max-w-md">
+      <div
+        className="max-w-[78%] sm:max-w-md"
+        style={
+          isSearchMatch
+            ? { outline: "2px solid var(--color-blue)", outlineOffset: 4, borderRadius: 24 }
+            : undefined
+        }
+      >
+        {message.is_forwarded && (
+          <div className={`flex items-center gap-1 mb-1 px-1 ${isMine ? "justify-end" : "justify-start"}`}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-gray-1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 17 20 12 15 7" />
+              <path d="M4 18v-2a4 4 0 014-4h12" />
+            </svg>
+            <span className="text-caption italic" style={{ color: "var(--color-gray-1)" }}>
+              Forwarded
+            </span>
+          </div>
+        )}
         <div
           onContextMenu={(e) => {
             e.preventDefault();
@@ -179,28 +237,32 @@ export function MessageBubble({
               }}
             >
               {replyTo && (
-                <span
-                  className="block mb-1.5 pl-2.5 py-1 rounded-md text-left"
-                  style={{
-                    borderLeft: `2.5px solid ${isMine ? "rgba(255,255,255,0.7)" : "var(--color-blue)"}`,
-                    background: isMine ? "rgba(255,255,255,0.12)" : "rgba(0,122,255,0.06)",
-                  }}
-                >
+                <span className="flex gap-2 mb-1.5 py-0.5 text-left">
+                  {/* Straight edge, no curves: a thin bar on its own,
+                      not a border following a rounded corner — the old
+                      border-left + rounded-md drew a stray curved line
+                      on the left edge of the strip. */}
                   <span
-                    className="block text-caption font-semibold truncate"
-                    style={{ color: isMine ? "#fff" : "var(--color-blue)" }}
-                  >
-                    {replyTo.senderName}
-                  </span>
-                  <span
-                    className="block text-caption truncate"
-                    style={{ color: isMine ? "rgba(255,255,255,0.75)" : "var(--color-gray-1)" }}
-                  >
-                    {truncatePreview(replyTo.text, 60)}
+                    className="w-[2.5px] rounded-full flex-shrink-0 self-stretch"
+                    style={{ background: isMine ? "rgba(255,255,255,0.7)" : "var(--color-blue)" }}
+                  />
+                  <span className="min-w-0">
+                    <span
+                      className="block text-caption font-semibold truncate"
+                      style={{ color: isMine ? "#fff" : "var(--color-blue)" }}
+                    >
+                      {replyTo.senderName}
+                    </span>
+                    <span
+                      className="block text-caption truncate"
+                      style={{ color: isMine ? "rgba(255,255,255,0.75)" : "var(--color-gray-1)" }}
+                    >
+                      {truncatePreview(replyTo.text, 60)}
+                    </span>
                   </span>
                 </span>
               )}
-              {message.text}
+              {message.text ? <HighlightedText text={message.text} query={highlight} /> : message.text}
             </button>
           )}
         </div>
@@ -258,6 +320,10 @@ export function MessageBubble({
           }}
           onReply={() => {
             onReply();
+            setMenuOpen(false);
+          }}
+          onForward={() => {
+            onForward();
             setMenuOpen(false);
           }}
           onEdit={() => {

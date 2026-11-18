@@ -67,6 +67,8 @@ export interface EncryptedMessageRow {
   content_type: "text" | "image" | "file" | "voice";
   media_path: string | null;
   reply_to_id: string | null;
+  // v1.5.1: true when this message was forwarded from another chat.
+  is_forwarded: boolean;
   edited_at: string | null;
   deleted_at: string | null;
   created_at: string;
@@ -82,6 +84,10 @@ export interface DecryptedMessage {
   content_type: "text" | "image" | "file" | "voice";
   media_url?: string;
   reply_to_id: string | null;
+  // v1.5.1: true when this message was forwarded from another chat.
+  // Mapped with `?? false` at every read site, so rows written before
+  // migration 0007 (or a cache from an older build) simply show no label.
+  is_forwarded: boolean;
   edited_at: string | null;
   deleted_at: string | null;
   created_at: string;

@@ -12,6 +12,7 @@
 import { createClient } from "@/lib/supabase";
 import { canSendMessage, msUntilNextMessageSlot, RateLimitError } from "@/lib/rateLimit";
 import { chatCache } from "@/lib/storage";
+import { sendMediaMessage, getMediaUrl } from "@/services/media-service";
 import type { DecryptedMessage, QueuedMessage, MessageReaction } from "@/types";
 
 const supabase = createClient();
@@ -56,6 +57,7 @@ export async function sendMessage({
     text: plaintext,
     content_type: "text",
     reply_to_id: replyToId,
+    is_forwarded: false,
     edited_at: null,
     deleted_at: null,
     created_at: new Date().toISOString(),
@@ -77,6 +79,7 @@ export async function sendMessageOptimistic(params: SendParams & { clientId: str
     text: params.plaintext,
     content_type: "text",
     reply_to_id: params.replyToId ?? null,
+    is_forwarded: false,
     edited_at: null,
     deleted_at: null,
     created_at: new Date().toISOString(),
@@ -136,6 +139,7 @@ export async function fetchMessages(
       content_type: row.content_type,
       media_url: row.media_path ?? undefined,
       reply_to_id: row.reply_to_id,
+      is_forwarded: row.is_forwarded ?? false,
       edited_at: row.edited_at,
       deleted_at: row.deleted_at,
       created_at: row.created_at,
@@ -144,6 +148,57 @@ export async function fetchMessages(
   );
 
   return messages.reverse(); // oldest first for rendering top-to-bottom
+}
+
+/**
+ * Server-side search inside one chat: matches message text (and media
+ * file names — media rows store the file name in `content`) with a
+ * case-insensitive substring match, across the chat's whole history
+ * (RLS scopes it to chats the caller belongs to). Deleted messages
+ * never match. Returns at most 100 rows, oldest first, so the thread
+ * can render them in order with day separators. The caller says
+ * "first 100 matches" when the cap is hit — never a fake total.
+ */
+export async function searchMessages(
+  chatId: string,
+  query: string
+): Promise<DecryptedMessage[]> {
+  const q = query.trim();
+  if (!q) return [];
+
+  // Escape the LIKE wildcards so a query like "100%" matches literally.
+  const escaped = q.replace(/[%_\\]/g, (c) => `\\${c}`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from("messages") as any)
+    .select("*")
+    .eq("chat_id", chatId)
+    .is("deleted_at", null)
+    .ilike("content", `%${escaped}%`)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) throw error;
+  if (!data?.length) return [];
+
+  const messages: DecryptedMessage[] = data.map(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (row: any): DecryptedMessage => ({
+      id: row.id,
+      chat_id: row.chat_id,
+      sender_id: row.sender_id,
+      text: row.content ?? "",
+      content_type: row.content_type,
+      media_url: row.media_path ?? undefined,
+      reply_to_id: row.reply_to_id,
+      is_forwarded: row.is_forwarded ?? false,
+      edited_at: row.edited_at,
+      deleted_at: row.deleted_at,
+      created_at: row.created_at,
+      status: "sent",
+    })
+  );
+
+  return messages.reverse(); // oldest first
 }
 
 export async function editMessage(messageId: string, newPlaintext: string) {
@@ -162,6 +217,82 @@ export async function deleteMessage(messageId: string) {
     .update({ content: "", deleted_at: new Date().toISOString() })
     .eq("id", messageId);
   if (error) throw error;
+}
+
+/**
+ * Marks a message I sent as forwarded. Returns true only when the flag
+ * actually stuck. It returns false (never throws) when the column does
+ * not exist yet — migration 0007 has not been run on the live project —
+ * so forwarding still delivers the message, just without the label
+ * until the migration lands. The caller reports the label from the
+ * return value, never by guessing.
+ */
+export async function markForwarded(messageId: string): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from("messages") as any)
+    .update({ is_forwarded: true })
+    .eq("id", messageId)
+    .eq("sender_id", user.id);
+  return !error;
+}
+
+/** Best-effort MIME guess from a file name, for re-sending a forwarded file. */
+function mimeFromFileName(fileName: string, contentType: DecryptedMessage["content_type"]): string {
+  if (contentType === "voice") return "audio/webm";
+  const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+  const byExt: Record<string, string> = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    gif: "image/gif",
+    heic: "image/heic",
+    pdf: "application/pdf",
+    doc: "application/msword",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    txt: "text/plain",
+    csv: "text/csv",
+    zip: "application/zip",
+  };
+  return byExt[ext] ?? "application/octet-stream";
+}
+
+/**
+ * Forwards a message to another chat, for real. Text is re-sent through
+ * the normal send path; media is downloaded from its signed URL and
+ * re-uploaded into the target chat's Storage folder — a forward by
+ * reference would not work, because Storage RLS only lets a chat's
+ * members read objects under that chat's folder, and the target chat's
+ * members are not members of the source chat. The new row is marked
+ * forwarded (see markForwarded) so it shows a "Forwarded" label.
+ * Throws on send failure so the caller can report which chat failed.
+ */
+export async function forwardMessage(
+  source: DecryptedMessage,
+  targetChatId: string
+): Promise<DecryptedMessage> {
+  let sent: DecryptedMessage;
+
+  if (source.content_type === "text" || !source.media_url) {
+    sent = await sendMessage({ chatId: targetChatId, plaintext: source.text });
+  } else {
+    const url = await getMediaUrl(source.media_url);
+    if (!url) throw new Error("Couldn't load the file to forward it.");
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Couldn't load the file to forward it.");
+    const blob = await res.blob();
+    sent = await sendMediaMessage({
+      chatId: targetChatId,
+      file: blob,
+      fileName: source.text || "File",
+      mimeType: mimeFromFileName(source.text || "", source.content_type),
+    });
+  }
+
+  const labelled = await markForwarded(sent.id);
+  return { ...sent, is_forwarded: labelled };
 }
 
 export async function reactToMessage(messageId: string, emoji: string) {

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 110" width="320" height="135" role="img" aria-label="Sparks">
+  <title>Sparks</title>
+  <style>
+    .s-ink { fill: #1D1D1F; }
+    @media (prefers-color-scheme: dark) {
+      /* GitHub renders READMEs in dark mode too; the app itself stays
+         light-only — this only keeps the wordmark legible here. */
+      .s-ink { fill: #ffffff; }
+    }
+  </style>
+  <!-- Animated Sparks lockup: the same calligraphic wordmark + plain blue
+       dot as the app (components/brand/SparkWordmark.tsx, v1.4.0).
+       Ink #1D1D1F, one blue #007AFF, no gradients on the word, no bolt.
+       SMIL animation, mirroring the app's timings: the word writes
+       itself in left-to-right at FULL opacity (a wipe, never a faint
+       grey fade), the blue dot pops in after the last letter lands,
+       then a gentle infinite shimmer passes over the word every 8s.
+       The shimmer is a soft white band clipped to the word shape —
+       it only ADDS light (max 35% white), the letters never go pale.
+       Every element's base attribute is its FINAL state, so the lockup
+       is correct even where SMIL is ignored.
+       Honest limit: GitHub's renderer does not have the Great Vibes
+       webfont, so it falls back to the system's script font — the same
+       word in calligraphy, not the exact Great Vibes glyphs. -->
+  <defs>
+    <linearGradient id="s-shine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="s-wipe">
+      <rect x="8" y="0" width="220" height="110">
+        <animate attributeName="width" from="0" to="220" dur="0.95s" begin="0s" fill="freeze"/>
+      </rect>
+    </clipPath>
+    <clipPath id="s-shape">
+      <text x="8" y="80" font-family="'Great Vibes', 'Snell Roundhand', 'Brush Script MT', 'Segoe Script', cursive" font-size="64" textLength="220" lengthAdjust="spacingAndGlyphs">Sparks</text>
+    </clipPath>
+  </defs>
+  <!-- The word, solid ink, revealed by a left-to-right wipe. -->
+  <text class="s-ink" x="8" y="80" font-family="'Great Vibes', 'Snell Roundhand', 'Brush Script MT', 'Segoe Script', cursive" font-size="64" textLength="220" lengthAdjust="spacingAndGlyphs" clip-path="url(#s-wipe)">Sparks</text>
+  <!-- The plain blue dot: pops in after the word lands (~0.95s), then
+       breathes gently on the same 8s rhythm as the shimmer. -->
+  <circle cx="240" cy="76" r="4.5" fill="#007AFF">
+    <animate attributeName="r" values="0;5.2;4.5" keyTimes="0;0.7;1" dur="0.35s" begin="0.95s" fill="freeze"/>
+    <animate attributeName="r" values="4.5;5.2;4.5" keyTimes="0;0.5;1" dur="8s" begin="1.3s" repeatCount="indefinite"/>
+  </circle>
+  <!-- Additive shine: parked off-word, one gentle sweep every 8s.
+       Waits 1.6s so it never runs over the write-in. -->
+  <g clip-path="url(#s-shape)">
+    <rect x="-100" y="0" width="84" height="110" fill="url(#s-shine)">
+      <animate attributeName="x" values="-100;-100;340;340" keyTimes="0;0.52;0.8;1" dur="8s" begin="1.6s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+</svg>

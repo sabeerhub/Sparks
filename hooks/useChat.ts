@@ -93,6 +93,7 @@ export function useChat(chatId: string) {
         content_type: row.content_type as DecryptedMessage["content_type"],
         media_url: (row.media_path as string) ?? undefined,
         reply_to_id: row.reply_to_id as string | null,
+        is_forwarded: (row.is_forwarded as boolean) ?? false,
         edited_at: row.edited_at as string | null,
         deleted_at: row.deleted_at as string | null,
         created_at: row.created_at as string,

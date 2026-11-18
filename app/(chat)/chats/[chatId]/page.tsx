@@ -12,16 +12,20 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Phone, Video } from "lucide-react";
+import { ArrowLeft, Phone, Video, Search as SearchIcon, ChevronUp, ChevronDown, X } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { Avatar } from "@/components/ui/Avatar";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { MessageComposer } from "@/components/chat/MessageComposer";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
+import { ForwardSheet } from "@/components/chat/ForwardSheet";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useChat } from "@/hooks/useChat";
 import { usePresence, useProfilePresence, useReceiptUpdates } from "@/hooks/useRealtime";
-import { markRead, reactToMessage, removeReaction, fetchReactions } from "@/services/message-service";
+import { markRead, reactToMessage, removeReaction, fetchReactions, searchMessages } from "@/services/message-service";
+import { markChatNotificationsRead } from "@/services/notification-service";
+import { setChatArchived } from "@/services/chat-service";
+import { useChatStore } from "@/store/chat-store";
 import { createClient } from "@/lib/supabase";
 import { formatLastSeen, formatDayLabel, formatMessageTime, truncatePreview } from "@/utils/helpers";
 import { useCallActions } from "@/components/call/CallProvider";
@@ -72,8 +76,20 @@ export default function ChatThreadPage() {
   const [reactions, setReactions] = useState<Record<string, MessageReaction[]>>({});
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [messageStatuses, setMessageStatuses] = useState<Record<string, DecryptedMessage["status"]>>({});
+  // In-thread search (v1.5.1): server-side, whole history — see
+  // services/message-service.ts searchMessages. While a query is typed
+  // the list below shows only the matches, oldest first.
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<DecryptedMessage[]>([]);
+  const [searchIndex, setSearchIndex] = useState(0);
+  const [searchBusy, setSearchBusy] = useState(false);
+  const [searchCapped, setSearchCapped] = useState(false);
+  // Forward (v1.5.1): the message the ForwardSheet is sending on.
+  const [forwardTarget, setForwardTarget] = useState<DecryptedMessage | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const nearBottomRef = useRef(true);
+  const messageRefs = useRef(new Map<string, HTMLDivElement>());
 
   useEffect(() => {
     (async () => {
@@ -205,6 +221,69 @@ export default function ChatThreadPage() {
 
   useEffect(() => { markMessagesRead(); }, [markMessagesRead]);
 
+  // Opening this chat clears its notifications: a notification only
+  // stays unread while you are NOT looking at the chat. (The trigger
+  // in migration 0007 creates them; this is the other half.)
+  useEffect(() => {
+    markChatNotificationsRead(chatId).catch(() => {});
+  }, [chatId]);
+
+  // In-thread search: debounced server-side lookup. Empty query shows
+  // the normal thread again; a query switches the list to the matches.
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!searchOpen || !q) {
+      setSearchResults([]);
+      setSearchIndex(0);
+      setSearchBusy(false);
+      setSearchCapped(false);
+      return;
+    }
+    setSearchBusy(true);
+    const timer = setTimeout(() => {
+      searchMessages(chatId, q)
+        .then((rows) => {
+          setSearchResults(rows);
+          setSearchCapped(rows.length >= 100);
+          setSearchIndex(0);
+        })
+        .catch(() => setSearchResults([]))
+        .finally(() => setSearchBusy(false));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, searchOpen, chatId]);
+
+  // Jump to the current match when it changes (or when results land).
+  useEffect(() => {
+    if (!searchOpen || !searchQuery.trim() || !searchResults.length) return;
+    const id = searchResults[Math.min(searchIndex, searchResults.length - 1)]?.id;
+    if (!id) return;
+    messageRefs.current.get(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [searchIndex, searchResults, searchOpen, searchQuery]);
+
+  // Escape closes search and returns to the normal thread.
+  useEffect(() => {
+    if (!searchOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSearchOpen(false);
+        setSearchQuery("");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [searchOpen]);
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setSearchQuery("");
+  };
+
+  const stepSearch = (dir: 1 | -1) => {
+    if (!searchResults.length) return;
+    setSearchIndex((i) => (i + dir + searchResults.length) % searchResults.length);
+  };
+
   useReceiptUpdates(chatId, async () => {
     if (!currentUserId) return;
     const myMessageIds = messages.filter((m) => m.sender_id === currentUserId).map((m) => m.id);
@@ -233,16 +312,22 @@ export default function ChatThreadPage() {
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+    // Never yank the view while the user is jumping between search matches.
+    if (searchOpen && searchQuery.trim()) return;
     if (nearBottomRef.current) {
       el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     }
-  }, [messages, typingUserIds]);
+  }, [messages, typingUserIds, searchOpen, searchQuery]);
 
   const isOtherTyping = otherUser ? typingUserIds.includes(otherUser.id) : false;
   const isSelfChat = otherUser && currentUserId ? otherUser.id === currentUserId : false;
 
-  const messageById = new Map(messages.map((m) => [m.id, m]));
+  const messageById = new Map([...messages, ...searchResults].map((m) => [m.id, m]));
   const replyMessage = replyTo ? messageById.get(replyTo) ?? null : null;
+
+  // While a query is typed, the list shows only the server-side matches.
+  const isSearching = searchOpen && searchQuery.trim().length > 0;
+  const visibleMessages = isSearching ? searchResults : messages;
 
   // Every image in this chat, in order, for prev/next in the viewer.
   const viewerImages: ViewerImage[] = messages
@@ -306,12 +391,46 @@ export default function ChatThreadPage() {
         </div>
         {!isSelfChat && (
           <div className="flex items-center gap-1 flex-shrink-0">
+            <button aria-label="Search in this chat" onClick={() => setSearchOpen((s) => !s)} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-white/60 active:scale-95 transition-all duration-200">
+              <SearchIcon size={19} color={searchOpen ? "var(--color-blue)" : "var(--color-gray-1)"} strokeWidth={1.8} />
+            </button>
             <button aria-label="Voice call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "voice")} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-white/60 active:scale-95 transition-all duration-200"><Phone size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
             <button aria-label="Video call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "video")} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-white/60 active:scale-95 transition-all duration-200"><Video size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
           </div>
         )}
 
       </div>
+      {searchOpen && (
+        <div className="glass px-4 py-2 flex items-center gap-2 border-b flex-shrink-0" style={{ borderColor: "rgba(255,255,255,0.6)" }}>
+          <SearchIcon size={16} color="var(--color-gray-1)" strokeWidth={1.8} className="flex-shrink-0" />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search in this chat"
+            autoFocus
+            aria-label="Search in this chat"
+            className="flex-1 min-w-0 outline-none text-body bg-transparent"
+          />
+          {searchBusy ? (
+            <span className="text-caption flex-shrink-0" style={{ color: "var(--color-gray-1)" }}>Searching…</span>
+          ) : searchQuery.trim() ? (
+            <span className="text-caption font-medium flex-shrink-0" style={{ color: "var(--color-gray-1)" }}>
+              {searchResults.length === 0
+                ? "No results"
+                : `${searchIndex + 1} of ${searchResults.length}${searchCapped ? "+" : ""}`}
+            </span>
+          ) : null}
+          <button onClick={() => stepSearch(-1)} disabled={!searchResults.length} aria-label="Previous match" className="w-9 h-9 rounded-full flex items-center justify-center active:bg-white/60 disabled:opacity-30">
+            <ChevronUp size={18} color="var(--color-gray-1)" strokeWidth={2} />
+          </button>
+          <button onClick={() => stepSearch(1)} disabled={!searchResults.length} aria-label="Next match" className="w-9 h-9 rounded-full flex items-center justify-center active:bg-white/60 disabled:opacity-30">
+            <ChevronDown size={18} color="var(--color-gray-1)" strokeWidth={2} />
+          </button>
+          <button onClick={closeSearch} aria-label="Close search" className="w-9 h-9 rounded-full flex items-center justify-center active:bg-white/60">
+            <X size={18} color="var(--color-gray-1)" strokeWidth={2} />
+          </button>
+        </div>
+      )}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
@@ -324,25 +443,37 @@ export default function ChatThreadPage() {
             "radial-gradient(70% 26% at 50% 0%, rgba(0,122,255,0.05), transparent 70%)",
         }}
       >
-        {loading && messages.length === 0 ? (
+        {loading && messages.length === 0 && !isSearching ? (
           <MessageSkeleton />
-        ) : messages.length === 0 ? (
+        ) : !isSearching && messages.length === 0 ? (
           <EmptyState
             wordmark
             title="No messages yet"
             subtitle={`Send the first message to ${isSelfChat ? "yourself" : otherUser.full_name.split(" ")[0]}`}
           />
+        ) : isSearching && !searchBusy && searchResults.length === 0 ? (
+          <EmptyState
+            title="No messages found"
+            subtitle={`Nothing in this chat matches "${searchQuery.trim()}"`}
+          />
         ) : (
-          messages.map((m, i) => {
+          visibleMessages.map((m, i) => {
             const isMine = m.sender_id === currentUserId;
             const effectiveStatus = isMine && messageStatuses[m.id]
               ? messageStatuses[m.id]
               : m.status;
-            const prev = messages[i - 1];
+            const prev = visibleMessages[i - 1];
             const showDay = !prev || new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
             const replied = m.reply_to_id ? messageById.get(m.reply_to_id) ?? null : null;
+            const matchPosition = isSearching ? searchResults.findIndex((r) => r.id === m.id) : -1;
             return (
-              <div key={m.id}>
+              <div
+                key={m.id}
+                ref={(el) => {
+                  if (el) messageRefs.current.set(m.id, el);
+                  else messageRefs.current.delete(m.id);
+                }}
+              >
                 {showDay && <DaySeparator label={formatDayLabel(m.created_at)} />}
                 <MessageBubble
                   message={{ ...m, status: effectiveStatus ?? m.status }}
@@ -355,6 +486,9 @@ export default function ChatThreadPage() {
                   onReact={(emoji) => handleReact(m.id, emoji)}
                   onRemoveReaction={() => handleRemoveReaction(m.id)}
                   onReply={() => setReplyTo(m.id)}
+                  onForward={() => setForwardTarget(m)}
+                  highlight={isSearching ? searchQuery.trim() : ""}
+                  isSearchMatch={isSearching && matchPosition === searchIndex}
                   replyTo={
                     replied
                       ? {
@@ -392,9 +526,30 @@ export default function ChatThreadPage() {
 
       <MessageComposer
         chatId={chatId}
-        onSend={(text) => { send(text, replyTo); setReplyTo(null); }}
+        onSend={(text) => {
+          send(text, replyTo);
+          setReplyTo(null);
+          // Sending in a hidden chat brings it back to the main list
+          // (WhatsApp behaviour). The server trigger in migration 0007
+          // does this for the other side too; this covers our side
+          // before that migration is run on the live project.
+          if (currentUserId) {
+            const item = useChatStore.getState().chatList.find((c) => c.chatId === chatId);
+            if (item?.isArchived) {
+              setChatArchived(chatId, currentUserId, false).catch(() => {});
+              const store = useChatStore.getState();
+              store.setChatList(
+                store.chatList.map((c) => (c.chatId === chatId ? { ...c, isArchived: false } : c))
+              );
+            }
+          }
+        }}
         onTyping={notifyTyping}
       />
+
+      {forwardTarget && (
+        <ForwardSheet message={forwardTarget} onClose={() => setForwardTarget(null)} />
+      )}
     </div>
   );
 }

@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Search, Bell, Plus } from "lucide-react";
+import { Search, Bell, Plus, Archive, ChevronRight } from "lucide-react";
 import { ChatListItem } from "@/components/chat/ChatListItem";
 import { ChatActionSheet } from "@/components/chat/ChatActionSheet";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SparkWordmark } from "@/components/brand/SparkWordmark";
 import { useChatStore } from "@/store/chat-store";
-import { fetchChatList, setChatPinned, setChatMuted, markChatRead, deleteChatForSelf, blockUser } from "@/services/chat-service";
+import { fetchChatList, setChatPinned, setChatMuted, setChatArchived, markChatRead, deleteChatForSelf, blockUser } from "@/services/chat-service";
 import { getUnreadCount } from "@/services/notification-service";
 import { createClient } from "@/lib/supabase";
 import { chatCache } from "@/lib/storage";
@@ -60,10 +60,13 @@ export function DesktopSidebar() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  const filtered = chatList.filter((c) =>
-    c.otherUser.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    c.otherUser.username?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = chatList
+    .filter((c) => !c.isArchived)
+    .filter((c) =>
+      c.otherUser.full_name.toLowerCase().includes(search.toLowerCase()) ||
+      c.otherUser.username?.toLowerCase().includes(search.toLowerCase())
+    );
+  const archivedCount = chatList.filter((c) => c.isArchived).length;
 
   const activeChat = chatList.find((c) => c.chatId === activeChatId) ?? null;
 
@@ -91,6 +94,12 @@ export function DesktopSidebar() {
     if (!activeChat || !userId) return;
     updateLocal(activeChat.chatId, { unreadCount: 0 });
     await markChatRead(activeChat.chatId, userId).catch(() => {});
+  };
+  const handleToggleArchive = async () => {
+    if (!activeChat || !userId) return;
+    const next = !activeChat.isArchived;
+    updateLocal(activeChat.chatId, { isArchived: next });
+    await setChatArchived(activeChat.chatId, userId, next).catch(() => {});
   };
   const handleDelete = async () => {
     if (!activeChat || !userId) return;
@@ -139,6 +148,34 @@ export function DesktopSidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
+        {archivedCount > 0 && !search && (
+          <button
+            onClick={() => router.push("/chats/hidden")}
+            className="w-full flex items-center gap-3.5 px-4 py-4 min-h-[76px] text-left rounded-2xl active:bg-white/50 transition-colors"
+          >
+            <span
+              className="w-[52px] h-[52px] rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: "rgba(0,122,255,0.1)" }}
+            >
+              <Archive size={22} color="var(--color-blue)" strokeWidth={1.8} />
+            </span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-body font-semibold truncate" style={{ color: "var(--color-black)" }}>
+                Hidden
+              </span>
+              <span className="block text-caption truncate" style={{ color: "var(--color-gray-1)" }}>
+                {archivedCount} {archivedCount === 1 ? "chat" : "chats"}
+              </span>
+            </span>
+            <span
+              className="min-w-6 h-6 px-1.5 rounded-full flex items-center justify-center text-caption font-bold text-white flex-shrink-0"
+              style={{ background: "var(--color-blue)" }}
+            >
+              {archivedCount}
+            </span>
+            <ChevronRight size={18} color="var(--color-gray-1)" strokeWidth={2} />
+          </button>
+        )}
         {filtered.length === 0 ? (
           <EmptyState
             wordmark={!search}
@@ -166,9 +203,11 @@ export function DesktopSidebar() {
         chatName={activeChat?.otherUser.full_name ?? ""}
         isPinned={activeChat?.isPinned ?? false}
         isMuted={activeChat?.isMuted ?? false}
+        isArchived={activeChat?.isArchived ?? false}
         onTogglePin={handleTogglePin}
         onToggleMute={handleToggleMute}
         onMarkRead={handleMarkRead}
+        onToggleArchive={handleToggleArchive}
         onDelete={handleDelete}
         onBlock={handleBlock}
       />

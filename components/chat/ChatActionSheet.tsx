@@ -1,13 +1,18 @@
 /**
  * components/chat/ChatActionSheet.tsx
- * v1.5.0 — Delete and Block now confirm inside this sheet, in plain
- * words, instead of the browser's ugly window.confirm box. The sheet
- * stays calm: tap Delete → confirm step → tap Delete again to confirm.
+ * v1.5.1 — Hide is a real row now: it calls setChatArchived through
+ * the list's handler, and hidden chats live in the Hidden view
+ * instead of the main list. (The feature is called "Hidden" in the
+ * UI on purpose — not "Archive", which is WhatsApp's word. The
+ * database column and service function keep their archived names;
+ * renaming those is risky and pointless.) Delete and Block still
+ * confirm inside this sheet, in plain words, instead of the browser's
+ * ugly window.confirm.
  */
 "use client";
 
 import { useState } from "react";
-import { Pin, PinOff, Bell, BellOff, CheckCheck, Ban, Trash2 } from "lucide-react";
+import { Pin, PinOff, Bell, BellOff, CheckCheck, Ban, Trash2, Archive, ArchiveRestore } from "lucide-react";
 
 interface ChatActionSheetProps {
   open: boolean;
@@ -16,9 +21,11 @@ interface ChatActionSheetProps {
   chatName: string;
   isPinned: boolean;
   isMuted: boolean;
+  isArchived: boolean;
   onTogglePin: () => void;
   onToggleMute: () => void;
   onMarkRead: () => void;
+  onToggleArchive: () => void;
   onDelete: () => void;
   onBlock: () => void;
 }
@@ -29,9 +36,11 @@ export function ChatActionSheet({
   chatName,
   isPinned,
   isMuted,
+  isArchived,
   onTogglePin,
   onToggleMute,
   onMarkRead,
+  onToggleArchive,
   onDelete,
   onBlock,
 }: ChatActionSheetProps) {
@@ -99,7 +108,8 @@ export function ChatActionSheet({
             <div className="glass rounded-2xl overflow-hidden">
               <ActionRow icon={isPinned ? PinOff : Pin} label={isPinned ? "Unpin Chat" : "Pin Chat"} onClick={wrap(onTogglePin)} />
               <ActionRow icon={isMuted ? Bell : BellOff} label={isMuted ? "Unmute" : "Mute"} onClick={wrap(onToggleMute)} />
-              <ActionRow icon={CheckCheck} label="Mark as Read" onClick={wrap(onMarkRead)} last />
+              <ActionRow icon={CheckCheck} label="Mark as Read" onClick={wrap(onMarkRead)} />
+              <ActionRow icon={isArchived ? ArchiveRestore : Archive} label={isArchived ? "Unhide Chat" : "Hide Chat"} onClick={wrap(onToggleArchive)} last />
             </div>
 
             <div className="glass rounded-2xl overflow-hidden mt-3">
