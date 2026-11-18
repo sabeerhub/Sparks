@@ -40,6 +40,8 @@ export interface SignUpInput {
   username: string;
   email: string;
   password: string;
+  /** v1.12.0 — ISO date (YYYY-MM-DD) from the signup DOB step. Stored in profiles.date_of_birth (migration 0008). */
+  dateOfBirth: string;
 }
 
 export interface SignUpResult {
@@ -78,6 +80,11 @@ export async function signUp(input: SignUpInput): Promise<SignUpResult> {
     full_name: input.fullName.trim(),
     bio: null,
     avatar_url: null,
+    // v1.12.0 — date of birth from the signup flow (migration 0008).
+    // Same insert as everything else: if this column does not exist yet
+    // (migration not run), the insert fails visibly and signup stops —
+    // the DOB is never silently dropped. Run 0008 before going live.
+    date_of_birth: input.dateOfBirth,
     public_key: JSON.stringify(publicJwk),
   });
 

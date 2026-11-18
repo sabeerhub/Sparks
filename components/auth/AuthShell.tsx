@@ -13,11 +13,15 @@
  * wordmark, titles, subtitles and spring entrance are unchanged.
  * Dark mode follows the tokens: surface becomes #1C1C1E, hairline
  * becomes the white hairline — nothing is hardcoded light.
+ * v1.12.0 — step-flow chrome for the signup flow: an optional back
+ * arrow (top-left) and a dots row (current step is a long blue pill,
+ * the rest are small grey dots), shown with the "Step X of Y" label.
  */
 "use client";
 
 import type { ReactNode } from "react";
 import { motion, MotionConfig } from "framer-motion";
+import { ChevronLeft } from "lucide-react";
 import { SparkWordmark } from "@/components/brand/SparkWordmark";
 
 interface AuthShellProps {
@@ -27,9 +31,13 @@ interface AuthShellProps {
   footer?: ReactNode;
   /** Small progress cue above the title, e.g. "Step 3 of 3" (onboarding). */
   stepLabel?: string;
+  /** v1.12.0 — dots for a multi-step flow, e.g. { current: 2, total: 5 }. */
+  stepDots?: { current: number; total: number };
+  /** v1.12.0 — back arrow (top-left of the card) for a multi-step flow. */
+  onBack?: () => void;
 }
 
-export function AuthShell({ title, subtitle, children, footer, stepLabel }: AuthShellProps) {
+export function AuthShell({ title, subtitle, children, footer, stepLabel, stepDots, onBack }: AuthShellProps) {
   return (
     <MotionConfig reducedMotion="user">
       <div className="app-surface min-h-screen flex items-center justify-center px-4 py-8">
@@ -47,6 +55,45 @@ export function AuthShell({ title, subtitle, children, footer, stepLabel }: Auth
             className="rounded-2xl px-6 py-10"
             style={{ background: "var(--color-surface)", border: "1px solid var(--hairline)", boxShadow: "var(--shadow-sm)" }}
           >
+            {/* v1.12.0 — step-flow chrome: back arrow on the left, dots
+                centred. The dots row and the "Step X of Y" text below it
+                are both shown, per the owner's brief. */}
+            {(onBack || stepDots) && (
+              <div className="flex items-center mb-4">
+                {onBack ? (
+                  <button
+                    type="button"
+                    onClick={onBack}
+                    aria-label="Back"
+                    className="pressable -ml-2 p-2 rounded-full"
+                    style={{ color: "var(--color-black)" }}
+                  >
+                    <ChevronLeft size={22} />
+                  </button>
+                ) : (
+                  <span className="w-9 shrink-0" />
+                )}
+                <div className="flex-1 flex justify-center">
+                  {stepDots && (
+                    <div className="flex items-center gap-1.5" aria-label={`Step ${stepDots.current} of ${stepDots.total}`}>
+                      {Array.from({ length: stepDots.total }).map((_, i) => (
+                        <span
+                          key={i}
+                          className="rounded-full"
+                          style={{
+                            width: i === stepDots.current - 1 ? 20 : 6,
+                            height: 6,
+                            background: i === stepDots.current - 1 ? "var(--color-blue)" : "var(--color-gray-3)",
+                            transition: "width 0.3s",
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <span className="w-9 shrink-0" />
+              </div>
+            )}
             {stepLabel && (
               <p className="text-caption font-semibold text-center mb-3" style={{ color: "var(--color-blue)" }}>
                 {stepLabel}

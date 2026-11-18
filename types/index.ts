@@ -8,6 +8,8 @@ export interface Profile {
   full_name: string;
   avatar_url: string | null;
   bio: string | null;
+  /** v1.12.0 — date of birth collected at signup (migration 0008). Null for older accounts. */
+  date_of_birth: string | null;
   location: string | null;
   last_seen_visible: boolean;
   online_status_visible: boolean;

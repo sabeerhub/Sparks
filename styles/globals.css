@@ -563,6 +563,9 @@ textarea:focus-visible {
   border: 1px solid var(--hairline);
   border-radius: 12px;
   box-shadow: none;
+  /* v1.12.0 — the native date input on the signup DOB step: without this
+     the OS date picker renders light even in dark mode. */
+  color-scheme: light;
 }
 .auth-input:focus {
   border-color: var(--color-blue);
@@ -821,6 +824,8 @@ html[data-theme="dark"] .glass-input.no-focus-ring:focus-within {
 html[data-theme="dark"] .auth-input {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
+  /* v1.12.0 — dark native date picker on the signup DOB step. */
+  color-scheme: dark;
 }
 html[data-theme="dark"] .auth-input:focus {
   border-color: var(--color-blue);

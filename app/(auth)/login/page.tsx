@@ -1,5 +1,15 @@
 "use client";
 
+/**
+ * app/(auth)/login/page.tsx
+ * v1.12.0 — same fields, same logic, same error handling as v1.11.0,
+ * reordered to Instagram's layout so login feels like the same family
+ * as the new step-by-step signup: inputs → Log In button → a small
+ * centred "Forgot password?" link → OR divider → a quiet Remember me
+ * row → the "Don't have an account? Create Account" footer card.
+ * Nothing about signing in changed — only the order and the spacing.
+ */
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -107,13 +117,23 @@ export default function LoginPage() {
 
       <Button fullWidth shape="rounded" loading={loading} onClick={handleSignIn} className="mt-5">Log In</Button>
 
+      {/* Instagram puts "Forgot password?" as a small centred link right
+          under the button — it was buried in a row with Remember me before. */}
+      <div className="text-center mt-4">
+        <Link href="/forgot-password" className="pressable text-caption font-medium" style={{ color: "var(--color-blue)" }}>
+          Forgot password?
+        </Link>
+      </div>
+
       <div className="flex items-center gap-3 my-5" aria-hidden="true">
         <div className="h-px flex-1" style={{ background: "var(--hairline)" }} />
         <span className="text-caption font-semibold" style={{ color: "var(--color-gray-1)" }}>OR</span>
         <div className="h-px flex-1" style={{ background: "var(--hairline)" }} />
       </div>
 
-      <div className="flex items-center justify-between">
+      {/* Remember me stays — it is existing behaviour, just quieter now,
+          centred under the divider instead of sharing a row. */}
+      <div className="flex justify-center">
         <label className="flex items-center gap-2 text-caption cursor-pointer">
           <input
             type="checkbox"
@@ -124,9 +144,6 @@ export default function LoginPage() {
           />
           <span style={{ color: "var(--color-gray-1)" }}>Remember me</span>
         </label>
-        <Link href="/forgot-password" className="pressable text-caption font-medium" style={{ color: "var(--color-blue)" }}>
-          Forgot password?
-        </Link>
       </div>
     </AuthShell>
   );
