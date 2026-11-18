@@ -378,9 +378,13 @@ export default function ChatThreadPage() {
   const messageById = new Map([...messages, ...searchResults].map((m) => [m.id, m]));
   const replyMessage = replyTo ? messageById.get(replyTo) ?? null : null;
 
-  // While a query is typed, the list shows only the server-side matches.
   const isSearching = searchOpen && searchQuery.trim().length > 0;
-  const visibleMessages = isSearching ? searchResults : messages;
+  // v1.9.0 — searching no longer swaps the thread for a matches-only
+  // list: the full thread stays visible with the matched WORD
+  // highlighted, and the up/down controls jump between matches in
+  // context. A matches-only list hid the conversation around the
+  // match, so you could not tell what anyone was replying to.
+  const visibleMessages = messages;
 
   // Every image in this chat, in order, for prev/next in the viewer.
   const viewerImages: ViewerImage[] = messages
@@ -409,15 +413,17 @@ export default function ChatThreadPage() {
     return (
       <div className="app-surface flex flex-col h-full">
         <StatusBar />
-        <div className="frosted-header flex items-center gap-2 px-4 py-2 animate-pulse">
-          <div className="w-8 h-8 rounded-full" style={{ background: "var(--color-gray-3)" }} />
-          <div className="w-8 h-8 rounded-full ml-1" style={{ background: "var(--color-gray-3)" }} />
-          <div className="flex-1 space-y-1.5">
-            <div className="h-3.5 w-28 rounded-full" style={{ background: "var(--color-gray-3)" }} />
-            <div className="h-2.5 w-16 rounded-full" style={{ background: "var(--color-gray-3)" }} />
+        <div className="mx-auto w-full max-w-[880px] flex flex-col flex-1 min-h-0">
+          <div className="frosted-header flex items-center gap-2 px-4 py-2 animate-pulse">
+            <div className="w-8 h-8 rounded-full" style={{ background: "var(--color-gray-3)" }} />
+            <div className="w-8 h-8 rounded-full ml-1" style={{ background: "var(--color-gray-3)" }} />
+            <div className="flex-1 space-y-1.5">
+              <div className="h-3.5 w-28 rounded-full" style={{ background: "var(--color-gray-3)" }} />
+              <div className="h-2.5 w-16 rounded-full" style={{ background: "var(--color-gray-3)" }} />
+            </div>
           </div>
+          <MessageSkeleton />
         </div>
-        <MessageSkeleton />
       </div>
     );
   }
@@ -425,6 +431,11 @@ export default function ChatThreadPage() {
   return (
     <div className="app-surface flex flex-col h-full">
       <StatusBar />
+      {/* v1.9.0 — the whole thread lives in a centred desktop column
+          (max 880px). Before, incoming bubbles hugged the left edge in
+          a ~350px strip while outgoing bubbles pinned to the far right
+          edge and the composer stretched ~1300px wide. */}
+      <div className="mx-auto w-full max-w-[880px] flex flex-col flex-1 min-h-0">
       <div className="frosted-header flex items-center justify-between px-4 py-2 flex-shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <button onClick={() => router.push("/chats")} aria-label="Back" className="w-11 h-11 -ml-2 rounded-full flex items-center justify-center flex-shrink-0 md:hidden active:bg-white/60 active:scale-95 transition-all duration-200">
@@ -442,15 +453,21 @@ export default function ChatThreadPage() {
             </div>
           </button>
         </div>
-        {!isSelfChat && (
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <button aria-label="Search in this chat" onClick={() => setSearchOpen((s) => !s)} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-white/60 active:scale-95 transition-all duration-200">
-              <SearchIcon size={19} color={searchOpen ? "var(--color-blue)" : "var(--color-gray-1)"} strokeWidth={1.8} />
-            </button>
-            <button aria-label="Voice call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "voice")} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-white/60 active:scale-95 transition-all duration-200"><Phone size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
-            <button aria-label="Video call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "video")} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-white/60 active:scale-95 transition-all duration-200"><Video size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
-          </div>
-        )}
+        {/* v1.9.0 — the header controls are the same on every thread:
+            search is always there (it works in Saved Messages too);
+            only the call buttons hide in a self-chat, because you
+            cannot call yourself. */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button aria-label="Search in this chat" onClick={() => setSearchOpen((s) => !s)} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-white/60 active:scale-95 transition-all duration-200">
+            <SearchIcon size={19} color={searchOpen ? "var(--color-blue)" : "var(--color-gray-1)"} strokeWidth={1.8} />
+          </button>
+          {!isSelfChat && (
+            <>
+              <button aria-label="Voice call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "voice")} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-white/60 active:scale-95 transition-all duration-200"><Phone size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
+              <button aria-label="Video call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "video")} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-white/60 active:scale-95 transition-all duration-200"><Video size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
+            </>
+          )}
+        </div>
 
       </div>
       {searchOpen && (
@@ -542,6 +559,7 @@ export default function ChatThreadPage() {
                   onForward={() => setForwardTarget(m)}
                   highlight={isSearching ? searchQuery.trim() : ""}
                   isSearchMatch={isSearching && matchPosition === searchIndex}
+                  hideSeenBy={isSelfChat}
                   replyTo={
                     replied
                       ? {
@@ -603,6 +621,7 @@ export default function ChatThreadPage() {
       {forwardTarget && (
         <ForwardSheet message={forwardTarget} onClose={() => setForwardTarget(null)} />
       )}
+      </div>
     </div>
   );
 }

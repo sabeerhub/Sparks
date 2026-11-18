@@ -140,28 +140,37 @@ export function VoiceMessagePlayer({ url, isMine }: VoiceMessagePlayerProps) {
         )}
       </button>
 
-      <button
-        className="flex-1 flex items-center gap-[2px] h-8"
-        onClick={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          seekTo((e.clientX - rect.left) / rect.width);
-        }}
-        aria-label="Seek"
-      >
-        {(peaks ?? new Array(BAR_COUNT).fill(0.3)).map((peak, i) => {
-          const isPast = i / BAR_COUNT <= progress;
-          return (
-            <span
-              key={i}
-              className="flex-1 rounded-full transition-colors"
-              style={{
-                height: `${Math.max(peak * 26, 3)}px`,
-                background: isPast ? fg : bg,
-              }}
-            />
-          );
-        })}
-      </button>
+      {/* v1.9.0 — a visible progress track line under the bars, and a
+          current / total time readout (was one number only). The bars
+          themselves already had real peaks and click-to-seek; the
+          inspection's "no visible progress" was the missing track. */}
+      <div className="flex-1 flex flex-col gap-1 min-w-0">
+        <button
+          className="flex items-center gap-[2px] h-8 w-full"
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            seekTo((e.clientX - rect.left) / rect.width);
+          }}
+          aria-label="Seek"
+        >
+          {(peaks ?? new Array(BAR_COUNT).fill(0.3)).map((peak, i) => {
+            const isPast = i / BAR_COUNT <= progress;
+            return (
+              <span
+                key={i}
+                className="flex-1 rounded-full transition-colors"
+                style={{
+                  height: `${Math.max(peak * 26, 3)}px`,
+                  background: isPast ? fg : bg,
+                }}
+              />
+            );
+          })}
+        </button>
+        <div className="h-1 rounded-full overflow-hidden" style={{ background: bg }}>
+          <div className="h-full rounded-full transition-[width]" style={{ width: `${progress * 100}%`, background: fg }} />
+        </div>
+      </div>
 
       <div className="flex flex-col items-end gap-1 flex-shrink-0">
         <button
@@ -172,7 +181,7 @@ export function VoiceMessagePlayer({ url, isMine }: VoiceMessagePlayerProps) {
           {SPEEDS[speedIndex]}×
         </button>
         <span className="text-caption font-medium" style={{ color: isMine ? "rgba(255,255,255,0.85)" : "var(--color-gray-1)" }}>
-          {formatTime(playing || currentTime > 0 ? currentTime : duration)}
+          {formatTime(currentTime)} / {formatTime(duration)}
         </span>
       </div>
     </div>

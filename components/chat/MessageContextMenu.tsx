@@ -27,6 +27,9 @@ interface MessageContextMenuProps {
   readersLoading?: boolean;
   /** The current user's id, so their own read shows as "You". */
   currentUserId?: string | null;
+  /** Self-chat (Saved Messages): there is no other reader, so the
+      "Seen by" section would always say "Not seen yet" — hide it. */
+  showSeenBy?: boolean;
   onClose: () => void;
   onReact: (emoji: string) => void;
   onReply: () => void;
@@ -35,7 +38,7 @@ interface MessageContextMenuProps {
   onDelete: () => void;
 }
 
-export function MessageContextMenu({ isMine, text, readers, readersLoading = false, currentUserId, onClose, onReact, onReply, onForward, onEdit, onDelete }: MessageContextMenuProps) {
+export function MessageContextMenu({ isMine, text, readers, readersLoading = false, currentUserId, showSeenBy = true, onClose, onReact, onReply, onForward, onEdit, onDelete }: MessageContextMenuProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -56,12 +59,12 @@ export function MessageContextMenu({ isMine, text, readers, readersLoading = fal
     ...(isMine ? [{ icon: TrashIcon, label: "Delete", onClick: onDelete, danger: true }] : []),
   ];
 
-  return (
-    <div className="fixed inset-0 z-50" style={{ background: "rgba(0,0,0,0.3)" }} onClick={onClose}>
-      <div
-        className="glass-strong absolute left-4 right-4 bottom-20 rounded-3xl overflow-hidden shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+  // v1.9.0 — the body is shared by the phone bottom sheet and the
+  // desktop popover. On desktop the old sheet stretched across half
+  // the screen with the reaction emojis ~400px apart; the popover is
+  // a compact 320px menu anchored to the message.
+  const body = (
+    <>
         <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
           {EMOJIS.map((emoji) => (
             <button key={emoji} className="text-title active:scale-125 transition-transform" onClick={() => onReact(emoji)} aria-label={`React with ${emoji}`}>
@@ -73,7 +76,10 @@ export function MessageContextMenu({ isMine, text, readers, readersLoading = fal
         {/* Seen by — who has read this message, and when. Only 'read'
             receipts count, so this never invents a reader or a time;
             the time is the receipt's updated_at, written by markRead
-            in the reader's local time. */}
+            in the reader's local time. Hidden in a self-chat (Saved
+            Messages): there is no other reader, so it would always
+            say "Not seen yet". */}
+        {showSeenBy && (
         <div className="px-4 py-3 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
           <div className="text-caption font-semibold uppercase tracking-wide mb-2" style={{ color: "var(--color-gray-1)" }}>
             Seen by
@@ -98,6 +104,7 @@ export function MessageContextMenu({ isMine, text, readers, readersLoading = fal
             <div className="text-body" style={{ color: "var(--color-gray-1)" }}>Not seen yet</div>
           )}
         </div>
+        )}
 
         {actions.map((action) => (
           <button
@@ -116,8 +123,30 @@ export function MessageContextMenu({ isMine, text, readers, readersLoading = fal
         <button className="w-full py-4 text-body font-semibold text-center active:opacity-60 transition-opacity" style={{ color: "var(--color-blue)" }} onClick={onClose}>
           Cancel
         </button>
+    </>
+  );
+
+  return (
+    <>
+      {/* Phone: the bottom sheet (unchanged). */}
+      <div className="fixed inset-0 z-50 md:hidden" style={{ background: "rgba(0,0,0,0.3)" }} onClick={onClose}>
+        <div
+          className="glass-strong absolute left-4 right-4 bottom-20 rounded-3xl overflow-hidden shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {body}
+        </div>
       </div>
-    </div>
+
+      {/* Desktop: a compact popover anchored to the message. */}
+      <div className="hidden md:block fixed inset-0 z-40" onClick={onClose} />
+      <div
+        className="hidden md:block absolute z-50 bottom-full mb-2 w-[320px] glass-strong rounded-3xl overflow-hidden shadow-2xl"
+        style={isMine ? { right: 0 } : { left: 0 }}
+      >
+        {body}
+      </div>
+    </>
   );
 }
 

@@ -232,6 +232,63 @@ export default function PublicProfilePage() {
     );
   }
 
+  // v1.9.0 — the 3-dot menu rows, shared by the phone bottom sheet
+  // and the desktop popover anchored to the button.
+  const menuBody = (
+    <>
+      <div className="rounded-2xl overflow-hidden" style={{ background: "var(--color-row-overlay)" }}>
+        <button
+          type="button"
+          onClick={() => { setMenuOpen(false); setShareOpen(true); }}
+          className="pressable w-full flex items-center gap-3 px-4 py-3.5 text-left"
+        >
+          <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
+            <Share2 size={16} color="var(--color-blue)" strokeWidth={1.8} />
+          </span>
+          <span className="text-body" style={{ color: "var(--color-black)" }}>Share profile</span>
+        </button>
+        <div className="ml-[60px]" style={{ height: 1, background: "var(--hairline)" }} />
+        <button
+          type="button"
+          onClick={() => { setMenuOpen(false); setTab("about"); }}
+          className="pressable w-full flex items-center gap-3 px-4 py-3.5 text-left"
+        >
+          <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "var(--color-gray-3)" }}>
+            <Info size={16} color="var(--color-gray-1)" strokeWidth={1.8} />
+          </span>
+          <span className="text-body" style={{ color: "var(--color-black)" }}>About account</span>
+        </button>
+        {!isSelf && (
+          <>
+            <div className="ml-[60px]" style={{ height: 1, background: "var(--hairline)" }} />
+            <button
+              type="button"
+              onClick={handleMenuBlock}
+              disabled={blockBusy}
+              className="pressable w-full flex items-center gap-3 px-4 py-3.5 text-left disabled:opacity-50"
+            >
+              <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,59,48,0.12)" }}>
+                <Ban size={16} color="#FF3B30" strokeWidth={1.8} />
+              </span>
+              <span className="text-body font-medium" style={{ color: blocked ? "var(--color-blue)" : "#FF3B30" }}>
+                {blocked ? "Unblock user" : blockArmed ? "Confirm block" : "Block user"}
+              </span>
+            </button>
+          </>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => { setMenuOpen(false); setBlockArmed(false); }}
+        className="pressable w-full mt-2 py-3.5 rounded-2xl text-body font-semibold"
+        style={{ background: "var(--color-row-overlay)", color: "var(--color-blue)" }}
+      >
+        Cancel
+      </button>
+    </>
+  );
+
   return (
     <div className="app-surface h-full w-full flex flex-col overflow-hidden">
       <StatusBar />
@@ -250,18 +307,31 @@ export default function PublicProfilePage() {
         <span className="text-body font-semibold truncate" style={{ color: "var(--color-black)" }}>
           @{profile.username}
         </span>
-        <button
-          onClick={() => setMenuOpen(true)}
-          className="glass pressable w-11 h-11 rounded-full flex items-center justify-center"
-          aria-label="More options"
-          aria-haspopup="menu"
-        >
-          <MoreHorizontal size={20} color="var(--color-blue)" strokeWidth={2} />
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="glass pressable w-11 h-11 rounded-full flex items-center justify-center"
+            aria-label="More options"
+            aria-haspopup="menu"
+          >
+            <MoreHorizontal size={20} color="var(--color-blue)" strokeWidth={2} />
+          </button>
+          {/* v1.9.0 — desktop: the menu is a popover anchored to this
+              button, not a sheet floating in the middle of the screen.
+              Phone still gets the bottom sheet below. */}
+          {menuOpen && (
+            <>
+              <div className="hidden md:block fixed inset-0 z-40" onClick={() => { setMenuOpen(false); setBlockArmed(false); }} />
+              <div className="hidden md:block absolute right-0 top-full mt-2 z-50 w-[320px] glass-strong rounded-[28px] px-2 pt-3 pb-3 shadow-2xl" role="menu" aria-label="Profile options">
+                {menuBody}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="w-full max-w-[640px] mx-auto pb-8">
+        <div className="w-full max-w-[640px] md:max-w-[720px] mx-auto pb-8">
           <TikTokProfileHeader
             name={nickname || profile.full_name}
             username={profile.username}
@@ -272,8 +342,10 @@ export default function PublicProfilePage() {
             bio={profile.bio}
             location={profile.location}
             joinedLabel={formatJoinDate(profile.created_at)}
+            // v1.9.0 — "Total Sparks" removed: spark_count has no
+            // definition anywhere in the code or the database, so the
+            // number could not be explained honestly.
             stats={[
-              { value: (profile.spark_count ?? 0).toLocaleString(), label: "Total Sparks" },
               { value: sparkConnections.toLocaleString(), label: "Connections" },
               { value: String(daysActive(profile.created_at)), label: "Days Active" },
             ]}
@@ -489,76 +561,22 @@ export default function PublicProfilePage() {
         username={profile.username}
       />
 
-      {/* 3-dot menu — iOS action-sheet style: frosted glass, drag
-          handle, calm icon rows with hairline separators, Cancel below.
-          Bottom sheet on mobile, centred menu on desktop. Every row
-          does something real: Share opens the share flow, About
-          account switches to the About tab, Block runs the same
-          two-tap block flow as the Block row below. */}
+      {/* 3-dot menu — phone: the iOS action sheet. Desktop gets the
+          popover anchored to the button in the top bar instead. */}
       {menuOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center md:items-center"
+          className="fixed inset-0 z-50 flex items-end justify-center md:hidden"
           onClick={() => { setMenuOpen(false); setBlockArmed(false); }}
           role="menu"
           aria-label="Profile options"
         >
           <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.4)" }} />
           <div
-            className="glass-strong relative w-full max-w-lg md:max-w-[380px] rounded-t-3xl md:rounded-[28px] px-2 pt-3 pb-6 md:pb-3"
+            className="glass-strong relative w-full max-w-lg rounded-t-3xl px-2 pt-3 pb-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-10 h-1 rounded-full mx-auto mb-3 md:hidden" style={{ background: "var(--color-gray-3)" }} />
-
-            <div className="rounded-2xl overflow-hidden" style={{ background: "var(--color-row-overlay)" }}>
-              <button
-                type="button"
-                onClick={() => { setMenuOpen(false); setShareOpen(true); }}
-                className="pressable w-full flex items-center gap-3 px-4 py-3.5 text-left"
-              >
-                <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
-                  <Share2 size={16} color="var(--color-blue)" strokeWidth={1.8} />
-                </span>
-                <span className="text-body" style={{ color: "var(--color-black)" }}>Share profile</span>
-              </button>
-              <div className="ml-[60px]" style={{ height: 1, background: "var(--hairline)" }} />
-              <button
-                type="button"
-                onClick={() => { setMenuOpen(false); setTab("about"); }}
-                className="pressable w-full flex items-center gap-3 px-4 py-3.5 text-left"
-              >
-                <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "var(--color-gray-3)" }}>
-                  <Info size={16} color="var(--color-gray-1)" strokeWidth={1.8} />
-                </span>
-                <span className="text-body" style={{ color: "var(--color-black)" }}>About account</span>
-              </button>
-              {!isSelf && (
-                <>
-                  <div className="ml-[60px]" style={{ height: 1, background: "var(--hairline)" }} />
-                  <button
-                    type="button"
-                    onClick={handleMenuBlock}
-                    disabled={blockBusy}
-                    className="pressable w-full flex items-center gap-3 px-4 py-3.5 text-left disabled:opacity-50"
-                  >
-                    <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,59,48,0.12)" }}>
-                      <Ban size={16} color="#FF3B30" strokeWidth={1.8} />
-                    </span>
-                    <span className="text-body font-medium" style={{ color: blocked ? "var(--color-blue)" : "#FF3B30" }}>
-                      {blocked ? "Unblock user" : blockArmed ? "Confirm block" : "Block user"}
-                    </span>
-                  </button>
-                </>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => { setMenuOpen(false); setBlockArmed(false); }}
-              className="pressable w-full mt-2 py-3.5 rounded-2xl text-body font-semibold"
-              style={{ background: "var(--color-row-overlay)", color: "var(--color-blue)" }}
-            >
-              Cancel
-            </button>
+            <div className="w-10 h-1 rounded-full mx-auto mb-3" style={{ background: "var(--color-gray-3)" }} />
+            {menuBody}
           </div>
         </div>
       )}

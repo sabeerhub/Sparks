@@ -14,7 +14,7 @@ export default function ChatsLayout({ children }: { children: React.ReactNode })
   return (
     <div className="app-shell w-full flex">
       <aside
-        className="hidden md:flex md:flex-col md:w-[380px] lg:w-[400px] flex-shrink-0 border-r relative"
+        className="hidden md:flex md:flex-col md:w-[380px] lg:w-[420px] flex-shrink-0 border-r relative"
         style={{ borderColor: "var(--color-gray-2)" }}
       >
         <DesktopSidebar />

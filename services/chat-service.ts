@@ -58,36 +58,46 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
 
   const chatIds = memberships.map((m) => m.chat_id);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const chatsQuery = await (supabase.from("chats") as any)
-    .select("id, created_by, is_group, is_self_chat, created_at, last_message_at")
-    .in("id", chatIds);
+  // v1.9.0 — these four reads were sequential awaits (7 round trips
+  // before the list could paint — the 5–8s skeleton stare on a cold
+  // connection). They only need chatIds, so they run in parallel now.
+  // The last-messages read is capped: it is ordered newest-first and
+  // only the first row per chat is ever used.
+  const [chatsQuery, lastMessagesQuery, otherMembersQuery, otherMessagesQuery] = await Promise.all([
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from("chats") as any)
+      .select("id, created_by, is_group, is_self_chat, created_at, last_message_at")
+      .in("id", chatIds),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from("messages") as any)
+      .select("chat_id, content, content_type, deleted_at, created_at")
+      .in("chat_id", chatIds)
+      .order("created_at", { ascending: false })
+      .limit(1000),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from("chat_members") as any)
+      .select("chat_id, user_id")
+      .in("chat_id", chatIds)
+      .neq("user_id", userId),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from("messages") as any)
+      .select("id, chat_id")
+      .in("chat_id", chatIds)
+      .neq("sender_id", userId),
+  ]);
 
   if (chatsQuery.error) throw chatsQuery.error;
   const chats = chatsQuery.data as ChatRow[] | null;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const lastMessagesQuery = await (supabase.from("messages") as any)
-    .select("chat_id, content, content_type, deleted_at, created_at")
-    .in("chat_id", chatIds)
-    .order("created_at", { ascending: false });
 
   const lastMessageByChatId = new Map<string, { content: string; content_type: string; deleted_at: string | null }>();
   (lastMessagesQuery.data ?? []).forEach((row: { chat_id: string; content: string; content_type: string; deleted_at: string | null }) => {
     if (!lastMessageByChatId.has(row.chat_id)) lastMessageByChatId.set(row.chat_id, row);
   });
 
-
   const chatById = new Map<string, ChatRow>();
   chats?.forEach((c) => chatById.set(c.id, c));
 
   // Fetch the *other* participant for each 1:1 chat in one query.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const otherMembersQuery = await (supabase.from("chat_members") as any)
-    .select("chat_id, user_id")
-    .in("chat_id", chatIds)
-    .neq("user_id", userId);
-
   if (otherMembersQuery.error) throw otherMembersQuery.error;
   const otherMembers = otherMembersQuery.data as OtherMemberRow[] | null;
 
@@ -96,10 +106,23 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
 
   const otherUserIds = [...new Set([...(otherMembers?.map((r) => r.user_id) ?? []), userId])];
 
-  const profilesQuery = otherUserIds.length
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ? await (supabase.from("profiles") as any).select("*").in("id", otherUserIds)
-    : { data: [] as Profile[], error: null };
+  // v1.9.0 — profiles and receipts run in parallel with each other
+  // (the receipts read needs only the message ids from round 2).
+  const otherMessageIds = (otherMessagesQuery.data ?? []) as { id: string; chat_id: string }[];
+  const [profilesQuery, readQuery] = await Promise.all([
+    otherUserIds.length
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? (supabase.from("profiles") as any).select("*").in("id", otherUserIds)
+      : Promise.resolve({ data: [] as Profile[], error: null }),
+    otherMessageIds.length
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? (supabase.from("message_receipts") as any)
+          .select("message_id")
+          .eq("user_id", userId)
+          .eq("status", "read")
+          .in("message_id", otherMessageIds.map((m) => m.id))
+      : Promise.resolve({ data: [] as { message_id: string }[], error: null }),
+  ]);
 
   if (profilesQuery.error) throw profilesQuery.error;
   const profiles = profilesQuery.data as Profile[] | null;
@@ -112,19 +135,7 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
   // me. The list used to hard-code 0 here, so unread badges and bold
   // names never showed at all.
   const unreadByChatId = new Map<string, number>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const otherMessagesQuery = await (supabase.from("messages") as any)
-    .select("id, chat_id")
-    .in("chat_id", chatIds)
-    .neq("sender_id", userId);
-  const otherMessageIds = (otherMessagesQuery.data ?? []) as { id: string; chat_id: string }[];
   if (otherMessageIds.length) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const readQuery = await (supabase.from("message_receipts") as any)
-      .select("message_id")
-      .eq("user_id", userId)
-      .eq("status", "read")
-      .in("message_id", otherMessageIds.map((m) => m.id));
     const readIds = new Set<string>(
       ((readQuery.data ?? []) as { message_id: string }[]).map((r) => r.message_id)
     );

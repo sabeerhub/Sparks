@@ -94,29 +94,17 @@ export default function ProfilePage() {
         <span className="text-body font-semibold truncate" style={{ color: "var(--color-black)" }}>
           @{profile?.username ?? ""}
         </span>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShareOpen(true)}
-            className="glass pressable w-11 h-11 rounded-full flex items-center justify-center"
-            aria-label="Share profile"
-          >
-            <Share2 size={18} color="var(--color-blue)" strokeWidth={1.8} />
-          </button>
-          <button
-            onClick={() => router.push("/profile/edit")}
-            className="glass pressable w-11 h-11 rounded-full flex items-center justify-center"
-            aria-label="Edit profile"
-          >
-            <Pencil size={18} color="var(--color-blue)" strokeWidth={1.8} />
-          </button>
-        </div>
+        {/* v1.9.0 — the top-right Edit/Share icons duplicated the big
+            Edit/Share buttons below the header. They are gone; the
+            spacer keeps @username centred. */}
+        <span className="w-11 h-11 flex-shrink-0" aria-hidden />
       </div>
 
       <div className="flex-1 overflow-y-auto relative z-10">
         {loading || !profile ? (
           <ProfileSkeleton />
         ) : (
-          <div className="w-full max-w-[640px] mx-auto pb-24">
+          <div className="w-full max-w-[640px] md:max-w-[720px] mx-auto pb-24">
             <TikTokProfileHeader
               name={profile.full_name ?? "—"}
               username={profile.username}
@@ -127,8 +115,12 @@ export default function ProfilePage() {
               bio={profile.bio}
               location={profile.location}
               joinedLabel={formatJoinDate(profile.created_at)}
+              // v1.9.0 — "Total Sparks" is gone: spark_count has no
+              // definition anywhere in the code or the database (no
+              // trigger, nothing ever increments it), so the number
+              // could not be explained honestly. Connections and Days
+              // Active are both real.
               stats={[
-                { value: (profile.spark_count ?? 0).toLocaleString(), label: "Total Sparks" },
                 { value: sparkConnections.toLocaleString(), label: "Connections" },
                 { value: String(daysActive(profile.created_at)), label: "Days Active" },
               ]}
@@ -152,10 +144,15 @@ export default function ProfilePage() {
               }
             />
 
-            {/* Tab bar — TikTok style: icon tabs, active = blue underline. */}
+            {/* Tab bar — TikTok style: icon tabs, active = blue underline.
+                v1.9.0 — the fill was a hardcoded pale grey
+                (rgba(245,245,247,0.85)), so on dark mode it stayed a
+                pale slab and the text washed out over the photos
+                behind it. It now tints from the surface token, which
+                follows the theme. */}
             <div
               className="flex mt-6 sticky top-0 z-10"
-              style={{ background: "rgba(245,245,247,0.85)", backdropFilter: "blur(24px) saturate(180%)" }}
+              style={{ background: "color-mix(in srgb, var(--color-surface) 88%, transparent)", backdropFilter: "blur(24px) saturate(180%)" }}
             >
               <TabButton
                 active={tab === "media"}
@@ -184,12 +181,15 @@ export default function ProfilePage() {
                         View all <ChevronRight size={14} strokeWidth={2} />
                       </button>
                     </div>
+                    {/* v1.9.0 — square 1:1 tiles like the standard grid
+                        on a friend's profile (was tall 3:4, so a lone
+                        4th tile left a big empty hole on row 2). */}
                     <div className="grid grid-cols-3 gap-[2px]">
                       {mediaThumbs.map((url) => (
                         <button
                           key={url}
                           onClick={() => router.push("/profile/media")}
-                          className="pressable overflow-hidden rounded-[10px] row-overlay"
+                          className="pressable overflow-hidden row-overlay"
                           aria-label="Open shared media"
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -198,7 +198,7 @@ export default function ProfilePage() {
                             alt=""
                             loading="lazy"
                             className="w-full object-cover"
-                            style={{ aspectRatio: "3 / 4" }}
+                            style={{ aspectRatio: "1 / 1" }}
                             onError={() => setMediaThumbs((prev) => prev.filter((u) => u !== url))}
                           />
                         </button>

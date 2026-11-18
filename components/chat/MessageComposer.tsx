@@ -18,10 +18,64 @@ const LOCK_THRESHOLD = 80;
 const CANCEL_THRESHOLD = 100;
 const WAVEFORM_BARS = 28;
 
-const EMOJI_PICKER: string[] = [
-  "😀", "😂", "😊", "😍", "😉", "😎", "🤔", "😢", "😡", "🥳",
-  "👍", "👏", "🙏", "❤️", "🔥", "🎉", "👋", "💯", "😴", "🤝",
+/** v1.9.0 — emoji are grouped by category with a plain name each,
+    so the desktop picker can offer categories + search instead of
+    one flat row of ~20 emojis stretched across the screen. */
+const EMOJI_CATEGORIES: { label: string; emojis: { e: string; name: string }[] }[] = [
+  {
+    label: "Smileys",
+    emojis: [
+      { e: "😀", name: "grinning happy" },
+      { e: "😂", name: "joy tears laughing" },
+      { e: "😊", name: "smiling blush" },
+      { e: "😍", name: "heart eyes love" },
+      { e: "😉", name: "wink" },
+      { e: "😎", name: "cool sunglasses" },
+      { e: "🤔", name: "thinking" },
+      { e: "😢", name: "crying sad tears" },
+      { e: "😡", name: "angry mad" },
+      { e: "🥳", name: "party celebrating" },
+      { e: "😴", name: "sleepy tired" },
+      { e: "🤯", name: "mind blown wow" },
+    ],
+  },
+  {
+    label: "Hearts",
+    emojis: [
+      { e: "❤️", name: "red heart love" },
+      { e: "💙", name: "blue heart" },
+      { e: "💚", name: "green heart" },
+      { e: "💜", name: "purple heart" },
+      { e: "💯", name: "hundred points" },
+      { e: "🔥", name: "fire hot" },
+      { e: "✨", name: "sparkles stars" },
+    ],
+  },
+  {
+    label: "Hands",
+    emojis: [
+      { e: "👍", name: "thumbs up like" },
+      { e: "👏", name: "clap applause" },
+      { e: "🙏", name: "pray thanks please" },
+      { e: "👋", name: "wave hello" },
+      { e: "🤝", name: "handshake deal" },
+      { e: "🙌", name: "raising hands celebrate" },
+    ],
+  },
+  {
+    label: "Fun",
+    emojis: [
+      { e: "🎉", name: "party popper celebrate" },
+      { e: "🎊", name: "confetti" },
+      { e: "🎂", name: "birthday cake" },
+      { e: "🎁", name: "gift present" },
+      { e: "⚽", name: "soccer football" },
+      { e: "🎵", name: "music note song" },
+    ],
+  },
 ];
+/** The flat list the phone picker still shows — one quick row. */
+const EMOJI_FLAT: string[] = EMOJI_CATEGORIES.flatMap((c) => c.emojis.map((x) => x.e)).slice(0, 20);
 
 export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerProps) {
   const [text, setText] = useState("");
@@ -34,6 +88,8 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
   const [liveLevels, setLiveLevels] = useState<number[]>([]);
   const [error, setError] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
+  const [emojiQuery, setEmojiQuery] = useState("");
+  const [emojiCategory, setEmojiCategory] = useState(0);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -349,8 +405,9 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
       )}
       {showEmoji && (
         <div className="px-3 pt-2 pb-1 border-t" style={{ borderColor: "var(--color-gray-2)" }}>
-          <div className="flex flex-wrap gap-1">
-            {EMOJI_PICKER.map((emoji) => (
+          {/* Phone: one quick row, as before. */}
+          <div className="flex flex-wrap gap-1 md:hidden">
+            {EMOJI_FLAT.map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => handleEmojiPick(emoji)}
@@ -360,6 +417,54 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
                 {emoji}
               </button>
             ))}
+          </div>
+          {/* Desktop: search + categories + a real grid. */}
+          <div className="hidden md:block py-2">
+            <div className="glass-input flex items-center gap-2 rounded-full px-3 py-1.5 mb-2">
+              <input
+                value={emojiQuery}
+                onChange={(e) => setEmojiQuery(e.target.value)}
+                placeholder="Search emoji"
+                aria-label="Search emoji"
+                className="flex-1 outline-none text-body bg-transparent"
+              />
+            </div>
+            <div className="flex items-center gap-1.5 mb-2 overflow-x-auto">
+              {EMOJI_CATEGORIES.map((cat, i) => (
+                <button
+                  key={cat.label}
+                  onClick={() => { setEmojiCategory(i); setEmojiQuery(""); }}
+                  aria-pressed={emojiCategory === i && !emojiQuery}
+                  className="pressable px-3 py-1 rounded-full text-caption font-semibold whitespace-nowrap"
+                  style={emojiCategory === i && !emojiQuery
+                    ? { background: "var(--color-blue)", color: "#fff" }
+                    : { background: "var(--color-gray-3)", color: "var(--color-gray-1)" }}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-8 gap-1 max-h-[240px] overflow-y-auto pr-1">
+              {(emojiQuery.trim()
+                ? EMOJI_CATEGORIES.flatMap((c) => c.emojis).filter((x) => x.name.includes(emojiQuery.trim().toLowerCase()))
+                : EMOJI_CATEGORIES[emojiCategory]?.emojis ?? []
+              ).map((item) => (
+                <button
+                  key={item.e}
+                  onClick={() => handleEmojiPick(item.e)}
+                  aria-label={`Insert ${item.name}`}
+                  title={item.name}
+                  className="aspect-square flex items-center justify-center text-title rounded-xl hover:bg-black/5 active:scale-95 transition-transform"
+                >
+                  {item.e}
+                </button>
+              ))}
+              {emojiQuery.trim() && EMOJI_CATEGORIES.flatMap((c) => c.emojis).filter((x) => x.name.includes(emojiQuery.trim().toLowerCase())).length === 0 && (
+                <p className="col-span-8 text-caption text-center py-4" style={{ color: "var(--color-gray-1)" }}>
+                  No emoji match “{emojiQuery.trim()}”
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}

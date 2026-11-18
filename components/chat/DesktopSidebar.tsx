@@ -27,6 +27,7 @@ export function DesktopSidebar() {
   const params = useParams<{ chatId?: string }>();
   const { chatList, setChatList } = useChatStore();
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "unread">("all");
   const [userId, setUserId] = useState<string | null>(null);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
@@ -69,11 +70,13 @@ export function DesktopSidebar() {
 
   const filtered = chatList
     .filter((c) => !c.isArchived)
+    .filter((c) => (filter === "unread" ? (c.unreadCount ?? 0) > 0 : true))
     .filter((c) =>
       c.otherUser.full_name.toLowerCase().includes(search.toLowerCase()) ||
       c.otherUser.username?.toLowerCase().includes(search.toLowerCase())
     );
   const archivedCount = chatList.filter((c) => c.isArchived).length;
+  const totalUnread = chatList.reduce((n, c) => n + (c.unreadCount ?? 0), 0);
 
   const activeChat = chatList.find((c) => c.chatId === activeChatId) ?? null;
 
@@ -152,6 +155,35 @@ export function DesktopSidebar() {
             className="flex-1 outline-none text-body bg-transparent"
           />
         </div>
+
+        {/* v1.9.0 — All / Unread filter chips. */}
+        <div className="flex items-center gap-2 mt-3">
+          <button
+            onClick={() => setFilter("all")}
+            aria-pressed={filter === "all"}
+            className="pressable px-3.5 py-1.5 rounded-full text-caption font-semibold"
+            style={filter === "all"
+              ? { background: "var(--color-blue)", color: "#fff" }
+              : { background: "var(--color-gray-3)", color: "var(--color-gray-1)" }}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setFilter("unread")}
+            aria-pressed={filter === "unread"}
+            className="pressable px-3.5 py-1.5 rounded-full text-caption font-semibold flex items-center gap-1.5"
+            style={filter === "unread"
+              ? { background: "var(--color-blue)", color: "#fff" }
+              : { background: "var(--color-gray-3)", color: "var(--color-gray-1)" }}
+          >
+            Unread
+            {totalUnread > 0 && (
+              <span className="min-w-4 h-4 px-1 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: filter === "unread" ? "rgba(255,255,255,0.25)" : "var(--color-blue)", color: "#fff" }}>
+                {totalUnread > 9 ? "9+" : totalUnread}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
@@ -185,11 +217,11 @@ export function DesktopSidebar() {
         )}
         {filtered.length === 0 ? (
           <EmptyState
-            wordmark={!search}
-            title={search ? `No chats matching "${search}"` : "No chats yet"}
-            subtitle={search ? "Try a different search" : "Search for people and send a Spark Request to connect"}
-            actionLabel={search ? undefined : "Find People"}
-            onAction={search ? undefined : () => router.push("/search")}
+            wordmark={!search && filter === "all"}
+            title={search ? `No chats matching "${search}"` : filter === "unread" ? "No unread chats" : "No chats yet"}
+            subtitle={search ? "Try a different search" : filter === "unread" ? "You're all caught up" : "Search for people and send a Spark Request to connect"}
+            actionLabel={search || filter === "unread" ? undefined : "Find People"}
+            onAction={search || filter === "unread" ? undefined : () => router.push("/search")}
           />
         ) : (
           filtered.map((item) => (

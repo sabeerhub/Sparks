@@ -9,7 +9,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { fetchCallHistory, type CallHistoryItem } from "@/services/call-service";
 import { useCallActions } from "@/components/call/CallProvider";
-import { formatChatListTime } from "@/utils/helpers";
+import { formatChatListTime, formatDayLabel } from "@/utils/helpers";
 
 function formatCallDuration(item: CallHistoryItem): string {
   if (!item.answered_at || !item.ended_at) return "";
@@ -32,6 +32,8 @@ export default function CallsPage() {
   const router = useRouter();
   const [history, setHistory] = useState<CallHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "missed">("all");
+  const [query, setQuery] = useState("");
   const { placeCall } = useCallActions();
 
   useEffect(() => {
@@ -49,19 +51,38 @@ export default function CallsPage() {
     };
   }, []);
 
+  // v1.9.0 — filter + search + date grouping. Direction icons were
+  // already real (PhoneIncoming / PhoneOutgoing / PhoneMissed), so
+  // that part of the brief needed no change; the call-back button was
+  // stranded at the far right edge only because the card was
+  // full-width — the desktop column below puts it next to the contact.
+  const filtered = history
+    .filter((item) => (filter === "missed" ? item.status === "missed" : true))
+    .filter((item) => item.otherUserName.toLowerCase().includes(query.trim().toLowerCase()));
+  const groups: { label: string; items: CallHistoryItem[] }[] = [];
+  filtered.forEach((item) => {
+    const label = formatDayLabel(item.started_at);
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) last.items.push(item);
+    else groups.push({ label, items: [item] });
+  });
+
   return (
     <div className="app-surface h-full w-full">
       <div className="flex flex-col h-full">
         <StatusBar />
 
         <div className="frosted-header px-4 pt-4 pb-3">
-          <h1 className="text-title font-bold">Calls</h1>
-          <p className="text-body mt-1" style={{ color: "var(--color-gray-1)" }}>
-            Your voice and video call history
-          </p>
+          <div className="mx-auto w-full max-w-[720px]">
+            <h1 className="text-title font-bold">Calls</h1>
+            <p className="text-body mt-1" style={{ color: "var(--color-gray-1)" }}>
+              Your voice and video call history
+            </p>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 pt-4 pb-24 relative">
+          <div className="mx-auto w-full max-w-[720px] relative">
           {/* Light aurora behind the list (v1.6.0): the glass history card
               only reads as glass because real blue sits behind it. */}
           <div
@@ -103,50 +124,94 @@ export default function CallsPage() {
 
           {!loading && history.length > 0 && (
             <div className="relative">
-              <p className="text-caption font-semibold uppercase tracking-wide px-1 pb-2" style={{ color: "var(--color-gray-1)" }}>
-                Recents
-              </p>
-              <div className="glass-card rounded-[24px] overflow-hidden">
-                {history.map((item, i) => {
-                  const missed = item.status === "missed";
-                  const DirectionIcon = missed ? PhoneMissed : item.isOutgoing ? PhoneOutgoing : PhoneIncoming;
-                  return (
-                    <div key={item.id}>
-                      {i > 0 && <div className="mx-4" style={{ height: 1, background: "var(--color-gray-2)" }} />}
-                      {/* The whole row calls back — that is the row's job.
-                          No dead buttons: the trailing icon is part of the
-                          same real action, not a second control. */}
-                      <button
-                        onClick={() => placeCall(item.otherUserId, item.otherUserName, item.otherUserAvatar, item.call_type)}
-                        aria-label={`Call ${item.otherUserName} back`}
-                        className="glass-row w-full flex items-center gap-3 px-4 py-4 text-left active:scale-[0.99] transition-all duration-200"
-                      >
-                        <Avatar name={item.otherUserName} src={item.otherUserAvatar} size={48} />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-body truncate" style={{ color: missed ? "var(--color-red)" : "var(--color-black)" }}>
-                            {item.otherUserName}
-                          </p>
-                          <p className="text-body flex items-center gap-1.5 mt-0.5" style={{ color: missed ? "var(--color-red)" : "var(--color-gray-1)" }}>
-                            <DirectionIcon size={14} strokeWidth={2} />
-                            <span className="truncate">{callLabel(item)}</span>
-                            <span aria-hidden>·</span>
-                            <span className="flex-shrink-0">{formatChatListTime(item.started_at)}</span>
-                          </p>
-                        </div>
-                        <span className="glass w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0">
-                          {item.call_type === "video" ? (
-                            <Video size={20} color="var(--color-blue)" strokeWidth={1.8} />
-                          ) : (
-                            <Phone size={20} color="var(--color-blue)" strokeWidth={1.8} />
-                          )}
-                        </span>
-                      </button>
-                    </div>
-                  );
-                })}
+              <div className="glass-input flex items-center gap-2 rounded-full px-4 py-2 mb-3">
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search calls"
+                  aria-label="Search calls"
+                  className="flex-1 outline-none text-body bg-transparent"
+                />
               </div>
+              <div className="flex items-center gap-2 mb-4">
+                <button
+                  onClick={() => setFilter("all")}
+                  aria-pressed={filter === "all"}
+                  className="pressable px-3.5 py-1.5 rounded-full text-caption font-semibold"
+                  style={filter === "all"
+                    ? { background: "var(--color-blue)", color: "#fff" }
+                    : { background: "var(--color-gray-3)", color: "var(--color-gray-1)" }}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setFilter("missed")}
+                  aria-pressed={filter === "missed"}
+                  className="pressable px-3.5 py-1.5 rounded-full text-caption font-semibold"
+                  style={filter === "missed"
+                    ? { background: "var(--color-blue)", color: "#fff" }
+                    : { background: "var(--color-gray-3)", color: "var(--color-gray-1)" }}
+                >
+                  Missed
+                </button>
+              </div>
+
+              {filtered.length === 0 ? (
+                <EmptyState
+                  title={query ? `No calls matching "${query.trim()}"` : "No missed calls"}
+                  subtitle={query ? "Try a different search" : "Missed calls will show up here."}
+                />
+              ) : (
+                groups.map((group) => (
+                  <div key={group.label} className="mb-5">
+                    <p className="text-caption font-semibold uppercase tracking-wide px-1 pb-2" style={{ color: "var(--color-gray-1)" }}>
+                      {group.label}
+                    </p>
+                    <div className="glass-card rounded-[24px] overflow-hidden">
+                      {group.items.map((item, i) => {
+                        const missed = item.status === "missed";
+                        const DirectionIcon = missed ? PhoneMissed : item.isOutgoing ? PhoneOutgoing : PhoneIncoming;
+                        return (
+                          <div key={item.id}>
+                            {i > 0 && <div className="mx-4" style={{ height: 1, background: "var(--color-gray-2)" }} />}
+                            {/* The whole row calls back — that is the row's job.
+                                No dead buttons: the trailing icon is part of the
+                                same real action, not a second control. */}
+                            <button
+                              onClick={() => placeCall(item.otherUserId, item.otherUserName, item.otherUserAvatar, item.call_type)}
+                              aria-label={`Call ${item.otherUserName} back`}
+                              className="glass-row w-full flex items-center gap-3 px-4 py-4 text-left active:scale-[0.99] transition-all duration-200"
+                            >
+                              <Avatar name={item.otherUserName} src={item.otherUserAvatar} size={48} />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-body truncate" style={{ color: missed ? "var(--color-red)" : "var(--color-black)" }}>
+                                  {item.otherUserName}
+                                </p>
+                                <p className="text-body flex items-center gap-1.5 mt-0.5" style={{ color: missed ? "var(--color-red)" : "var(--color-gray-1)" }}>
+                                  <DirectionIcon size={14} strokeWidth={2} />
+                                  <span className="truncate">{callLabel(item)}</span>
+                                  <span aria-hidden>·</span>
+                                  <span className="flex-shrink-0">{formatChatListTime(item.started_at)}</span>
+                                </p>
+                              </div>
+                              <span className="glass w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0">
+                                {item.call_type === "video" ? (
+                                  <Video size={20} color="var(--color-blue)" strokeWidth={1.8} />
+                                ) : (
+                                  <Phone size={20} color="var(--color-blue)" strokeWidth={1.8} />
+                                )}
+                              </span>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
+          </div>
         </div>
 
         <div className="md:hidden">

@@ -356,58 +356,65 @@ export function ImageViewer({ images, index: startIndex, onClose }: ImageViewerP
         </button>
       </div>
 
-      {/* Centre: the image. */}
+      {/* Centre: the image. v1.9.0 — the image now scales to the
+          viewport (was max 100vw / its natural size, so a 720px
+          photo sat small in a 1919px black frame). The frame is
+          92vw × 86vh and the image fills it with contain, so a small
+          photo grows and a big one still fits. Prev/Next sit next to
+          the image, not at the far screen edges. */}
       <div className="flex-1 flex items-center justify-center overflow-hidden relative min-h-0">
-        {!loaded && (
-          <Loader2 size={32} color="white" className="animate-spin absolute" />
-        )}
-        {currentUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={currentUrl}
-            alt={current?.fileName || "Shared image"}
-            onLoad={() => setLoaded(true)}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={() => resetGesture()}
-            className="select-none"
-            style={{
-              maxWidth: "100vw",
-              maxHeight: "100%",
-              objectFit: "contain",
-              opacity: loaded ? 1 : 0,
-              transform: `scale(${visible ? scale : 0.92}) translate(${(translate.x + dragX) / scale}px, ${(translate.y + dragY) / scale}px)`,
-              transition: "transform 200ms ease-out, opacity 200ms ease-out",
-              touchAction: "none",
-              cursor: scale > 1 ? "grab" : "default",
-            }}
-            draggable={false}
-          />
-        )}
-        {/* PC arrows: move between images in this chat. */}
-        {hasMultiple && (
-          <>
-            <button
-              onClick={() => goTo(idx - 1)}
-              disabled={idx === 0}
-              aria-label="Previous image"
-              className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full items-center justify-center disabled:opacity-30 active:scale-95 transition-all"
-              style={{ background: "rgba(255,255,255,0.15)" }}
-            >
-              <ChevronLeft size={22} color="white" strokeWidth={2} />
-            </button>
-            <button
-              onClick={() => goTo(idx + 1)}
-              disabled={idx === images.length - 1}
-              aria-label="Next image"
-              className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full items-center justify-center disabled:opacity-30 active:scale-95 transition-all"
-              style={{ background: "rgba(255,255,255,0.15)" }}
-            >
-              <ChevronRight size={22} color="white" strokeWidth={2} />
-            </button>
-          </>
-        )}
+        <div className="relative flex items-center justify-center" style={{ width: "min(92vw, 1400px)", height: "min(86vh, 1000px)" }}>
+          {!loaded && (
+            <Loader2 size={32} color="white" className="animate-spin absolute" />
+          )}
+          {currentUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={currentUrl}
+              alt={current?.fileName || "Shared image"}
+              onLoad={() => setLoaded(true)}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={() => resetGesture()}
+              className="select-none"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+                opacity: loaded ? 1 : 0,
+                transform: `scale(${visible ? scale : 0.92}) translate(${(translate.x + dragX) / scale}px, ${(translate.y + dragY) / scale}px)`,
+                transition: "transform 200ms ease-out, opacity 200ms ease-out",
+                touchAction: "none",
+                cursor: scale > 1 ? "grab" : "default",
+              }}
+              draggable={false}
+            />
+          )}
+          {/* PC arrows: move between images in this chat. */}
+          {hasMultiple && (
+            <>
+              <button
+                onClick={() => goTo(idx - 1)}
+                disabled={idx === 0}
+                aria-label="Previous image"
+                className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full items-center justify-center disabled:opacity-30 active:scale-95 transition-all"
+                style={{ background: "rgba(255,255,255,0.15)" }}
+              >
+                <ChevronLeft size={22} color="white" strokeWidth={2} />
+              </button>
+              <button
+                onClick={() => goTo(idx + 1)}
+                disabled={idx === images.length - 1}
+                aria-label="Next image"
+                className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full items-center justify-center disabled:opacity-30 active:scale-95 transition-all"
+                style={{ background: "rgba(255,255,255,0.15)" }}
+              >
+                <ChevronRight size={22} color="white" strokeWidth={2} />
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Bottom bar: caption + real actions. */}

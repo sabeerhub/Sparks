@@ -58,6 +58,7 @@ export default function ChatsPage() {
   const router = useRouter();
   const { chatList, setChatList } = useChatStore();
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "unread">("all");
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
@@ -151,11 +152,13 @@ export default function ChatsPage() {
 
   const filtered = chatList
     .filter((c) => !c.isArchived)
+    .filter((c) => (filter === "unread" ? (c.unreadCount ?? 0) > 0 : true))
     .filter((c) =>
       c.otherUser.full_name.toLowerCase().includes(search.toLowerCase()) ||
       c.otherUser.username?.toLowerCase().includes(search.toLowerCase())
     );
   const archivedCount = chatList.filter((c) => c.isArchived).length;
+  const totalUnread = chatList.reduce((n, c) => n + (c.unreadCount ?? 0), 0);
 
   const trimmedSearch = search.trim();
   const isSearchMode = trimmedSearch.length > 0;
@@ -259,6 +262,35 @@ export default function ChatsPage() {
                   </button>
                 )}
               </div>
+
+              {/* v1.9.0 — All / Unread filter chips. */}
+              <div className="flex items-center gap-2 mt-3">
+                <button
+                  onClick={() => setFilter("all")}
+                  aria-pressed={filter === "all"}
+                  className="pressable px-3.5 py-1.5 rounded-full text-caption font-semibold"
+                  style={filter === "all"
+                    ? { background: "var(--color-blue)", color: "#fff" }
+                    : { background: "var(--color-gray-3)", color: "var(--color-gray-1)" }}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setFilter("unread")}
+                  aria-pressed={filter === "unread"}
+                  className="pressable px-3.5 py-1.5 rounded-full text-caption font-semibold flex items-center gap-1.5"
+                  style={filter === "unread"
+                    ? { background: "var(--color-blue)", color: "#fff" }
+                    : { background: "var(--color-gray-3)", color: "var(--color-gray-1)" }}
+                >
+                  Unread
+                  {totalUnread > 0 && (
+                    <span className="min-w-4 h-4 px-1 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: filter === "unread" ? "rgba(255,255,255,0.25)" : "var(--color-blue)", color: "#fff" }}>
+                      {totalUnread > 9 ? "9+" : totalUnread}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-2 pt-2 pb-24 space-y-1">
@@ -297,11 +329,11 @@ export default function ChatsPage() {
 
               {!showSkeletons && !isSearchMode && filtered.length === 0 && (
                 <EmptyState
-                  wordmark
-                  title="No chats yet"
-                  subtitle="Search for people and send a Spark Request to connect"
-                  actionLabel="Find People"
-                  onAction={() => router.push("/search")}
+                  wordmark={filter === "all"}
+                  title={filter === "unread" ? "No unread chats" : "No chats yet"}
+                  subtitle={filter === "unread" ? "You're all caught up" : "Search for people and send a Spark Request to connect"}
+                  actionLabel={filter === "unread" ? undefined : "Find People"}
+                  onAction={filter === "unread" ? undefined : () => router.push("/search")}
                 />
               )}
 
@@ -414,23 +446,33 @@ export default function ChatsPage() {
         <BottomNav />
       </div>
 
-      {/* Desktop: sidebar already shows the list, so this panel is just an empty state until a chat is picked. */}
-      <div className="hidden md:flex md:flex-1 md:items-center md:justify-center h-full">
-        <div className="glass-card rounded-[32px] px-8 py-10 flex flex-col items-center text-center max-w-sm mx-8">
-          <div className="mb-4">
+      {/* Desktop: sidebar already shows the list, so this panel is a
+          proper welcome — not a small card floating in a void. */}
+      <div className="hidden md:flex md:flex-1 md:items-center md:justify-center h-full app-surface">
+        <div className="flex flex-col items-center text-center max-w-md mx-8 px-4">
+          <div className="mb-6">
             <SparkWordmark size="medium" animate />
           </div>
-          <p className="text-title font-semibold mb-1">Select a chat</p>
-          <p className="text-body max-w-xs mb-6" style={{ color: "var(--color-gray-1)" }}>
-            Choose a conversation from the sidebar, or start a new one to begin messaging.
+          <p className="font-bold mb-2" style={{ color: "var(--color-black)", fontSize: 28, lineHeight: "34px", letterSpacing: "-0.02em" }}>
+            Your conversations, in one place
+          </p>
+          <p className="text-body mb-8 max-w-sm" style={{ color: "var(--color-gray-1)" }}>
+            Choose a conversation from the sidebar to keep talking, or start a new one. Nobody can message you until you accept their Spark.
           </p>
           <button
             onClick={() => router.push("/chats/new")}
-            className="pressable px-6 py-3 rounded-full text-body font-semibold text-white"
+            className="pressable px-6 py-3 rounded-full text-body font-semibold text-white mb-8"
             style={{ background: "var(--color-blue)", boxShadow: "0 8px 24px rgba(0,122,255,0.3)" }}
           >
             New Chat
           </button>
+          <div className="flex items-center gap-6 text-caption" style={{ color: "var(--color-gray-1)" }}>
+            <span>Real-time messages</span>
+            <span aria-hidden>·</span>
+            <span>Voice &amp; video calls</span>
+            <span aria-hidden>·</span>
+            <span>Spark Requests</span>
+          </div>
         </div>
       </div>
 

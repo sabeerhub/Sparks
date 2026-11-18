@@ -645,6 +645,70 @@ html[data-bubble-size="compact"] { --bubble-pad-x: 12px; --bubble-pad-y: 7px; --
 html[data-bubble-size="standard"] { --bubble-pad-x: 16px; --bubble-pad-y: 10px; --bubble-radius: 24px; }
 html[data-bubble-size="large"] { --bubble-pad-x: 20px; --bubble-pad-y: 14px; --bubble-radius: 28px; }
 
+/* ─── v1.9.0 desktop type scale ───────────────────────────────────────────
+   A PC is not a phone: on desktop widths the reading type steps up one
+   notch (body 16 → 17px, caption 12 → 13px, title 24 → 26px), and a
+   saved Small font / Compact bubbles presentation defaults back to
+   Medium / Standard — presentation only, the user's own saved choice
+   on their phone is never changed. Below 768px nothing changes. */
+@media (min-width: 768px) {
+  .text-body { font-size: 17px; line-height: 26px; }
+  .text-caption { font-size: 13px; line-height: 18px; }
+  .text-title { font-size: 26px; line-height: 32px; }
+  html[data-font-size="small"] { --font-scale: 1; }
+  html[data-bubble-size="compact"] { --bubble-pad-x: 16px; --bubble-pad-y: 10px; --bubble-radius: 24px; }
+}
+
+/* ─── v1.9.0 screen frame ─────────────────────────────────────────────────
+   ScreenContainer's frame: on mobile the phone-like glass column
+   (max-w-sm, full height). On desktop the frame disappears entirely —
+   the page fills the screen like a real desktop app, no phone column
+   floating on a void. */
+.screen-frame-outer {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.screen-frame {
+  height: 100vh;
+  height: 100dvh;
+  width: 100%;
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border-left: 1px solid rgba(255, 255, 255, 0.65);
+  border-right: 1px solid rgba(255, 255, 255, 0.65);
+}
+@media (min-width: 768px) {
+  .screen-frame-outer {
+    min-height: 0;
+    height: 100%;
+    display: block;
+  }
+  .screen-frame {
+    height: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    overflow: visible;
+    box-shadow: none;
+    border-left: none;
+    border-right: none;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 /* ─── v1.7.0 dark theme — opt-in, Light stays the default ───────────────
    One block, one mechanism: `html[data-theme="dark"]` redefines the
    design tokens, and every surface that paints its own fill gets a dark

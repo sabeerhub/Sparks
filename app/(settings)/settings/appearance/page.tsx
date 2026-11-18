@@ -107,7 +107,10 @@ export default function AppearanceSettingsPage() {
               />
             </SettingsCard>
             <p className="text-caption mt-2 px-2" style={{ color: "var(--color-gray-1)" }}>
-              Light is the default. Dark is your choice — or System follows your phone.
+              {/* v1.9.0 — on a computer System follows the computer, not
+                  a phone; the copy says so on desktop widths. */}
+              <span className="md:hidden">Light is the default. Dark is your choice — or System follows your phone.</span>
+              <span className="hidden md:inline">Light is the default. Dark is your choice — or System follows your computer.</span>
             </p>
           </div>
 

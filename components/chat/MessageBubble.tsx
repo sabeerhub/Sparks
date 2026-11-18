@@ -21,8 +21,11 @@ export interface ReplyQuote {
   text: string;
 }
 
-/** Renders `text` with every case-insensitive match of `query` tinted. */
-function HighlightedText({ text, query }: { text: string; query: string }) {
+/** Renders `text` with every case-insensitive match of `query` tinted.
+    v1.9.0 — the CURRENT match's word is tinted stronger; the old code
+    also ringed the whole bubble with a blue outline, which is what the
+    owner complained about ("highlight the word, not the bubble"). */
+function HighlightedText({ text, query, strong = false }: { text: string; query: string; strong?: boolean }) {
   if (!query.trim()) return <>{text}</>;
   const lower = text.toLowerCase();
   const needle = query.trim().toLowerCase();
@@ -40,7 +43,7 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
     <>
       {parts.map((p, i) =>
         p.match ? (
-          <span key={i} style={{ background: "rgba(0,122,255,0.25)", borderRadius: 3, padding: "0 1px" }}>
+          <span key={i} style={{ background: strong ? "rgba(0,122,255,0.45)" : "rgba(0,122,255,0.25)", borderRadius: 3, padding: "0 1px" }}>
             {p.text}
           </span>
         ) : (
@@ -75,6 +78,9 @@ interface MessageBubbleProps {
   highlight?: string;
   /** In-thread search: true when this is the match the user is on. */
   isSearchMatch?: boolean;
+  /** Self-chat (Saved Messages): there is no other reader, so the
+      "Seen by" section would always say "Not seen yet" — hide it. */
+  hideSeenBy?: boolean;
 }
 
 export function MessageBubble({
@@ -94,6 +100,7 @@ export function MessageBubble({
   viewerIndex = 0,
   highlight = "",
   isSearchMatch = false,
+  hideSeenBy = false,
 }: MessageBubbleProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -143,15 +150,37 @@ export function MessageBubble({
   };
 
   return (
-    <div className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2 relative`}>
+    <div className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2 relative group`}>
+      {/* v1.9.0 — desktop hover toolbar: quick react, reply, forward.
+          It sits in the empty space beside the bubble (never on top of
+          a message). Phone keeps the long-press menu; on a PC hovering
+          is the standard way to reach these. */}
       <div
-        className="max-w-[78%] sm:max-w-md"
-        style={
-          isSearchMatch
-            ? { outline: "2px solid var(--color-blue)", outlineOffset: 4, borderRadius: 24 }
-            : undefined
-        }
+        className={`hidden md:flex absolute top-1/2 -translate-y-1/2 z-20 items-center gap-0.5 glass-strong rounded-full px-1 py-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity ${isMine ? "right-full mr-2" : "left-full ml-2"}`}
       >
+        <button
+          onClick={() => onReact("❤️")}
+          aria-label="React with heart"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-[16px] leading-none active:scale-125 transition-transform"
+        >
+          ❤️
+        </button>
+        <button
+          onClick={onReply}
+          aria-label="Reply"
+          className="w-8 h-8 rounded-full flex items-center justify-center active:scale-110 transition-transform"
+        >
+          <ReplyIcon color="var(--color-gray-1)" />
+        </button>
+        <button
+          onClick={onForward}
+          aria-label="Forward"
+          className="w-8 h-8 rounded-full flex items-center justify-center active:scale-110 transition-transform"
+        >
+          <ForwardIcon color="var(--color-gray-1)" />
+        </button>
+      </div>
+      <div className="max-w-[78%] sm:max-w-md">
         {message.is_forwarded && (
           <div className={`flex items-center gap-1 mb-1 px-1 ${isMine ? "justify-end" : "justify-start"}`}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-gray-1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -276,7 +305,7 @@ export function MessageBubble({
                   </span>
                 </span>
               )}
-              {message.text ? <HighlightedText text={message.text} query={highlight} /> : message.text}
+              {message.text ? <HighlightedText text={message.text} query={highlight} strong={isSearchMatch} /> : message.text}
             </button>
           )}
         </div>
@@ -330,6 +359,7 @@ export function MessageBubble({
           readers={readers}
           readersLoading={readersLoading}
           currentUserId={currentUserId}
+          showSeenBy={!hideSeenBy}
           onClose={() => setMenuOpen(false)}
           onReact={(emoji) => {
             onReact(emoji);
@@ -356,6 +386,18 @@ export function MessageBubble({
       )}
     </div>
   );
+}
+
+function hoverIconProps(color: string) {
+  return { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+}
+
+function ReplyIcon({ color }: { color: string }) {
+  return <svg {...hoverIconProps(color)}><polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 00-4-4H4" /></svg>;
+}
+
+function ForwardIcon({ color }: { color: string }) {
+  return <svg {...hoverIconProps(color)}><polyline points="15 17 20 12 15 7" /><path d="M4 18v-2a4 4 0 014-4h12" /></svg>;
 }
 
 function StatusTicks({ status }: { status: DecryptedMessage["status"] }) {

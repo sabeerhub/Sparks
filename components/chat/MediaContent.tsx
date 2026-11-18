@@ -63,12 +63,14 @@ export function MediaContent({ contentType, mediaPath, fileName, isMine, senderN
             </div>
           )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* v1.9.0 — thumbnails are bigger on desktop (was 240px, so
+              document photos were illegible until opened). */}
           <img
             src={url}
             alt={fileName}
             loading="lazy"
             onLoad={() => setImageLoaded(true)}
-            className="max-w-[240px] max-h-[300px] object-cover"
+            className="max-w-[240px] max-h-[300px] md:max-w-[360px] md:max-h-[420px] object-cover"
             style={{ opacity: imageLoaded ? 1 : 0, transition: "opacity 250ms ease-out" }}
           />
         </button>

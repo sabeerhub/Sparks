@@ -203,6 +203,7 @@ export default function ActivityPage() {
       <div className="flex flex-col h-full">
         <StatusBar />
         <div className="frosted-header px-4 pt-4 pb-3">
+          <div className="mx-auto w-full max-w-[720px]">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-title font-bold">Activity</h1>
             {tab === "notifications" && notifications.length > 0 && (
@@ -242,9 +243,11 @@ export default function ActivityPage() {
               );
             })}
           </div>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 pt-4 pb-24">
+          <div className="mx-auto w-full max-w-[720px]">
           {loading && (
             <div className="glass-card rounded-[24px] overflow-hidden">
               <RowSkeleton /><RowSkeleton /><RowSkeleton />
@@ -253,7 +256,11 @@ export default function ActivityPage() {
 
           {!loading && tab === "notifications" && (
             notifications.length === 0
-              ? <EmptyState title="No notifications yet" subtitle="New messages, Spark requests, and updates will appear here." />
+              // v1.9.0 — honest about what creates a notification:
+              // missed calls and new messages (server triggers). Spark
+              // requests do not create one yet, so the old copy
+              // ("Spark requests will appear here") over-promised.
+              ? <EmptyState title="No notifications yet" subtitle="Missed calls and new messages create a notification here. Nothing has arrived yet." />
               : (
                 <div className="glass-card rounded-[24px] overflow-hidden">
                   {notifications.map((n, i) => (
@@ -295,6 +302,7 @@ export default function ActivityPage() {
                 </div>
               )
           )}
+          </div>
         </div>
 
         <div className="md:hidden"><BottomNav /></div>
