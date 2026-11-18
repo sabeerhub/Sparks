@@ -1,3 +1,13 @@
+/**
+ * app/(chat)/chats/[chatId]/page.tsx
+ * v1.5.0 — the thread is the screen people live in, so it gets the most
+ * care: real persisted reactions (they used to live only in memory and
+ * vanish on reload), date separators, a premium empty state, reply
+ * quotes that actually show, WhatsApp-style image navigation, and
+ * auto-scroll that only follows when you are already near the bottom
+ * (reading history never gets yanked away). Glass bubbles sit over a
+ * soft tinted message area, so the frost is real, not white on white.
+ */
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -8,19 +18,21 @@ import { Avatar } from "@/components/ui/Avatar";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { MessageComposer } from "@/components/chat/MessageComposer";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useChat } from "@/hooks/useChat";
 import { usePresence, useProfilePresence, useReceiptUpdates } from "@/hooks/useRealtime";
-import { markRead } from "@/services/message-service";
+import { markRead, reactToMessage, removeReaction, fetchReactions } from "@/services/message-service";
 import { createClient } from "@/lib/supabase";
-import { formatLastSeen } from "@/utils/helpers";
+import { formatLastSeen, formatDayLabel, formatMessageTime, truncatePreview } from "@/utils/helpers";
 import { useCallActions } from "@/components/call/CallProvider";
-import type { Profile, DecryptedMessage } from "@/types";
+import type { Profile, DecryptedMessage, MessageReaction } from "@/types";
+import type { ViewerImage } from "@/components/chat/ImageViewer";
 
 const supabase = createClient();
 
 function MessageSkeleton() {
   return (
-    <div className="flex flex-col gap-3 px-4 py-3">
+    <div className="flex flex-col gap-3 px-4 py-4">
       {[false, true, false, true, true].map((mine, i) => (
         <div key={i} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
           <div
@@ -37,6 +49,19 @@ function MessageSkeleton() {
   );
 }
 
+function DaySeparator({ label }: { label: string }) {
+  return (
+    <div className="flex justify-center my-5">
+      <span
+        className="glass px-3.5 py-1.5 rounded-full text-caption font-medium"
+        style={{ color: "var(--color-gray-1)" }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
 export default function ChatThreadPage() {
   const { chatId } = useParams<{ chatId: string }>();
   const router = useRouter();
@@ -44,10 +69,11 @@ export default function ChatThreadPage() {
   const [otherUserOnline, setOtherUserOnline] = useState(false);
   const [otherUserLastSeen, setOtherUserLastSeen] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [reactions, setReactions] = useState<Record<string, string>>({});
+  const [reactions, setReactions] = useState<Record<string, MessageReaction[]>>({});
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [messageStatuses, setMessageStatuses] = useState<Record<string, DecryptedMessage["status"]>>({});
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const nearBottomRef = useRef(true);
 
   useEffect(() => {
     (async () => {
@@ -90,6 +116,84 @@ export default function ChatThreadPage() {
     setOtherUserLastSeen(lastSeen);
   });
 
+  // Reactions: loaded from the server (message_reactions table) and kept
+  // live — the other person's reaction appears without reloading.
+  const messageIdsKey = messages.map((m) => m.id).join(",");
+  useEffect(() => {
+    if (!messages.length) return;
+    let cancelled = false;
+    fetchReactions(messages.map((m) => m.id))
+      .then((map) => {
+        if (!cancelled) setReactions(map);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatId, messageIdsKey]);
+
+  useEffect(() => {
+    if (!messages.length) return;
+    const channel = supabase
+      .channel(`reactions-${chatId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "message_reactions" }, () => {
+        fetchReactions(messages.map((m) => m.id))
+          .then(setReactions)
+          .catch(() => {});
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatId, messageIdsKey]);
+
+  const handleReact = useCallback(
+    async (messageId: string, emoji: string) => {
+      if (!currentUserId) return;
+      const mine = (reactions[messageId] ?? []).find((r) => r.user_id === currentUserId);
+      // Optimistic: show it at once, then confirm with the server.
+      setReactions((prev) => {
+        const rest = (prev[messageId] ?? []).filter((r) => r.user_id !== currentUserId);
+        return {
+          ...prev,
+          [messageId]:
+            mine?.emoji === emoji
+              ? rest
+              : [...rest, { message_id: messageId, user_id: currentUserId, emoji, created_at: new Date().toISOString() }],
+        };
+      });
+      try {
+        if (mine?.emoji === emoji) await removeReaction(messageId);
+        else await reactToMessage(messageId, emoji);
+        const fresh = await fetchReactions([messageId]);
+        setReactions((prev) => ({ ...prev, ...fresh }));
+      } catch {
+        const fresh = await fetchReactions([messageId]).catch(() => ({} as Record<string, MessageReaction[]>));
+        setReactions((prev) => ({ ...prev, ...fresh }));
+      }
+    },
+    [currentUserId, reactions]
+  );
+
+  const handleRemoveReaction = useCallback(
+    async (messageId: string) => {
+      if (!currentUserId) return;
+      setReactions((prev) => ({
+        ...prev,
+        [messageId]: (prev[messageId] ?? []).filter((r) => r.user_id !== currentUserId),
+      }));
+      try {
+        await removeReaction(messageId);
+      } catch {
+        const fresh = await fetchReactions([messageId]).catch(() => ({} as Record<string, MessageReaction[]>));
+        setReactions((prev) => ({ ...prev, ...fresh }));
+      }
+    },
+    [currentUserId]
+  );
+
   const markMessagesRead = useCallback(async () => {
     if (!messages.length || !currentUserId) return;
     const unread = messages
@@ -118,12 +222,50 @@ export default function ChatThreadPage() {
     setMessageStatuses(statusMap);
   });
 
+  // Auto-scroll follows new messages only when you are already near the
+  // bottom — reading older history is never yanked away.
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    nearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 140;
+  };
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const el = scrollRef.current;
+    if (!el) return;
+    if (nearBottomRef.current) {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    }
+  }, [messages, typingUserIds]);
 
   const isOtherTyping = otherUser ? typingUserIds.includes(otherUser.id) : false;
   const isSelfChat = otherUser && currentUserId ? otherUser.id === currentUserId : false;
+
+  const messageById = new Map(messages.map((m) => [m.id, m]));
+  const replyMessage = replyTo ? messageById.get(replyTo) ?? null : null;
+
+  // Every image in this chat, in order, for prev/next in the viewer.
+  const viewerImages: ViewerImage[] = messages
+    .filter((m) => m.content_type === "image" && m.media_url)
+    .map((m) => ({
+      path: m.media_url as string,
+      senderName: m.sender_id === currentUserId ? "You" : (otherUser?.full_name ?? ""),
+      timestamp: formatMessageTime(m.created_at),
+      fileName: m.text || "Image",
+    }));
+  const viewerIndexById = new Map(
+    messages
+      .filter((m) => m.content_type === "image" && m.media_url)
+      .map((m, i) => [m.id, i])
+  );
+
+  const replyLabel = (m: DecryptedMessage): string => {
+    if (m.deleted_at) return "Message deleted";
+    if (m.content_type === "image") return "📷 Photo";
+    if (m.content_type === "voice") return "🎤 Voice message";
+    if (m.content_type === "file") return m.text || "File";
+    return m.text;
+  };
 
   if (!otherUser) {
     return (
@@ -151,7 +293,7 @@ export default function ChatThreadPage() {
             <ArrowLeft size={22} color="var(--color-blue)" strokeWidth={2} />
           </button>
           <button onClick={() => isSelfChat ? router.push("/profile") : router.push(`/profile/${otherUser.id}`)} className="flex items-center gap-2 min-w-0">
-            <Avatar name={otherUser.full_name} src={otherUser.avatar_url} size={34} online={!isSelfChat && otherUserOnline} />
+            <Avatar name={otherUser.full_name} src={otherUser.avatar_url} size={36} online={!isSelfChat && otherUserOnline} />
             <div className="min-w-0 text-left">
               <div className="text-body font-semibold truncate">{isSelfChat ? "Saved Messages" : otherUser.full_name}</div>
               {!isSelfChat && (
@@ -170,38 +312,81 @@ export default function ChatThreadPage() {
         )}
 
       </div>
-      <div className="flex-1 overflow-y-auto px-4 py-3">
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-4 py-4"
+        style={{
+          // A whisper of blue at the top of the message area, so the
+          // glass bubbles and the frosted header blur something real
+          // instead of flat grey. Barely there, by design.
+          background:
+            "radial-gradient(70% 26% at 50% 0%, rgba(0,122,255,0.05), transparent 70%)",
+        }}
+      >
         {loading && messages.length === 0 ? (
           <MessageSkeleton />
+        ) : messages.length === 0 ? (
+          <EmptyState
+            wordmark
+            title="No messages yet"
+            subtitle={`Send the first message to ${isSelfChat ? "yourself" : otherUser.full_name.split(" ")[0]}`}
+          />
         ) : (
-          messages.map((m) => {
+          messages.map((m, i) => {
             const isMine = m.sender_id === currentUserId;
             const effectiveStatus = isMine && messageStatuses[m.id]
               ? messageStatuses[m.id]
               : m.status;
+            const prev = messages[i - 1];
+            const showDay = !prev || new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
+            const replied = m.reply_to_id ? messageById.get(m.reply_to_id) ?? null : null;
             return (
-              <MessageBubble
-                key={m.id}
-                message={{ ...m, status: effectiveStatus ?? m.status }}
-                isMine={isMine}
-                senderName={isMine ? "You" : otherUser.full_name}
-                reaction={reactions[m.id]}
-                onEdit={(text) => edit(m.id, text)}
-                onDelete={() => remove(m.id)}
-                onReact={(emoji) => setReactions((r) => ({ ...r, [m.id]: emoji }))}
-                onReply={() => setReplyTo(m.id)}
-              />
+              <div key={m.id}>
+                {showDay && <DaySeparator label={formatDayLabel(m.created_at)} />}
+                <MessageBubble
+                  message={{ ...m, status: effectiveStatus ?? m.status }}
+                  isMine={isMine}
+                  senderName={isMine ? "You" : otherUser.full_name}
+                  reactions={reactions[m.id] ?? []}
+                  currentUserId={currentUserId}
+                  onEdit={(text) => edit(m.id, text)}
+                  onDelete={() => remove(m.id)}
+                  onReact={(emoji) => handleReact(m.id, emoji)}
+                  onRemoveReaction={() => handleRemoveReaction(m.id)}
+                  onReply={() => setReplyTo(m.id)}
+                  replyTo={
+                    replied
+                      ? {
+                          senderName: replied.sender_id === currentUserId ? "You" : otherUser.full_name,
+                          text: replyLabel(replied),
+                        }
+                      : null
+                  }
+                  viewerImages={viewerImages}
+                  viewerIndex={viewerIndexById.get(m.id) ?? 0}
+                />
+              </div>
             );
           })
         )}
         {isOtherTyping && <TypingIndicator label={otherUser.full_name.split(" ")[0] ?? otherUser.full_name} />}
-        <div ref={bottomRef} />
       </div>
 
-      {replyTo && (
-        <div className="glass px-4 py-2 flex items-center justify-between border-t flex-shrink-0" style={{ borderColor: "rgba(255,255,255,0.6)" }}>
-          <span className="text-caption" style={{ color: "var(--color-gray-1)" }}>Replying to message</span>
-          <button onClick={() => setReplyTo(null)} className="text-caption font-semibold" style={{ color: "var(--color-blue)" }}>Cancel</button>
+      {replyMessage && (
+        <div className="glass px-4 py-2.5 flex items-center justify-between gap-3 border-t flex-shrink-0" style={{ borderColor: "rgba(255,255,255,0.6)" }}>
+          <div className="min-w-0 flex items-center gap-2.5">
+            <span className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: "var(--color-blue)" }} />
+            <div className="min-w-0">
+              <div className="text-caption font-semibold" style={{ color: "var(--color-blue)" }}>
+                Replying to {replyMessage.sender_id === currentUserId ? "yourself" : otherUser.full_name.split(" ")[0]}
+              </div>
+              <div className="text-caption truncate" style={{ color: "var(--color-gray-1)" }}>
+                {truncatePreview(replyLabel(replyMessage), 60)}
+              </div>
+            </div>
+          </div>
+          <button onClick={() => setReplyTo(null)} className="text-caption font-semibold flex-shrink-0" style={{ color: "var(--color-blue)" }}>Cancel</button>
         </div>
       )}
 

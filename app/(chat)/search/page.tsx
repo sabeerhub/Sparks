@@ -87,7 +87,7 @@ export default function SearchPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2 py-1">
+        <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
           {!query.trim() && (
             <EmptyState
               wordmark

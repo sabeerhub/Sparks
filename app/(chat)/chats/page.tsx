@@ -115,13 +115,11 @@ export default function ChatsPage() {
   };
   const handleDelete = async () => {
     if (!activeChat || !userId) return;
-    if (!window.confirm(`Delete chat with ${activeChat.otherUser.full_name}? This only removes it from your side.`)) return;
     removeLocal(activeChat.chatId);
     await deleteChatForSelf(activeChat.chatId, userId).catch(() => {});
   };
   const handleBlock = async () => {
     if (!activeChat) return;
-    if (!window.confirm(`Block ${activeChat.otherUser.full_name}? They won't be able to message you.`)) return;
     removeLocal(activeChat.chatId);
     await blockUser(activeChat.otherUser.id).catch(() => {});
   };
@@ -172,7 +170,7 @@ export default function ChatsPage() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-2 py-1">
+            <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
               {showSkeletons && (
                 <>{[1,2,3,4,5].map((i) => <ChatRowSkeleton key={i} />)}</>
               )}
@@ -227,6 +225,7 @@ export default function ChatsPage() {
       <ChatActionSheet
         open={!!activeChat}
         onClose={() => setActiveChatId(null)}
+        chatName={activeChat?.otherUser.full_name ?? ""}
         isPinned={activeChat?.isPinned ?? false}
         isMuted={activeChat?.isMuted ?? false}
         onTogglePin={handleTogglePin}

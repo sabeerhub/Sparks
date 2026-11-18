@@ -12,7 +12,7 @@
 import { createClient } from "@/lib/supabase";
 import { canSendMessage, msUntilNextMessageSlot, RateLimitError } from "@/lib/rateLimit";
 import { chatCache } from "@/lib/storage";
-import type { DecryptedMessage, QueuedMessage } from "@/types";
+import type { DecryptedMessage, QueuedMessage, MessageReaction } from "@/types";
 
 const supabase = createClient();
 
@@ -177,8 +177,31 @@ export async function reactToMessage(messageId: string, emoji: string) {
 }
 
 export async function removeReaction(messageId: string) {
-  const { error } = await supabase.from("message_reactions").delete().eq("message_id", messageId);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  // Scoped to the current user: removing my reaction must never remove
+  // the other person's reaction on the same message.
+  const { error } = await supabase
+    .from("message_reactions")
+    .delete()
+    .eq("message_id", messageId)
+    .eq("user_id", user.id);
   if (error) throw error;
+}
+
+/** Loads every reaction on the given messages, grouped by message id. */
+export async function fetchReactions(messageIds: string[]): Promise<Record<string, MessageReaction[]>> {
+  if (!messageIds.length) return {};
+  const { data, error } = await supabase
+    .from("message_reactions")
+    .select("message_id, user_id, emoji, created_at")
+    .in("message_id", messageIds);
+  if (error) throw error;
+  const map: Record<string, MessageReaction[]> = {};
+  ((data ?? []) as MessageReaction[]).forEach((r) => {
+    (map[r.message_id] ??= []).push(r);
+  });
+  return map;
 }
 
 export async function markDelivered(messageIds: string[]) {

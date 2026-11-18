@@ -94,13 +94,11 @@ export function DesktopSidebar() {
   };
   const handleDelete = async () => {
     if (!activeChat || !userId) return;
-    if (!window.confirm(`Delete chat with ${activeChat.otherUser.full_name}?`)) return;
     removeLocal(activeChat.chatId);
     await deleteChatForSelf(activeChat.chatId, userId).catch(() => {});
   };
   const handleBlock = async () => {
     if (!activeChat) return;
-    if (!window.confirm(`Block ${activeChat.otherUser.full_name}?`)) return;
     removeLocal(activeChat.chatId);
     await blockUser(activeChat.otherUser.id).catch(() => {});
   };
@@ -140,7 +138,7 @@ export function DesktopSidebar() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 py-2">
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
         {filtered.length === 0 ? (
           <EmptyState
             wordmark={!search}
@@ -165,6 +163,7 @@ export function DesktopSidebar() {
       <ChatActionSheet
         open={!!activeChat}
         onClose={() => setActiveChatId(null)}
+        chatName={activeChat?.otherUser.full_name ?? ""}
         isPinned={activeChat?.isPinned ?? false}
         isMuted={activeChat?.isMuted ?? false}
         onTogglePin={handleTogglePin}

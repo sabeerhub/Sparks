@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { FileText } from "lucide-react";
 import { getMediaUrl } from "@/services/media-service";
 import { VoiceMessagePlayer } from "@/components/chat/VoiceMessagePlayer";
-import { ImageViewer } from "@/components/chat/ImageViewer";
+import { ImageViewer, type ViewerImage } from "@/components/chat/ImageViewer";
 import { formatMessageTime } from "@/utils/helpers";
 
 interface MediaContentProps {
@@ -14,9 +14,13 @@ interface MediaContentProps {
   isMine: boolean;
   senderName: string;
   timestamp: string;
+  /** All images in this chat, for prev/next in the viewer. Falls back to just this one. */
+  viewerImages?: ViewerImage[];
+  /** This image's position inside viewerImages. */
+  viewerIndex?: number;
 }
 
-export function MediaContent({ contentType, mediaPath, fileName, isMine, senderName, timestamp }: MediaContentProps) {
+export function MediaContent({ contentType, mediaPath, fileName, isMine, senderName, timestamp, viewerImages, viewerIndex = 0 }: MediaContentProps) {
   const [url, setUrl] = useState<string | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -70,9 +74,12 @@ export function MediaContent({ contentType, mediaPath, fileName, isMine, senderN
         </button>
         {viewerOpen && (
           <ImageViewer
-            url={url}
-            senderName={senderName}
-            timestamp={timestamp}
+            images={
+              viewerImages ?? [
+                { path: mediaPath, url, senderName, timestamp, fileName },
+              ]
+            }
+            index={viewerImages ? viewerIndex : 0}
             onClose={() => setViewerOpen(false)}
           />
         )}

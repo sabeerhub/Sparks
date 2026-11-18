@@ -4,6 +4,7 @@
 "use client";
 
 import { useRef } from "react";
+import { VolumeX } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { formatChatListTime, truncatePreview } from "@/utils/helpers";
 import type { ChatListItem as ChatListItemType } from "@/types";
@@ -45,7 +46,7 @@ export function ChatListItem({ item, onClick, onLongPress }: ChatListItemProps) 
       onMouseUp={endPress}
       onMouseLeave={endPress}
       onContextMenu={(e) => { e.preventDefault(); onLongPress(); }}
-      className="glass-row w-full flex items-center gap-3 px-4 py-3.5 min-h-[72px] text-left rounded-2xl active:scale-[0.99] transition-all duration-200"
+      className="glass-row w-full flex items-center gap-3.5 px-4 py-4 min-h-[76px] text-left rounded-2xl active:scale-[0.99] transition-all duration-200"
     >
       <Avatar name={item.otherUser.full_name} src={item.otherUser.avatar_url} size={52} online={item.isOnline} badge={item.unreadCount || null} />
       <div className="flex-1 min-w-0">
@@ -58,9 +59,9 @@ export function ChatListItem({ item, onClick, onLongPress }: ChatListItemProps) 
             {formatChatListTime(item.lastMessageAt)}
           </span>
         </div>
-        <span className="text-body truncate block" style={{ color: item.unreadCount ? "var(--color-black)" : "var(--color-gray-1)", fontWeight: item.unreadCount ? 500 : 400 }}>
-          {item.isMuted && "🔇 "}
-          {truncatePreview(item.lastMessagePreview || "No messages yet")}
+        <span className="text-body truncate flex items-center gap-1.5" style={{ color: item.unreadCount ? "var(--color-black)" : "var(--color-gray-1)", fontWeight: item.unreadCount ? 500 : 400 }}>
+          {item.isMuted && <VolumeX size={13} color="var(--color-gray-1)" strokeWidth={2} className="flex-shrink-0" />}
+          <span className="truncate">{truncatePreview(item.lastMessagePreview || "No messages yet")}</span>
         </span>
       </div>
     </button>

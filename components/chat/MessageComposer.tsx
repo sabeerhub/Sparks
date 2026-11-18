@@ -35,7 +35,7 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
   const [error, setError] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -55,7 +55,15 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
     onSend(trimmed);
     setText("");
     setShowEmoji(false);
+    // Shrink back to one line after sending.
+    if (inputRef.current) inputRef.current.style.height = "auto";
     inputRef.current?.focus();
+  };
+
+  // Auto-grow the composer up to ~5 lines, then scroll inside it.
+  const autoGrow = (el: HTMLTextAreaElement) => {
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 132)}px`;
   };
 
   const handleEmojiPick = (emoji: string) => {
@@ -366,17 +374,26 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
         <div
           className="glass-input flex-1 flex items-end rounded-full px-4 py-2"
         >
-          <input
+          <textarea
             ref={inputRef}
             value={text}
+            rows={1}
             onChange={(e) => {
               setText(e.target.value);
+              autoGrow(e.target);
               onTyping();
             }}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            onKeyDown={(e) => {
+              // Enter sends, Shift+Enter is a new line — like every flagship chat app.
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
             placeholder="Message..."
-            className="flex-1 outline-none text-body bg-transparent"
-            style={{ color: "var(--color-black)" }}
+            aria-label="Message"
+            className="flex-1 outline-none text-body bg-transparent resize-none overflow-y-auto"
+            style={{ color: "var(--color-black)", maxHeight: 132, lineHeight: "24px" }}
           />
           <button
             className="ml-2 w-11 h-11 -mr-2 flex items-center justify-center flex-shrink-0"

@@ -107,6 +107,34 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
   const profileById = new Map<string, Profile>();
   profiles?.forEach((p) => profileById.set(p.id, p));
 
+  // Real unread counts from message_receipts: a message from the other
+  // participant is unread for me when no 'read' receipt row exists for
+  // me. The list used to hard-code 0 here, so unread badges and bold
+  // names never showed at all.
+  const unreadByChatId = new Map<string, number>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const otherMessagesQuery = await (supabase.from("messages") as any)
+    .select("id, chat_id")
+    .in("chat_id", chatIds)
+    .neq("sender_id", userId);
+  const otherMessageIds = (otherMessagesQuery.data ?? []) as { id: string; chat_id: string }[];
+  if (otherMessageIds.length) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const readQuery = await (supabase.from("message_receipts") as any)
+      .select("message_id")
+      .eq("user_id", userId)
+      .eq("status", "read")
+      .in("message_id", otherMessageIds.map((m) => m.id));
+    const readIds = new Set<string>(
+      ((readQuery.data ?? []) as { message_id: string }[]).map((r) => r.message_id)
+    );
+    otherMessageIds.forEach((m) => {
+      if (!readIds.has(m.id)) {
+        unreadByChatId.set(m.chat_id, (unreadByChatId.get(m.chat_id) ?? 0) + 1);
+      }
+    });
+  }
+
   const otherByChatId = new Map<string, Profile>();
   otherUserIdByChatId.forEach((otherUserId, chatId) => {
     const profile = profileById.get(otherUserId);
@@ -132,7 +160,7 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
           return lm.content ?? "";
         })(),
         lastMessageAt: chat.last_message_at,
-        unreadCount: 0, // computed by the caller from message_receipts
+        unreadCount: unreadByChatId.get(m.chat_id) ?? 0,
         isPinned: m.is_pinned,
         isMuted: m.is_muted,
         isArchived: m.is_archived,
@@ -141,6 +169,9 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
     })
     .filter((c): c is ChatListItem => c !== null)
     .sort((a, b) => {
+      // Pinned chats first — pinning did nothing to the order before,
+      // so the pin was only a glyph. Then most recent first.
+      if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
       const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
       const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
       return bTime - aTime;
