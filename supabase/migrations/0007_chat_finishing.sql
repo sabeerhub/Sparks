@@ -47,11 +47,11 @@ begin
   from public.profiles where id = new.sender_id;
 
   if new.content_type = 'image' then
-    v_body := '📷 Photo';
+    v_body := 'Photo';
   elsif new.content_type = 'voice' then
-    v_body := '🎤 Voice message';
+    v_body := 'Voice message';
   elsif new.content_type = 'file' then
-    v_body := '📎 ' || coalesce(new.content, 'File');
+    v_body := coalesce(new.content, 'File');
   else
     v_body := left(coalesce(new.content, ''), 120);
   end if;

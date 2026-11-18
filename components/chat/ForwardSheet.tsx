@@ -93,9 +93,9 @@ export function ForwardSheet({ message, onClose }: ForwardSheetProps) {
 
   const preview =
     message.content_type === "image"
-      ? "📷 Photo"
+      ? "Photo"
       : message.content_type === "voice"
-        ? "🎤 Voice message"
+        ? "Voice message"
         : message.content_type === "file"
           ? message.text || "File"
           : truncatePreview(message.text, 80);

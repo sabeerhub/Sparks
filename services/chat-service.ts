@@ -154,9 +154,9 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
           const lm = lastMessageByChatId.get(m.chat_id);
           if (!lm) return "";
           if (lm.deleted_at) return "This message was deleted";
-          if (lm.content_type === "image") return "\ud83d\udcf7 Photo";
-          if (lm.content_type === "voice") return "\ud83c\udfa4 Voice message";
-          if (lm.content_type === "file") return "\ud83d\udcce File";
+          if (lm.content_type === "image") return "Photo";
+          if (lm.content_type === "voice") return "Voice message";
+          if (lm.content_type === "file") return "File";
           return lm.content ?? "";
         })(),
         lastMessageAt: chat.last_message_at,

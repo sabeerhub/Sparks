@@ -346,8 +346,8 @@ export default function ChatThreadPage() {
 
   const replyLabel = (m: DecryptedMessage): string => {
     if (m.deleted_at) return "Message deleted";
-    if (m.content_type === "image") return "📷 Photo";
-    if (m.content_type === "voice") return "🎤 Voice message";
+    if (m.content_type === "image") return "Photo";
+    if (m.content_type === "voice") return "Voice message";
     if (m.content_type === "file") return m.text || "File";
     return m.text;
   };
