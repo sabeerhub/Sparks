@@ -42,24 +42,24 @@ export default function ForgotPasswordPage() {
         title="Check your email"
         subtitle="We sent a password reset link"
         footer={
-          <button onClick={() => router.push("/login")} className="pressable text-body font-medium" style={{ color: "var(--color-blue)" }}>
+          <button onClick={() => router.push("/login")} className="pressable text-caption font-medium" style={{ color: "var(--color-blue)" }}>
             Back to Log In
           </button>
         }
       >
         <div className="flex flex-col items-center text-center">
-          <div className="glass w-20 h-20 rounded-[28px] flex items-center justify-center mb-5">
+          <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5" style={{ background: "var(--color-blue-light)" }}>
             <MailIcon />
           </div>
-          <p className="text-body leading-relaxed" style={{ color: "var(--color-gray-1)" }}>
+          <p className="text-caption leading-relaxed" style={{ color: "var(--color-gray-1)" }}>
             We sent a password reset link to
           </p>
-          <p className="text-body font-semibold mt-1 mb-2">{email}</p>
-          <p className="text-body leading-relaxed" style={{ color: "var(--color-gray-1)" }}>
+          <p className="text-caption font-semibold mt-1 mb-2">{email}</p>
+          <p className="text-caption leading-relaxed" style={{ color: "var(--color-gray-1)" }}>
             Click the link in the email to reset your password. The link expires in 1 hour.
             Didn&apos;t get it? Check spam, then try again.
           </p>
-          <Button variant="secondary" fullWidth onClick={() => setSent(false)} className="mt-6">
+          <Button variant="secondary" fullWidth shape="rounded" onClick={() => setSent(false)} className="mt-6">
             Try a different email
           </Button>
         </div>
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
       title="Forgot password?"
       subtitle="Enter your email and we'll send you a link to reset your password."
       footer={
-        <p className="text-body" style={{ color: "var(--color-gray-1)" }}>
+        <p className="text-caption" style={{ color: "var(--color-gray-1)" }}>
           Remembered it?{" "}
           <Link href="/login" className="pressable font-semibold" style={{ color: "var(--color-blue)" }}>
             Log In
@@ -80,11 +80,12 @@ export default function ForgotPasswordPage() {
         </p>
       }
     >
-      <button onClick={() => router.push("/login")} className="pressable flex items-center gap-1 text-body font-medium mb-5" style={{ color: "var(--color-blue)" }} aria-label="Back to log in">
+      <button onClick={() => router.push("/login")} className="pressable flex items-center gap-1 text-caption font-medium mb-5" style={{ color: "var(--color-blue)" }} aria-label="Back to log in">
         <BackIcon /> Back
       </button>
 
       <Input
+        variant="auth"
         type="email"
         placeholder="Email address"
         value={email}
@@ -94,7 +95,7 @@ export default function ForgotPasswordPage() {
       />
 
       {error && (
-        <div className="rounded-2xl px-4 py-3 mt-4 text-body" style={{ background: "rgba(255,59,48,0.08)", color: "var(--color-red)" }}>
+        <div className="rounded-xl px-4 py-3 mt-4 text-body" style={{ background: "rgba(255,59,48,0.08)", color: "var(--color-red)" }}>
           <p className="font-medium">{error}</p>
           <p className="text-caption mt-1" style={{ color: "var(--color-gray-1)" }}>
             Check the address and try again, or contact support.
@@ -102,7 +103,7 @@ export default function ForgotPasswordPage() {
         </div>
       )}
 
-      <Button fullWidth loading={loading} onClick={handleSubmit} className="mt-4">
+      <Button fullWidth shape="rounded" loading={loading} onClick={handleSubmit} className="mt-4">
         Send Reset Link
       </Button>
     </AuthShell>

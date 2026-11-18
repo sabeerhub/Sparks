@@ -38,30 +38,30 @@ function VerifyEmailContent() {
   return (
     <>
       <div className="flex flex-col items-center text-center">
-        <div className="glass w-20 h-20 rounded-[28px] flex items-center justify-center mb-5">
+        <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5" style={{ background: "var(--color-blue-light)" }}>
           <MailIcon />
         </div>
-        <p className="text-body leading-relaxed" style={{ color: "var(--color-gray-1)" }}>
+        <p className="text-caption leading-relaxed" style={{ color: "var(--color-gray-1)" }}>
           We sent a verification link to
         </p>
-        {email && <p className="text-body font-semibold mt-1 mb-2">{email}</p>}
-        <p className="text-body leading-relaxed" style={{ color: "var(--color-gray-1)" }}>
+        {email && <p className="text-caption font-semibold mt-1 mb-2">{email}</p>}
+        <p className="text-caption leading-relaxed" style={{ color: "var(--color-gray-1)" }}>
           Click the link in the email to verify your account, then come back to log in.
           No email yet? Check spam, then resend.
         </p>
       </div>
       {resent && (
-        <div className="glass rounded-2xl px-4 py-3 mt-5 text-body font-medium w-full" style={{ color: "var(--color-green)" }}>
+        <div className="rounded-xl px-4 py-3 mt-5 text-caption font-medium w-full" style={{ color: "var(--color-green)", background: "rgba(52,199,89,0.12)" }}>
           ✓ Verification email resent.
         </div>
       )}
       {error && (
-        <p className="text-body mt-4 font-medium text-center" style={{ color: "var(--color-red)" }}>{error}</p>
+        <p className="text-caption mt-4 font-medium text-center" style={{ color: "var(--color-red)" }}>{error}</p>
       )}
-      <Button variant="secondary" fullWidth loading={resending} onClick={handleResend} className="mt-6">
+      <Button variant="secondary" fullWidth shape="rounded" loading={resending} onClick={handleResend} className="mt-6">
         Resend verification email
       </Button>
-      <button onClick={() => router.push("/login")} className="pressable mt-4 w-full text-body font-medium" style={{ color: "var(--color-blue)" }}>
+      <button onClick={() => router.push("/login")} className="pressable mt-4 w-full text-caption font-medium" style={{ color: "var(--color-blue)" }}>
         Back to Log In
       </button>
     </>

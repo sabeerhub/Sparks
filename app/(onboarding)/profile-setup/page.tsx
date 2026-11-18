@@ -54,20 +54,23 @@ export default function ProfileSetupPage() {
     <AuthShell
       title="Set up your profile"
       subtitle="Tell people a bit about yourself"
+      stepLabel="Step 3 of 3"
     >
       <div className="flex justify-center mb-6">
-        <div className="glass rounded-full p-1.5">
+        <div className="rounded-full p-1.5" style={{ background: "var(--color-surface)", border: "1px solid var(--hairline)", boxShadow: "var(--shadow-sm)" }}>
           <Avatar name={fullName || "You"} size={72} />
         </div>
       </div>
 
       <div className="space-y-3">
         <Input
+          variant="auth"
           placeholder="Full Name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
         />
         <Input
+          variant="auth"
           placeholder="Bio (optional)"
           value={bio}
           onChange={(e) => setBio(e.target.value)}
@@ -75,7 +78,7 @@ export default function ProfileSetupPage() {
       </div>
 
       {error && (
-        <div className="rounded-2xl px-4 py-3 mt-4 text-body" style={{ background: "rgba(255,59,48,0.08)", color: "var(--color-red)" }}>
+        <div className="rounded-xl px-4 py-3 mt-4 text-body" style={{ background: "rgba(255,59,48,0.08)", color: "var(--color-red)" }}>
           <p className="font-medium">{error}</p>
           <p className="text-caption mt-1" style={{ color: "var(--color-gray-1)" }}>
             Check your connection and try again — your details aren&apos;t lost.
@@ -83,7 +86,7 @@ export default function ProfileSetupPage() {
         </div>
       )}
 
-      <Button fullWidth loading={loading} onClick={handleContinue} className="mt-6">
+      <Button fullWidth shape="rounded" loading={loading} onClick={handleContinue} className="mt-6">
         Continue to Sparks
       </Button>
     </AuthShell>

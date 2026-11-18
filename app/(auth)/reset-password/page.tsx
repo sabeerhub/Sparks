@@ -60,10 +60,10 @@ export default function ResetPasswordPage() {
         subtitle="Your password has been reset. You can now log in with your new password."
       >
         <div className="flex flex-col items-center">
-          <div className="glass w-20 h-20 rounded-[28px] flex items-center justify-center mb-5">
+          <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5" style={{ background: "rgba(52,199,89,0.12)" }}>
             <CheckIcon />
           </div>
-          <Button fullWidth onClick={() => router.push("/login")}>Log In</Button>
+          <Button fullWidth shape="rounded" onClick={() => router.push("/login")}>Log In</Button>
         </div>
       </AuthShell>
     );
@@ -74,7 +74,7 @@ export default function ResetPasswordPage() {
       title="Create new password"
       subtitle="Choose a strong password for your account."
       footer={
-        <p className="text-body" style={{ color: "var(--color-gray-1)" }}>
+        <p className="text-caption" style={{ color: "var(--color-gray-1)" }}>
           Link expired?{" "}
           <Link href="/forgot-password" className="pressable font-semibold" style={{ color: "var(--color-blue)" }}>
             Request a new one
@@ -86,6 +86,7 @@ export default function ResetPasswordPage() {
         <div>
           <div className="relative">
             <Input
+              variant="auth"
               type={showPassword ? "text" : "password"}
               placeholder="New password"
               value={password}
@@ -119,6 +120,7 @@ export default function ResetPasswordPage() {
         </div>
 
         <Input
+          variant="auth"
           type={showPassword ? "text" : "password"}
           placeholder="Confirm new password"
           value={confirmPassword}
@@ -127,7 +129,7 @@ export default function ResetPasswordPage() {
       </div>
 
       {error && (
-        <div className="rounded-2xl px-4 py-3 mt-4 text-body" style={{ background: "rgba(255,59,48,0.08)", color: "var(--color-red)" }}>
+        <div className="rounded-xl px-4 py-3 mt-4 text-body" style={{ background: "rgba(255,59,48,0.08)", color: "var(--color-red)" }}>
           <p className="font-medium">{error}</p>
           <p className="text-caption mt-1" style={{ color: "var(--color-gray-1)" }}>
             Reset links expire after 1 hour — request a fresh one from the login screen.
@@ -135,7 +137,7 @@ export default function ResetPasswordPage() {
         </div>
       )}
 
-      <Button fullWidth loading={loading} onClick={handleReset} className="mt-6">
+      <Button fullWidth shape="rounded" loading={loading} onClick={handleReset} className="mt-6">
         Reset Password
       </Button>
     </AuthShell>

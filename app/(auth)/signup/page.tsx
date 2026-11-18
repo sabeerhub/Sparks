@@ -114,7 +114,7 @@ export default function SignupPage() {
       title="Create account"
       subtitle="Join Sparks — it's free"
       footer={
-        <p className="text-body" style={{ color: "var(--color-gray-1)" }}>
+        <p className="text-caption" style={{ color: "var(--color-gray-1)" }}>
           Already have an account?{" "}
           <Link href="/login" className="pressable font-semibold" style={{ color: "var(--color-blue)" }}>
             Log In
@@ -123,9 +123,10 @@ export default function SignupPage() {
       }
     >
       <div className="space-y-3">
-        <Input placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+        <Input variant="auth" placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
         <div>
           <Input
+            variant="auth"
             placeholder="@username"
             value={username}
             onChange={(e) => setUsername(e.target.value.replace(/^@/, ""))}
@@ -134,10 +135,11 @@ export default function SignupPage() {
           />
           <UsernameStatus status={usernameStatus} />
         </div>
-        <Input type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} autoCapitalize="none" />
+        <Input variant="auth" type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} autoCapitalize="none" />
         <div>
           <div className="relative">
             <Input
+              variant="auth"
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               value={password}
@@ -155,6 +157,7 @@ export default function SignupPage() {
           <PasswordStrengthBar password={password} />
         </div>
         <Input
+          variant="auth"
           type={showPassword ? "text" : "password"}
           placeholder="Confirm Password"
           value={confirmPassword}
@@ -163,7 +166,7 @@ export default function SignupPage() {
       </div>
 
       {error && (
-        <div className="rounded-2xl px-4 py-3 mt-4 text-body" style={{ background: "rgba(255,59,48,0.08)", color: "var(--color-red)" }}>
+        <div className="rounded-xl px-4 py-3 mt-4 text-body" style={{ background: "rgba(255,59,48,0.08)", color: "var(--color-red)" }}>
           <p className="font-medium">{error}</p>
           <p className="text-caption mt-1" style={{ color: "var(--color-gray-1)" }}>
             Fix the detail above and try again — nothing is saved until it works.
@@ -171,6 +174,12 @@ export default function SignupPage() {
         </div>
       )}
 
+      {/* v1.11.0 — the terms checkbox is a real gate, not decoration.
+          The Sign Up button is disabled AND visibly blurred/greyed
+          while the box is unticked, and handleSignUp also refuses to
+          submit without it — there is no way through unticked. The
+          Terms / Privacy Policy words link to the real /terms and
+          /privacy pages in the app. */}
       <label className="flex items-start gap-3 mt-5 cursor-pointer">
         <input
           type="checkbox"
@@ -179,16 +188,28 @@ export default function SignupPage() {
           className="mt-0.5 w-4 h-4 rounded flex-shrink-0"
           style={{ accentColor: "var(--color-blue)" }}
         />
-        <span className="text-body" style={{ color: "var(--color-gray-1)" }}>
+        <span className="text-caption leading-relaxed" style={{ color: "var(--color-gray-1)" }}>
           I agree to the{" "}
           <Link href="/terms" className="pressable" style={{ color: "var(--color-blue)" }}>Terms of Service</Link> and{" "}
           <Link href="/privacy" className="pressable" style={{ color: "var(--color-blue)" }}>Privacy Policy</Link>
         </span>
       </label>
 
-      <Button fullWidth loading={loading} onClick={handleSignUp} className="mt-5">
+      <Button
+        fullWidth
+        shape="rounded"
+        loading={loading}
+        disabled={!agreedToTerms}
+        onClick={handleSignUp}
+        className={agreedToTerms ? "mt-5" : "mt-5 grayscale blur-[1px]"}
+      >
         Create Account
       </Button>
+      {!agreedToTerms && (
+        <p className="text-caption text-center mt-3" style={{ color: "var(--color-gray-1)" }}>
+          Tick the box above to agree to the Terms and continue.
+        </p>
+      )}
     </AuthShell>
   );
 }

@@ -48,7 +48,7 @@ export default function LoginPage() {
       title="Welcome back"
       subtitle="Log in to continue"
       footer={
-        <p className="text-body" style={{ color: "var(--color-gray-1)" }}>
+        <p className="text-caption" style={{ color: "var(--color-gray-1)" }}>
           Don&apos;t have an account?{" "}
           <Link href="/signup" className="pressable font-semibold" style={{ color: "var(--color-blue)" }}>
             Create Account
@@ -57,13 +57,14 @@ export default function LoginPage() {
       }
     >
       {verified && (
-        <div className="glass rounded-2xl px-4 py-3 mb-5 text-body font-medium" style={{ color: "var(--color-green)" }}>
+        <div className="rounded-xl px-4 py-3 mb-5 text-body font-medium" style={{ color: "var(--color-green)", background: "rgba(52,199,89,0.12)" }}>
           ✓ Email verified — you can now log in.
         </div>
       )}
 
       <div className="space-y-3">
         <Input
+          variant="auth"
           placeholder="Email or username"
           value={identifier}
           onChange={(e) => setIdentifier(e.target.value)}
@@ -73,6 +74,7 @@ export default function LoginPage() {
         />
         <div className="relative">
           <Input
+            variant="auth"
             type={showPassword ? "text" : "password"}
             placeholder="Password"
             value={password}
@@ -91,7 +93,7 @@ export default function LoginPage() {
       </div>
 
       {error && (
-        <div className="rounded-2xl px-4 py-3 mt-4 text-body" style={{ background: "rgba(255,59,48,0.08)", color: "var(--color-red)" }}>
+        <div className="rounded-xl px-4 py-3 mt-4 text-body" style={{ background: "rgba(255,59,48,0.08)", color: "var(--color-red)" }}>
           <p className="font-medium">{error}</p>
           <p className="text-caption mt-1" style={{ color: "var(--color-gray-1)" }}>
             Double-check your details, or{" "}
@@ -103,8 +105,16 @@ export default function LoginPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between mt-4 mb-6">
-        <label className="flex items-center gap-2 text-body cursor-pointer">
+      <Button fullWidth shape="rounded" loading={loading} onClick={handleSignIn} className="mt-5">Log In</Button>
+
+      <div className="flex items-center gap-3 my-5" aria-hidden="true">
+        <div className="h-px flex-1" style={{ background: "var(--hairline)" }} />
+        <span className="text-caption font-semibold" style={{ color: "var(--color-gray-1)" }}>OR</span>
+        <div className="h-px flex-1" style={{ background: "var(--hairline)" }} />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <label className="flex items-center gap-2 text-caption cursor-pointer">
           <input
             type="checkbox"
             checked={rememberMe}
@@ -114,12 +124,10 @@ export default function LoginPage() {
           />
           <span style={{ color: "var(--color-gray-1)" }}>Remember me</span>
         </label>
-        <Link href="/forgot-password" className="pressable text-body font-medium" style={{ color: "var(--color-blue)" }}>
+        <Link href="/forgot-password" className="pressable text-caption font-medium" style={{ color: "var(--color-blue)" }}>
           Forgot password?
         </Link>
       </div>
-
-      <Button fullWidth loading={loading} onClick={handleSignIn}>Log In</Button>
     </AuthShell>
   );
 }

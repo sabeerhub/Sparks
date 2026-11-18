@@ -17,6 +17,13 @@
  * below its label). Callers must size the slot to fit the label —
  * see the friend profile action row, where the widths are measured
  * out at 360px in the page's header comment.
+ *
+ * v1.11.0 — `shape` prop: "pill" (default, the rounded-full button
+ * the whole app uses) or "rounded" (12px radius, the Instagram-style
+ * auth button). Only the auth / onboarding screens use "rounded";
+ * every other button in the app is untouched. Radius comes from
+ * `shape` only — never override a Button's radius through className
+ * (same Tailwind-ordering trap as padding, see above).
  */
 import { type ButtonHTMLAttributes, forwardRef } from "react";
 import { classNames } from "@/utils/helpers";
@@ -35,13 +42,15 @@ const SIZES: Record<ButtonSize, string> = {
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "text" | "danger";
   size?: ButtonSize;
+  /** "pill" (default) or "rounded" (12px, Instagram-style auth button). */
+  shape?: "pill" | "rounded";
   loading?: boolean;
   fullWidth?: boolean;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", size = "lg", loading = false, fullWidth = false, className, children, disabled, ...props }, ref) => {
-    const base = "pressable rounded-full font-semibold disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2 whitespace-nowrap";
+  ({ variant = "primary", size = "lg", shape = "pill", loading = false, fullWidth = false, className, children, disabled, ...props }, ref) => {
+    const base = "pressable font-semibold disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2 whitespace-nowrap";
 
     const variants: Record<string, string> = {
       primary: "text-white",
@@ -66,7 +75,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        className={classNames(base, variants[variant], padding, fullWidth && "w-full", className)}
+        className={classNames(base, variants[variant], shape === "rounded" ? "rounded-xl" : "rounded-full", padding, fullWidth && "w-full", className)}
         style={style}
         disabled={disabled || loading}
         {...props}

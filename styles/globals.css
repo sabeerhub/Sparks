@@ -552,6 +552,24 @@ textarea:focus-visible {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
+/* ─── v1.11.0 Instagram-style auth field ─────────────────────────────────
+   The auth/onboarding screens use a calm filled field, not a glass
+   pill: light grey fill, 12px radius, hairline border, blue focus
+   ring. The fill is a token, so dark mode gets its own version below
+   (dark fill + white hairline). The rest of the app keeps the glass
+   pill — this class is only used by the auth variant of Input. */
+.auth-input {
+  background: var(--color-gray-2);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  box-shadow: none;
+}
+.auth-input:focus {
+  border-color: var(--color-blue);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.12);
+}
+
 /* Composer placeholder: clean grey text, no box around it. */
 .composer-textarea::placeholder {
   color: var(--color-gray-1);
@@ -798,6 +816,16 @@ html[data-theme="dark"] .glass-input:focus-within {
 html[data-theme="dark"] .glass-input.no-focus-ring:focus-within {
   border-color: rgba(255, 255, 255, 0.12);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+/* v1.11.0 auth field on dark: faint white fill, white hairline, blue halo. */
+html[data-theme="dark"] .auth-input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+html[data-theme="dark"] .auth-input:focus {
+  border-color: var(--color-blue);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.25);
 }
 html[data-theme="dark"] .glass-row:hover {
   background: rgba(255, 255, 255, 0.08);
