@@ -52,21 +52,12 @@ const HERO_DETAILS = [
 
 /**
  * One calm row of the four characters — overlapping circles with a thin
- * white ring, so they read premium, not crowded. Used on the desktop
- * hero (beside the line) and at the bottom of the mobile splash landing
- * (stacked above the line).
+ * white ring, so they read premium, not crowded. Desktop hero only:
+ * on mobile the landing is the animation alone, with nothing else.
  */
-function CharacterRow({
-  vertical = false,
-  className = "",
-}: {
-  vertical?: boolean;
-  className?: string;
-}) {
+function CharacterRow({ className = "" }: { className?: string }) {
   return (
-    <div
-      className={`flex ${vertical ? "flex-col items-center gap-2.5" : "flex-row items-center gap-3"} ${className}`}
-    >
+    <div className={`flex flex-row items-center gap-3 ${className}`}>
       <div className="flex items-center">
         {LANDING_CHARACTERS.map((character, index) => (
           <span
@@ -123,21 +114,15 @@ export default function LandingPage() {
     return <div className="min-h-screen bg-white" aria-hidden="true" />;
   }
 
-  // MOBILE FLOW: the landing page is the animation first. When it ends
+  // MOBILE FLOW: the landing page is the animation ONLY. When it ends
   // — or the user taps to skip — go straight to the login page (which
   // links to signup). The splash shows on every mobile visit, because
-  // on mobile the animation IS the landing.
+  // on mobile the animation IS the landing. Nothing else on this
+  // screen: no characters, no extra lines, no cards.
   if (isMobile) {
     return (
       <MotionConfig reducedMotion="user">
         <SparkSplash onDone={() => router.replace("/login")} />
-        {/* Characters on the mobile landing — the splash IS the landing
-            on mobile, so the row sits at the bottom of it. It does not
-            touch the animation: pointer-events-none, so taps still reach
-            the splash (tap anywhere to skip). */}
-        <div className="pointer-events-none fixed inset-x-0 bottom-10 z-[60] flex justify-center">
-          <CharacterRow vertical />
-        </div>
       </MotionConfig>
     );
   }
