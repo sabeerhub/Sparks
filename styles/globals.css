@@ -404,32 +404,30 @@ html, body {
     0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-/* Dark liquid-glass bottom nav (v1.6.1) — the reference picture:
-   a near-black translucent bar, blur + saturate, a bright thin edge
-   on top so the bar reads as glass over whatever scrolls behind it.
-   Kept separate from .frosted-pill (light) on purpose: the nav is
-   dark while the rest of the app stays light.
-   v1.6.1 (always glass): real glass is only visible when there is
-   something to blur, and the chat list behind the pill is mostly flat
-   pale grey — so the pill carries its OWN faint aurora inside it
-   (deep blue-violet tints layered over the translucent dark fill) plus
-   a soft inner highlight along the bottom edge. The blur + saturate
-   are still real; the internal aurora just means the pill never reads
-   as a flat dark bar, whatever is behind it. */
-.nav-glass-dark {
+/* Light liquid-glass bottom nav (v1.7.1) — in the app's own design
+   colours only: white translucent glass, blur + saturate, a bright
+   hairline edge, exactly like the rest of the app. The v1.6.1 dark
+   slate-blue bar was rejected by the user ("out of our design
+   colours") and is gone — no dark bar, no slate-blue, no grey-blue.
+   v1.6.1 (always glass) still applies: real glass is only visible
+   when there is something to blur, and the chat list behind the pill
+   is mostly flat pale grey — so the pill carries its OWN faint aurora
+   inside it (soft Apple-blue tints layered over the white fill) plus
+   a soft inner highlight, so it never reads as a flat white bar,
+   whatever is behind it. The blur + saturate are still real. */
+.nav-glass {
   background:
-    radial-gradient(120% 150% at 10% 0%, rgba(0, 122, 255, 0.30), transparent 55%),
-    radial-gradient(120% 150% at 90% 100%, rgba(147, 164, 255, 0.24), transparent 55%),
-    radial-gradient(90% 130% at 50% 130%, rgba(0, 122, 255, 0.16), transparent 60%),
-    rgba(18, 18, 22, 0.72);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  backdrop-filter: blur(28px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+    radial-gradient(120% 150% at 10% 0%, rgba(0, 122, 255, 0.14), transparent 55%),
+    radial-gradient(120% 150% at 90% 100%, rgba(0, 122, 255, 0.10), transparent 55%),
+    rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
-    0 12px 32px rgba(0, 0, 0, 0.35),
-    0 2px 8px rgba(0, 0, 0, 0.25);
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(0, 122, 255, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.14),
+    0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 /* Slow light sheen drifting across the whole nav pill (v1.6.1) —
@@ -463,40 +461,35 @@ html, body {
   65%, 100% { transform: translateX(280%) skewX(-12deg); }
 }
 
-/* The active tab's bubble (v1.6.1) — a bigger capsule than the bar,
-   lighter glass with a bright glowing edge, clearly lifted above the
-   bar. It is positioned -inset-y-4 on the tab button, so it bulges
-   above and below the bar exactly like the picture. The bubble glides
-   between tabs via the framer-motion layoutId on the element that
-   carries this class. It also breathes gently (glow only — never
-   transform, so it never fights the spring glide). */
+/* The active tab's indicator (v1.7.1) — a standard in-bar capsule:
+   it sits INSIDE the bar (inset 0 of the tab button), the same height
+   as the tab content, rounded-full, solid Apple blue with the icon +
+   label in white — the clean iOS/WhatsApp standard. It glides between
+   tabs via the framer-motion layoutId on the element that carries this
+   class. The v1.6.1 tall grey-blue oval bulging above and below the
+   bar was rejected by the user ("not standard and beautiful") and is
+   gone. It breathes gently (blue glow only — never transform, so it
+   never fights the spring glide). The fill is var(--color-blue), so
+   dark mode gets #0A84FF automatically. */
 .nav-active-bubble {
-  background:
-    radial-gradient(120% 120% at 50% 0%, rgba(160, 200, 255, 0.28), transparent 60%),
-    rgba(255, 255, 255, 0.22);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: var(--color-blue);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
-    0 4px 16px rgba(0, 0, 0, 0.35);
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 4px 14px rgba(0, 122, 255, 0.35);
   animation: nav-bubble-breathe 4s ease-in-out infinite;
 }
 
 @keyframes nav-bubble-breathe {
   0%, 100% {
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.6),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.12),
-      0 4px 16px rgba(0, 0, 0, 0.35);
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      0 4px 14px rgba(0, 122, 255, 0.35);
   }
   50% {
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.65),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.12),
-      0 4px 16px rgba(0, 0, 0, 0.35),
-      0 0 24px rgba(120, 170, 255, 0.35);
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      0 4px 14px rgba(0, 122, 255, 0.35),
+      0 0 20px rgba(0, 122, 255, 0.35);
   }
 }
 
@@ -783,5 +776,22 @@ html[data-theme="dark"] .wordmark-shine-band {
   background: linear-gradient(105deg, transparent, rgba(10, 132, 255, 0.45) 50%, transparent);
 }
 
-/* The dark nav and the call screen are dark in both themes already —
-   nothing to override there. */
+/* Bottom nav on dark (v1.7.1): the same light-glass shape, dark
+   translucent fill + blur + bright edge, soft blue aurora inside so
+   it never reads flat. The active capsule needs no override —
+   var(--color-blue) is already #0A84FF on dark. */
+html[data-theme="dark"] .nav-glass {
+  background:
+    radial-gradient(120% 150% at 10% 0%, rgba(10, 132, 255, 0.20), transparent 55%),
+    radial-gradient(120% 150% at 90% 100%, rgba(10, 132, 255, 0.14), transparent 55%),
+    rgba(28, 28, 30, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* The call screen is dark in both themes already — nothing to
+   override there. */
