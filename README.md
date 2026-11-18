@@ -9,7 +9,7 @@
 A privacy-first messaging app. Light by default with opt-in Dark mode, Apple-blue accent,
 mobile-first. Next.js (App Router) + Supabase + WebRTC.
 
-> **Honest status (v1.7.1):** messages are **not** end-to-end encrypted
+> **Honest status (v1.7.2):** messages are **not** end-to-end encrypted
 > in V1 — they are plain text, protected by Supabase Auth + RLS + HTTPS +
 > encryption at rest. True E2E encryption is planned for a future version,
 > not built yet. See [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md).
