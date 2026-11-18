@@ -91,6 +91,10 @@ begin
 end;
 $$ language plpgsql security definer set search_path = public, pg_temp;
 
+-- Drop first so the file can be run again safely — CREATE TRIGGER has
+-- no IF NOT EXISTS, so a second run used to die here with 42710.
+drop trigger if exists trg_notify_new_message on public.messages;
+
 create trigger trg_notify_new_message
   after insert on public.messages
   for each row execute function public.notify_new_message();
@@ -107,6 +111,9 @@ begin
   return new;
 end;
 $$ language plpgsql security definer set search_path = public, pg_temp;
+
+-- Same drop-first guard as above: safe to re-run.
+drop trigger if exists trg_unarchive_on_message on public.messages;
 
 create trigger trg_unarchive_on_message
   after insert on public.messages
