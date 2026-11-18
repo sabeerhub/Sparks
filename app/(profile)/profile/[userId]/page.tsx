@@ -1,53 +1,35 @@
 /**
  * app/(profile)/profile/[userId]/page.tsx
- * v1.8.1 — Apple-level minimalist rebuild. The v1.8.0 rebuild looked
- * right in code but not on his phone: the blue "Message" pill was too
- * small for its label ("Message" burst out of both sides) and the
- * Block row's description was cut off. Both are fixed here, and the
- * whole page is restyled to the Apple standard: open space, one clear
- * hierarchy (avatar → name → handle → stats → actions → tabs →
- * content), hairline dividers instead of heavy cards, one 48px action
- * height, nothing clipped, nothing cramped.
- *
- * ACTION ROW WIDTHS, measured at a 360px viewport (the narrowest
- * phone this must fit — worst case is the accepted state, Message +
- * voice + video + Share):
- *   360 − 32 (header px-4) − 24 (3 × 8px gaps) − 144 (3 × 48px
- *   circles) = 160px for the Message slot. "Message" at 16px semibold
- *   is ~67px + 40px (md px-5) = ~107px, so ~53px spare. At 320px the
- *   slot is 120px — still fits with ~13px spare. The old row left
- *   only ~80px for Message (two 52px circles + a ~112px Share pill)
- *   against ~115px needed — that is why the label burst out.
- *   Share is an icon circle now (the WhatsApp/Instagram pattern);
- *   the header already has a Share button too.
- *
- * Honest rules kept here:
- * - "Message" is NOT a separate button: the SparkRequestButton below
- *   already shows a real Message button once the Spark is accepted,
- *   and a standalone Message button would bypass the Spark handshake
- *   — the rule that nobody can message you until you accept them.
- * - No Report button: Sparks has no report feature, so none is shown.
- * - Block IS real (blocked_users table): a real Block / Unblock row.
- * - No fake counts: Total Sparks, Connections and Days Active are all
- *   read from the server; the media grid shows only photos that
- *   actually exist in your chat with this person.
- * - The nickname editor is a real bottom sheet now — window.prompt
- *   is gone.
+ * v1.8.2 — two refinements on the friend profile, the user's pick
+ * after seeing v1.8.1:
+ * - Top-right Share button is now a 3-dot menu (bottom sheet on
+ *   mobile, centred menu on desktop): Share profile (the same share
+ *   flow), About account (switches to the About tab), Block user in
+ *   red (the SAME two-tap block flow as the Block row below — first
+ *   tap arms, second confirms; "Unblock user" while blocked). The
+ *   bottom Block row stays as the visible safety action.
+ * - Shared media grid is now the standard: square 1:1 tiles, uniform
+ *   2px gaps, clean edges — and tapping a photo opens it full-screen
+ *   in the WhatsApp-standard image viewer (sender + time + n of m,
+ *   Download + Share, pinch/double-tap zoom, Esc/arrows). The old
+ *   3:4 portrait tiles were plain images with no tap action.
  */
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronLeft, Share2, Pencil, Phone, Video, LayoutGrid, User, Image as ImageIcon, Ban, X } from "lucide-react";
+import { ChevronLeft, Share2, Pencil, Phone, Video, LayoutGrid, User, Image as ImageIcon, Ban, X, MoreHorizontal, Info } from "lucide-react";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { ShareProfileSheet } from "@/components/profile/ShareProfileSheet";
 import { TikTokProfileHeader } from "@/components/profile/TikTokProfileHeader";
 import { SparkRequestButton } from "@/components/spark/SparkRequestButton";
+import { ImageViewer, type ViewerImage } from "@/components/chat/ImageViewer";
 import { createClient } from "@/lib/supabase";
 import { getSparkConnectionsCount, getNickname, setNickname, findDirectChatId, isUserBlocked, blockUser, unblockUser } from "@/services/chat-service";
 import { hasAcceptedSpark } from "@/services/spark-service";
 import { getChatMedia, getMediaUrl } from "@/services/media-service";
 import { useCallActions } from "@/components/call/CallProvider";
+import { formatMessageTime } from "@/utils/helpers";
 import type { Profile } from "@/types";
 
 const supabase = createClient();
@@ -118,8 +100,12 @@ export default function PublicProfilePage() {
   const [loading, setLoading] = useState(true);
   const [canCall, setCanCall] = useState(false);
   const [tab, setTab] = useState<"media" | "about">("media");
-  const [mediaThumbs, setMediaThumbs] = useState<string[]>([]);
+  // Shared media, with sender + time + file name attached — the grid
+  // needs them to open a photo in the full image viewer.
+  const [mediaItems, setMediaItems] = useState<{ id: string; mediaPath: string; url: string; senderId: string; createdAt: string; fileName: string }[]>([]);
   const [mediaLoading, setMediaLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [blocked, setBlocked] = useState(false);
   const [blockArmed, setBlockArmed] = useState(false);
   const [blockBusy, setBlockBusy] = useState(false);
@@ -152,9 +138,13 @@ export default function PublicProfilePage() {
           setMediaLoading(false);
           return;
         }
-        const items = await getChatMedia(chatId, 9);
-        const urls = await Promise.all(items.map((t) => getMediaUrl(t.mediaPath)));
-        setMediaThumbs(urls.filter((u): u is string => !!u));
+        // The grid + viewer show the whole shared history, sent and
+        // received, newest first — not just the first few photos.
+        const items = await getChatMedia(chatId, 100);
+        const resolved = await Promise.all(
+          items.map(async (t) => ({ ...t, url: await getMediaUrl(t.mediaPath) }))
+        );
+        setMediaItems(resolved.filter((t): t is typeof t & { url: string } => !!t.url));
         setMediaLoading(false);
       });
     } else {
@@ -209,6 +199,28 @@ export default function PublicProfilePage() {
     }
   };
 
+  // The menu's Block row runs the SAME two-tap flow as the Block row
+  // below — it just lives in the menu. First tap arms it (the menu
+  // stays open and the row becomes "Confirm block"); second tap
+  // confirms and the menu closes. Unblocking closes straight away.
+  const handleMenuBlock = async () => {
+    if (blocked || blockArmed) {
+      await handleBlockToggle();
+      setMenuOpen(false);
+      return;
+    }
+    handleBlockToggle();
+  };
+
+  // Every shared photo, in grid order, for the full image viewer.
+  const viewerImages: ViewerImage[] = mediaItems.map((t) => ({
+    path: t.mediaPath,
+    url: t.url,
+    senderName: t.senderId === currentUserId ? "You" : profile?.full_name ?? "",
+    timestamp: formatMessageTime(t.createdAt),
+    fileName: t.fileName,
+  }));
+
   if (loading || !profile) {
     return (
       <div className="app-surface h-full w-full flex flex-col">
@@ -224,7 +236,9 @@ export default function PublicProfilePage() {
     <div className="app-surface h-full w-full flex flex-col overflow-hidden">
       <StatusBar />
 
-      {/* Top bar — TikTok style: back left, @username centred, share right. */}
+      {/* Top bar — TikTok style: back left, @username centred, 3-dot
+          menu right. The menu holds Share profile, About account and
+          Block user — every row does something real. */}
       <div className="flex items-center justify-between px-4 pt-3 flex-shrink-0">
         <button
           onClick={() => router.back()}
@@ -237,11 +251,12 @@ export default function PublicProfilePage() {
           @{profile.username}
         </span>
         <button
-          onClick={() => setShareOpen(true)}
+          onClick={() => setMenuOpen(true)}
           className="glass pressable w-11 h-11 rounded-full flex items-center justify-center"
-          aria-label="Share profile"
+          aria-label="More options"
+          aria-haspopup="menu"
         >
-          <Share2 size={18} color="var(--color-blue)" strokeWidth={1.8} />
+          <MoreHorizontal size={20} color="var(--color-blue)" strokeWidth={2} />
         </button>
       </div>
 
@@ -344,33 +359,44 @@ export default function PublicProfilePage() {
           </div>
 
           {tab === "media" ? (
-            <div className="px-0.5 pt-0.5">
+            /* Shared media — the standard grid (WhatsApp / Instagram):
+               square 1:1 tiles, uniform 2px gaps, clean square edges,
+               flush to the screen edges. Tapping a photo opens it
+               full-screen in the image viewer (sender + time, n of m,
+               Download + Share, pinch / double-tap zoom). */
+            <div>
               {mediaLoading ? (
                 <div className="grid grid-cols-3 gap-[2px]">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="rounded-[10px] animate-pulse" style={{ aspectRatio: "3 / 4", background: "var(--color-gray-3)" }} />
+                    <div key={i} className="aspect-square animate-pulse" style={{ background: "var(--color-gray-3)" }} />
                   ))}
                 </div>
-              ) : mediaThumbs.length > 0 ? (
+              ) : mediaItems.length > 0 ? (
                 <>
                   <div className="px-3 py-2">
                     <span className="text-caption font-semibold uppercase tracking-wide" style={{ color: "#6E6E73" }}>
-                      {mediaThumbs.length} {mediaThumbs.length === 1 ? "photo" : "photos"} shared
+                      {mediaItems.length} {mediaItems.length === 1 ? "photo" : "photos"} shared
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-[2px]">
-                    {mediaThumbs.map((url) => (
-                      <div key={url} className="rounded-[10px] overflow-hidden row-overlay">
+                    {mediaItems.map((item, i) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setViewerIndex(i)}
+                        aria-label={`Open shared photo ${i + 1} of ${mediaItems.length}`}
+                        className="pressable relative aspect-square overflow-hidden"
+                        style={{ background: "var(--color-gray-3)" }}
+                      >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={url}
+                          src={item.url}
                           alt=""
                           loading="lazy"
-                          className="w-full object-cover"
-                          style={{ aspectRatio: "3 / 4" }}
-                          onError={() => setMediaThumbs((prev) => prev.filter((u) => u !== url))}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          onError={() => setMediaItems((prev) => prev.filter((t) => t.id !== item.id))}
                         />
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </>
@@ -462,6 +488,89 @@ export default function PublicProfilePage() {
         userId={profile.id}
         username={profile.username}
       />
+
+      {/* 3-dot menu — iOS action-sheet style: frosted glass, drag
+          handle, calm icon rows with hairline separators, Cancel below.
+          Bottom sheet on mobile, centred menu on desktop. Every row
+          does something real: Share opens the share flow, About
+          account switches to the About tab, Block runs the same
+          two-tap block flow as the Block row below. */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center md:items-center"
+          onClick={() => { setMenuOpen(false); setBlockArmed(false); }}
+          role="menu"
+          aria-label="Profile options"
+        >
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.4)" }} />
+          <div
+            className="glass-strong relative w-full max-w-lg md:max-w-[380px] rounded-t-3xl md:rounded-[28px] px-2 pt-3 pb-6 md:pb-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 rounded-full mx-auto mb-3 md:hidden" style={{ background: "var(--color-gray-3)" }} />
+
+            <div className="rounded-2xl overflow-hidden" style={{ background: "var(--color-row-overlay)" }}>
+              <button
+                type="button"
+                onClick={() => { setMenuOpen(false); setShareOpen(true); }}
+                className="pressable w-full flex items-center gap-3 px-4 py-3.5 text-left"
+              >
+                <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.12)" }}>
+                  <Share2 size={16} color="var(--color-blue)" strokeWidth={1.8} />
+                </span>
+                <span className="text-body" style={{ color: "var(--color-black)" }}>Share profile</span>
+              </button>
+              <div className="ml-[60px]" style={{ height: 1, background: "var(--hairline)" }} />
+              <button
+                type="button"
+                onClick={() => { setMenuOpen(false); setTab("about"); }}
+                className="pressable w-full flex items-center gap-3 px-4 py-3.5 text-left"
+              >
+                <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "var(--color-gray-3)" }}>
+                  <Info size={16} color="var(--color-gray-1)" strokeWidth={1.8} />
+                </span>
+                <span className="text-body" style={{ color: "var(--color-black)" }}>About account</span>
+              </button>
+              {!isSelf && (
+                <>
+                  <div className="ml-[60px]" style={{ height: 1, background: "var(--hairline)" }} />
+                  <button
+                    type="button"
+                    onClick={handleMenuBlock}
+                    disabled={blockBusy}
+                    className="pressable w-full flex items-center gap-3 px-4 py-3.5 text-left disabled:opacity-50"
+                  >
+                    <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,59,48,0.12)" }}>
+                      <Ban size={16} color="#FF3B30" strokeWidth={1.8} />
+                    </span>
+                    <span className="text-body font-medium" style={{ color: blocked ? "var(--color-blue)" : "#FF3B30" }}>
+                      {blocked ? "Unblock user" : blockArmed ? "Confirm block" : "Block user"}
+                    </span>
+                  </button>
+                </>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => { setMenuOpen(false); setBlockArmed(false); }}
+              className="pressable w-full mt-2 py-3.5 rounded-2xl text-body font-semibold"
+              style={{ background: "var(--color-row-overlay)", color: "var(--color-blue)" }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Full-screen image viewer for the shared-media grid. */}
+      {viewerIndex !== null && (
+        <ImageViewer
+          images={viewerImages}
+          index={viewerIndex}
+          onClose={() => setViewerIndex(null)}
+        />
+      )}
 
       {/* Nickname sheet — a real editor, not a browser prompt. */}
       {nickOpen && (

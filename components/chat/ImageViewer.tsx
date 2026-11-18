@@ -6,10 +6,11 @@
  * name + real message time (+ "n of m" when there are several images),
  * close X. Bottom bar: the file name as caption, plus Download and Share
  * — only actions that actually work (Share only appears where the
- * device can share). Mobile: swipe down to dismiss, pinch to zoom,
- * double-tap to zoom, tap to hide/show the bars. PC: Esc to close,
- * click outside to close, arrow keys / on-screen arrows to move
- * between images. Nothing extra, nothing dead.
+ * device can share). Mobile: swipe down to dismiss, swipe left/right
+ * to move to the next/previous photo, pinch to zoom, double-tap to
+ * zoom, tap to hide/show the bars. PC: Esc to close, click outside to
+ * close, arrow keys / on-screen arrows to move between images. Nothing
+ * extra, nothing dead.
  */
 "use client";
 
@@ -37,6 +38,7 @@ interface ImageViewerProps {
 const MAX_SCALE = 4;
 const DOUBLE_TAP_SCALE = 2.5;
 const DISMISS_THRESHOLD = 120;
+const SWIPE_THRESHOLD = 80;
 
 export function ImageViewer({ images, index: startIndex, onClose }: ImageViewerProps) {
   const [visible, setVisible] = useState(false);
@@ -46,6 +48,7 @@ export function ImageViewer({ images, index: startIndex, onClose }: ImageViewerP
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [dragY, setDragY] = useState(0);
+  const [dragX, setDragX] = useState(0);
   const [chromeVisible, setChromeVisible] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [savedNote, setSavedNote] = useState("");
@@ -62,6 +65,10 @@ export function ImageViewer({ images, index: startIndex, onClose }: ImageViewerP
     panStart: { x: 0, y: 0 },
     scale: 1,
     translate: { x: 0, y: 0 },
+    // Latest drag offsets (the ref is always current; state can lag a
+    // frame behind during a fast swipe, which is when we read them).
+    dragX: 0,
+    dragY: 0,
   });
   const lastTapRef = useRef(0);
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -126,6 +133,7 @@ export function ImageViewer({ images, index: startIndex, onClose }: ImageViewerP
       setTranslate({ x: 0, y: 0 });
       gestureRef.current.translate = { x: 0, y: 0 };
       setDragY(0);
+      setDragX(0);
       setLoaded(false);
       setChromeVisible(true);
     },
@@ -146,6 +154,7 @@ export function ImageViewer({ images, index: startIndex, onClose }: ImageViewerP
   const resetGesture = () => {
     pointersRef.current.clear();
     setDragY(0);
+    setDragX(0);
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLImageElement>) => {
@@ -203,8 +212,20 @@ export function ImageViewer({ images, index: startIndex, onClose }: ImageViewerP
       };
       g.translate = next;
       setTranslate(next);
+    } else if (Math.abs(dx) > Math.abs(dy)) {
+      // Horizontal swipe: the photo follows the finger; on release it
+      // slides to the next / previous photo (or snaps back).
+      g.dragX = dx;
+      g.dragY = 0;
+      setDragX(dx);
+      setDragY(0);
     } else if (dy > 0) {
+      // Vertical swipe down: the photo follows the finger; on release
+      // past the threshold it dismisses.
+      g.dragX = 0;
+      g.dragY = dy;
       setDragY(dy);
+      setDragX(0);
     }
   };
 
@@ -239,12 +260,18 @@ export function ImageViewer({ images, index: startIndex, onClose }: ImageViewerP
         // Single tap: toggle the top/bottom bars (after the double-tap window).
         tapTimerRef.current = setTimeout(() => setChromeVisible((v) => !v), 280);
       }
-    } else if (g.scale === 1 && dragY > DISMISS_THRESHOLD) {
+    } else if (g.scale === 1 && g.dragY > DISMISS_THRESHOLD) {
       handleClose();
+    } else if (g.scale === 1 && Math.abs(g.dragX) > SWIPE_THRESHOLD) {
+      // Swipe left: next photo. Swipe right: previous photo. At either
+      // end goTo clamps, so the photo just snaps back.
+      goTo(idx + (g.dragX < 0 ? 1 : -1));
     }
-    if (g.scale === 1) setDragY(0);
-    if (pointersRef.current.size === 0 && g.scale === 1 && dragY <= DISMISS_THRESHOLD) {
+    if (g.scale === 1) {
+      g.dragX = 0;
+      g.dragY = 0;
       setDragY(0);
+      setDragX(0);
     }
   };
 
@@ -350,7 +377,7 @@ export function ImageViewer({ images, index: startIndex, onClose }: ImageViewerP
               maxHeight: "100%",
               objectFit: "contain",
               opacity: loaded ? 1 : 0,
-              transform: `scale(${visible ? scale : 0.92}) translate(${translate.x / scale}px, ${(translate.y + dragY) / scale}px)`,
+              transform: `scale(${visible ? scale : 0.92}) translate(${(translate.x + dragX) / scale}px, ${(translate.y + dragY) / scale}px)`,
               transition: "transform 200ms ease-out, opacity 200ms ease-out",
               touchAction: "none",
               cursor: scale > 1 ? "grab" : "default",

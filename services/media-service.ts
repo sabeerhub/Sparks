@@ -128,11 +128,14 @@ export async function getRecentMediaThumbnails(limit = 4): Promise<{ id: string;
  * which is the current user's own sends) — a photo they sent you is
  * shared media too. RLS already scopes messages to chats the caller
  * is a member of; an empty chat simply returns an empty list.
+ * v1.8.2 — also returns sender, time and file name, so the profile
+ * grid can open a photo in the full image viewer (which shows who
+ * sent it and when, and lets you move between photos).
  */
-export async function getChatMedia(chatId: string, limit = 9): Promise<{ id: string; mediaPath: string }[]> {
+export async function getChatMedia(chatId: string, limit = 9): Promise<{ id: string; mediaPath: string; senderId: string; createdAt: string; fileName: string }[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from("messages") as any)
-    .select("id, media_path")
+    .select("id, media_path, sender_id, created_at, content")
     .eq("chat_id", chatId)
     .eq("content_type", "image")
     .not("media_path", "is", null)
@@ -141,5 +144,11 @@ export async function getChatMedia(chatId: string, limit = 9): Promise<{ id: str
     .limit(limit);
 
   if (error || !data) return [];
-  return data.map((row: { id: string; media_path: string }) => ({ id: row.id, mediaPath: row.media_path }));
+  return data.map((row: { id: string; media_path: string; sender_id: string; created_at: string; content: string | null }) => ({
+    id: row.id,
+    mediaPath: row.media_path,
+    senderId: row.sender_id,
+    createdAt: row.created_at,
+    fileName: row.content || "Photo",
+  }));
 }
