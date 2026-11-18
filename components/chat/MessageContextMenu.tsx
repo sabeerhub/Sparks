@@ -11,7 +11,7 @@
  */
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { formatSeenTime } from "@/utils/helpers";
 import type { MessageReader } from "@/services/message-service";
@@ -30,6 +30,11 @@ interface MessageContextMenuProps {
   /** Self-chat (Saved Messages): there is no other reader, so the
       "Seen by" section would always say "Not seen yet" — hide it. */
   showSeenBy?: boolean;
+  /** v1.10.0 — where the user tapped (viewport coordinates), so the
+      desktop menu opens beside the message. Without it the menu used
+      to grow upward from the message's top edge and float over the
+      message above it. */
+  anchor?: { x: number; y: number } | null;
   onClose: () => void;
   onReact: (emoji: string) => void;
   onReply: () => void;
@@ -38,8 +43,31 @@ interface MessageContextMenuProps {
   onDelete: () => void;
 }
 
-export function MessageContextMenu({ isMine, text, readers, readersLoading = false, currentUserId, showSeenBy = true, onClose, onReact, onReply, onForward, onEdit, onDelete }: MessageContextMenuProps) {
+export function MessageContextMenu({ isMine, text, readers, readersLoading = false, currentUserId, showSeenBy = true, anchor = null, onClose, onReact, onReply, onForward, onEdit, onDelete }: MessageContextMenuProps) {
   const [copied, setCopied] = useState(false);
+  // v1.10.0 — desktop popover position, measured after mount so the
+  // menu never runs off the bottom or the side of the screen. It
+  // starts hidden at the tap point until measured — never flashed in
+  // the wrong place.
+  const popRef = useRef<HTMLDivElement>(null);
+  const [popPos, setPopPos] = useState<{ left: number; top: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const el = popRef.current;
+    if (!el || !anchor) return;
+    const W = 320;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    // Open on the bubble's side of the tap: my messages open left of
+    // the tap, theirs open right — the menu stays beside the message
+    // instead of covering it. Clamped 8px inside every edge.
+    let left = isMine ? anchor.x - W : anchor.x;
+    left = Math.max(8, Math.min(left, vw - W - 8));
+    let top = anchor.y;
+    const h = el.offsetHeight;
+    if (top + h > vh - 12) top = Math.max(12, vh - h - 12);
+    setPopPos({ left, top });
+  }, [anchor, isMine, readers, readersLoading]);
 
   const handleCopy = async () => {
     try {
@@ -138,11 +166,21 @@ export function MessageContextMenu({ isMine, text, readers, readersLoading = fal
         </div>
       </div>
 
-      {/* Desktop: a compact popover anchored to the message. */}
+      {/* Desktop: a compact popover beside the message, at the tap
+          point and clamped inside the viewport (v1.10.0 — the old
+          `absolute bottom-full` menu grew upward and floated over the
+          message above the one you tapped). Fixed positioning is safe
+          here: the menu's ancestors carry no transform/filter, and the
+          backdrop below already relies on `fixed` from this exact spot. */}
       <div className="hidden md:block fixed inset-0 z-40" onClick={onClose} />
       <div
-        className="hidden md:block absolute z-50 bottom-full mb-2 w-[320px] glass-strong rounded-3xl overflow-hidden shadow-2xl"
-        style={isMine ? { right: 0 } : { left: 0 }}
+        ref={popRef}
+        className="hidden md:block fixed z-50 w-[320px] glass-strong rounded-3xl overflow-hidden shadow-2xl"
+        style={
+          popPos
+            ? { left: popPos.left, top: popPos.top }
+            : { left: anchor?.x ?? 0, top: anchor?.y ?? 0, visibility: "hidden" }
+        }
       >
         {body}
       </div>

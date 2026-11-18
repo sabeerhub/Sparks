@@ -24,8 +24,13 @@ export interface ReplyQuote {
 /** Renders `text` with every case-insensitive match of `query` tinted.
     v1.9.0 — the CURRENT match's word is tinted stronger; the old code
     also ringed the whole bubble with a blue outline, which is what the
-    owner complained about ("highlight the word, not the bubble"). */
-function HighlightedText({ text, query, strong = false }: { text: string; query: string; strong?: boolean }) {
+    owner complained about ("highlight the word, not the bubble").
+    v1.10.0 — the blue tint was invisible on MY blue bubble (blue on
+    blue): the live check showed the matched word looking exactly like
+    normal text. On my bubble the match is now white — a soft white
+    wash for other matches, solid white with blue text for the one the
+    user is on. Their bubble keeps the blue tint. */
+function HighlightedText({ text, query, strong = false, isMine = false }: { text: string; query: string; strong?: boolean; isMine?: boolean }) {
   if (!query.trim()) return <>{text}</>;
   const lower = text.toLowerCase();
   const needle = query.trim().toLowerCase();
@@ -43,7 +48,16 @@ function HighlightedText({ text, query, strong = false }: { text: string; query:
     <>
       {parts.map((p, i) =>
         p.match ? (
-          <span key={i} style={{ background: strong ? "rgba(0,122,255,0.45)" : "rgba(0,122,255,0.25)", borderRadius: 3, padding: "0 1px" }}>
+          <span
+            key={i}
+            style={
+              isMine
+                ? strong
+                  ? { background: "#fff", color: "var(--color-blue)", fontWeight: 600, borderRadius: 3, padding: "0 1px" }
+                  : { background: "rgba(255,255,255,0.35)", borderRadius: 3, padding: "0 1px" }
+                : { background: strong ? "rgba(0,122,255,0.45)" : "rgba(0,122,255,0.25)", borderRadius: 3, padding: "0 1px" }
+            }
+          >
             {p.text}
           </span>
         ) : (
@@ -105,12 +119,18 @@ export function MessageBubble({
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(message.text);
+  // v1.10.0 — where the user actually tapped, so the desktop menu can
+  // open beside the message instead of floating above it (the old
+  // `bottom-full` popover grew upward from the message's top edge and
+  // sat over the image above it).
+  const [menuAnchor, setMenuAnchor] = useState<{ x: number; y: number } | null>(null);
   // "Seen by" readers for the long-press menu — loaded only when the
   // menu opens, never for every bubble on screen.
   const [readers, setReaders] = useState<MessageReader[] | null>(null);
   const [readersLoading, setReadersLoading] = useState(false);
 
-  const openMenu = () => {
+  const openMenu = (e?: React.MouseEvent | React.PointerEvent) => {
+    if (e) setMenuAnchor({ x: e.clientX, y: e.clientY });
     setMenuOpen(true);
     setReadersLoading(true);
     fetchMessageReaders(message.id)
@@ -195,9 +215,9 @@ export function MessageBubble({
         <div
           onContextMenu={(e) => {
             e.preventDefault();
-            openMenu();
+            openMenu(e);
           }}
-          onDoubleClick={() => openMenu()}
+          onDoubleClick={(e) => openMenu(e)}
         >
           {isMedia ? (
             <MediaContent
@@ -305,7 +325,7 @@ export function MessageBubble({
                   </span>
                 </span>
               )}
-              {message.text ? <HighlightedText text={message.text} query={highlight} strong={isSearchMatch} /> : message.text}
+              {message.text ? <HighlightedText text={message.text} query={highlight} strong={isSearchMatch} isMine={isMine} /> : message.text}
             </button>
           )}
         </div>
@@ -360,6 +380,7 @@ export function MessageBubble({
           readersLoading={readersLoading}
           currentUserId={currentUserId}
           showSeenBy={!hideSeenBy}
+          anchor={menuAnchor}
           onClose={() => setMenuOpen(false)}
           onReact={(emoji) => {
             onReact(emoji);

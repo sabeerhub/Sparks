@@ -21,6 +21,20 @@ interface SendParams {
   chatId: string;
   plaintext: string;
   replyToId?: string | null;
+  /** The sender's id when the caller already knows it — avoids an
+      extra auth round trip on the send path (v1.10.0). */
+  senderId?: string;
+}
+
+/** The current user's id from the local session — a storage read, not
+    a network call, so it never blocks the send path on a cold
+    connection. Falls back to getUser() only if there is no session. */
+async function getLocalUserId(): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user.id) return session.user.id;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in");
+  return user.id;
 }
 
 /**
@@ -33,6 +47,7 @@ export async function sendMessage({
   chatId,
   plaintext,
   replyToId = null,
+  senderId,
 }: SendParams): Promise<DecryptedMessage> {
   if (!canSendMessage(chatId)) {
     throw new RateLimitError(msUntilNextMessageSlot(chatId));
@@ -48,12 +63,14 @@ export async function sendMessage({
 
   if (error) throw error;
 
-  const { data: { user } } = await supabase.auth.getUser();
-
+  // v1.10.0 — the old code awaited getUser() here, a whole extra
+  // network round trip AFTER the insert, before the "Sending…" tick
+  // could flip to sent. The sender id is already known (or read from
+  // the local session), so resolving no longer waits on the network.
   return {
     id: data as string,
     chat_id: chatId,
-    sender_id: user!.id,
+    sender_id: senderId ?? (await getLocalUserId()),
     text: plaintext,
     content_type: "text",
     reply_to_id: replyToId,
@@ -72,10 +89,15 @@ export async function sendMessage({
  * lib/storage.ts's reconnect listener retries it automatically.
  */
 export async function sendMessageOptimistic(params: SendParams & { clientId: string }) {
+  // v1.10.0 — the old code awaited getUser() (a network call) BEFORE
+  // the optimistic row was written, so on a cold connection the
+  // message did not even appear for seconds. The id comes from the
+  // local session now, so the bubble shows at once.
+  const senderId = params.senderId ?? (await getLocalUserId());
   const optimisticRow: DecryptedMessage = {
     id: params.clientId,
     chat_id: params.chatId,
-    sender_id: (await supabase.auth.getUser()).data.user!.id,
+    sender_id: senderId,
     text: params.plaintext,
     content_type: "text",
     reply_to_id: params.replyToId ?? null,
@@ -89,7 +111,7 @@ export async function sendMessageOptimistic(params: SendParams & { clientId: str
   await chatCache.addOptimisticMessage(params.chatId, optimisticRow);
 
   try {
-    const serverMessage = await sendMessage(params);
+    const serverMessage = await sendMessage({ ...params, senderId });
     await chatCache.resolveMessage(params.chatId, params.clientId, serverMessage);
     return serverMessage;
   } catch (err) {

@@ -4,7 +4,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Paperclip, Smile, Send, Mic, Trash2, Lock, ChevronLeft } from "lucide-react";
+import { Paperclip, Smile, Send, Mic, Trash2, Lock, ChevronLeft, Image as ImageIcon, FileText } from "lucide-react";
 import { sendMediaMessage, MAX_MEDIA_BYTES } from "@/services/media-service";
 import { chatCache } from "@/lib/storage";
 
@@ -90,6 +90,12 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
   const [showEmoji, setShowEmoji] = useState(false);
   const [emojiQuery, setEmojiQuery] = useState("");
   const [emojiCategory, setEmojiCategory] = useState(0);
+  // v1.10.0 — tapping + now opens a visible sheet first (Photo /
+  // Document), instead of jumping straight to the OS file dialog: the
+  // tap used to give zero visible feedback, so on a slow device — and
+  // to the cloud-browser check — it looked dead. Picking an option
+  // then opens the picker with the right file types.
+  const [showAttach, setShowAttach] = useState(false);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -136,7 +142,18 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
     inputRef.current?.focus();
   };
 
-  const handleAttachClick = () => fileInputRef.current?.click();
+  const handleAttachClick = () => setShowAttach(true);
+
+  const chooseAttach = (kind: "photo" | "document") => {
+    setShowAttach(false);
+    const input = fileInputRef.current;
+    if (!input) return;
+    input.accept =
+      kind === "photo"
+        ? "image/*"
+        : "application/pdf,.doc,.docx,.zip,.rar,.txt,.csv,.xlsx";
+    input.click();
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -397,7 +414,24 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
   }
 
   return (
-    <div>
+    <div className="relative">
+      {showAttach && (
+        <>
+          {/* Phone: bottom sheet. Desktop: small popover above the + button. */}
+          <div className="fixed inset-0 z-50 md:hidden" style={{ background: "rgba(0,0,0,0.3)" }} onClick={() => setShowAttach(false)}>
+            <div
+              className="glass-strong absolute left-4 right-4 bottom-20 rounded-3xl overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <AttachSheetBody onChoose={chooseAttach} onClose={() => setShowAttach(false)} />
+            </div>
+          </div>
+          <div className="hidden md:block fixed inset-0 z-40" onClick={() => setShowAttach(false)} />
+          <div className="hidden md:block absolute bottom-full left-3 mb-2 w-60 glass-strong rounded-3xl overflow-hidden shadow-2xl z-50">
+            <AttachSheetBody onChoose={chooseAttach} onClose={() => setShowAttach(false)} />
+          </div>
+        </>
+      )}
       {error && (
         <div className="px-4 py-1.5 text-caption text-center" style={{ color: "var(--color-red)", background: "rgba(255,59,48,0.08)" }}>
           {error}
@@ -480,8 +514,12 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*,application/pdf,.doc,.docx,.zip,.rar,.txt,.csv,.xlsx"
-          className="hidden"
+          // Visually hidden but still rendered — a `display: none`
+          // input is a known flaky target for programmatic clicks in
+          // some mobile WebViews; 1px + transparent never is.
+          style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+          aria-hidden
+          tabIndex={-1}
           onChange={handleFileChange}
         />
 
@@ -549,5 +587,38 @@ export function MessageComposer({ chatId, onSend, onTyping }: MessageComposerPro
         )}
       </div>
     </div>
+  );
+}
+
+/** The attach sheet's rows, shared by the phone sheet and the desktop
+    popover. Plain words only, no emoji — system labels stay plain. */
+function AttachSheetBody({ onChoose, onClose }: { onChoose: (kind: "photo" | "document") => void; onClose: () => void }) {
+  const rows = [
+    { kind: "photo" as const, icon: ImageIcon, label: "Photo" },
+    { kind: "document" as const, icon: FileText, label: "Document" },
+  ];
+  return (
+    <>
+      {rows.map((row) => (
+        <button
+          key={row.kind}
+          className="w-full flex items-center justify-between px-4 py-4 border-b active:bg-white/40 transition-colors"
+          style={{ borderColor: "var(--color-gray-2)" }}
+          onClick={() => onChoose(row.kind)}
+        >
+          <span className="text-body font-medium" style={{ color: "var(--color-black)" }}>
+            {row.label}
+          </span>
+          <row.icon size={18} color="var(--color-gray-1)" strokeWidth={2} />
+        </button>
+      ))}
+      <button
+        className="w-full py-4 text-body font-semibold text-center active:opacity-60 transition-opacity"
+        style={{ color: "var(--color-blue)" }}
+        onClick={onClose}
+      >
+        Cancel
+      </button>
+    </>
   );
 }

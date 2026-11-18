@@ -16,6 +16,21 @@ import { chatCache } from "@/lib/storage";
 
 const supabase = createClient();
 
+function SidebarRowSkeleton() {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 animate-pulse">
+      <div className="w-12 h-12 rounded-full flex-shrink-0" style={{ background: "var(--color-gray-3)" }} />
+      <div className="flex-1 space-y-2">
+        <div className="flex justify-between">
+          <div className="h-4 w-28 rounded-full" style={{ background: "var(--color-gray-3)" }} />
+          <div className="h-3 w-10 rounded-full" style={{ background: "var(--color-gray-3)" }} />
+        </div>
+        <div className="h-3 w-44 rounded-full" style={{ background: "var(--color-gray-3)" }} />
+      </div>
+    </div>
+  );
+}
+
 /**
  * Persistent desktop-only chat list sidebar, shown alongside the active
  * chat thread (WhatsApp Web style). Lives in the (chat)/chats layout, so
@@ -31,22 +46,35 @@ export function DesktopSidebar() {
   const [userId, setUserId] = useState<string | null>(null);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
+  // v1.10.0 — the sidebar used to render "No chats yet" the moment it
+  // mounted, while the list was still fetching: on first arrival the
+  // empty state flashed before the chats populated. Now it shows
+  // skeletons until the first fetch settles, exactly like the mobile
+  // list already did.
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const cached = await chatCache.hydrateChatList();
-      if (cached?.length && !cancelled) setChatList(cached as never);
+      if (cached?.length && !cancelled) {
+        setChatList(cached as never);
+        setLoading(false);
+      }
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || cancelled) return;
       setUserId(user.id);
       getUnreadCount().then((n) => { if (!cancelled) setUnreadNotifs(n); });
 
-      const fresh = await fetchChatList(user.id);
-      if (!cancelled) {
-        setChatList(fresh);
-        await chatCache.setChatList(fresh as never);
+      try {
+        const fresh = await fetchChatList(user.id);
+        if (!cancelled) {
+          setChatList(fresh);
+          await chatCache.setChatList(fresh as never);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
@@ -73,7 +101,11 @@ export function DesktopSidebar() {
     .filter((c) => (filter === "unread" ? (c.unreadCount ?? 0) > 0 : true))
     .filter((c) =>
       c.otherUser.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      c.otherUser.username?.toLowerCase().includes(search.toLowerCase())
+      c.otherUser.username?.toLowerCase().includes(search.toLowerCase()) ||
+      // v1.10.0 — the self-chat's list name is "Saved Messages", so
+      // searching "saved" must find it even though the profile name is
+      // the user's own name.
+      (c.isSelfChat && "saved messages".includes(search.toLowerCase()))
     );
   const archivedCount = chatList.filter((c) => c.isArchived).length;
   const totalUnread = chatList.reduce((n, c) => n + (c.unreadCount ?? 0), 0);
@@ -187,7 +219,7 @@ export function DesktopSidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
-        {archivedCount > 0 && !search && (
+        {!loading && archivedCount > 0 && !search && (
           <button
             onClick={() => router.push("/chats/hidden")}
             className="w-full flex items-center gap-3.5 px-4 py-4 min-h-[76px] text-left rounded-2xl active:bg-white/50 transition-colors"
@@ -215,7 +247,9 @@ export function DesktopSidebar() {
             <ChevronRight size={18} color="var(--color-gray-1)" strokeWidth={2} />
           </button>
         )}
-        {filtered.length === 0 ? (
+        {loading && filtered.length === 0 ? (
+          <>{[1, 2, 3, 4, 5].map((i) => <SidebarRowSkeleton key={i} />)}</>
+        ) : filtered.length === 0 ? (
           <EmptyState
             wordmark={!search && filter === "all"}
             title={search ? `No chats matching "${search}"` : filter === "unread" ? "No unread chats" : "No chats yet"}

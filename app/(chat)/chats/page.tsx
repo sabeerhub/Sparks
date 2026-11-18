@@ -155,7 +155,11 @@ export default function ChatsPage() {
     .filter((c) => (filter === "unread" ? (c.unreadCount ?? 0) > 0 : true))
     .filter((c) =>
       c.otherUser.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      c.otherUser.username?.toLowerCase().includes(search.toLowerCase())
+      c.otherUser.username?.toLowerCase().includes(search.toLowerCase()) ||
+      // v1.10.0 — the self-chat's list name is "Saved Messages", so
+      // searching "saved" must find it even though the profile name is
+      // the user's own name.
+      (c.isSelfChat && "saved messages".includes(search.toLowerCase()))
     );
   const archivedCount = chatList.filter((c) => c.isArchived).length;
   const totalUnread = chatList.reduce((n, c) => n + (c.unreadCount ?? 0), 0);

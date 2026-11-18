@@ -19,6 +19,10 @@ export function ChatListItem({ item, onClick, onLongPress }: ChatListItemProps) 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firedRef = useRef(false);
 
+  // v1.10.0 — your own chat is "Saved Messages", never your own name
+  // as if it were another person. The avatar still shows your photo.
+  const displayName = item.isSelfChat ? "Saved Messages" : item.otherUser.full_name;
+
   const startPress = () => {
     firedRef.current = false;
     timerRef.current = setTimeout(() => {
@@ -51,7 +55,7 @@ export function ChatListItem({ item, onClick, onLongPress }: ChatListItemProps) 
       <Avatar name={item.otherUser.full_name} src={item.otherUser.avatar_url} size={52} online={item.isOnline} />
       <div className="flex-1 min-w-0">
         <span className="text-body truncate block" style={{ color: "var(--color-black)", fontWeight: item.unreadCount ? 700 : 600 }}>
-          {item.otherUser.full_name}
+          {displayName}
           {item.isPinned && <PinGlyph />}
         </span>
         <span className="text-body truncate flex items-center gap-1.5" style={{ color: item.unreadCount ? "var(--color-black)" : "var(--color-gray-1)", fontWeight: item.unreadCount ? 500 : 400 }}>

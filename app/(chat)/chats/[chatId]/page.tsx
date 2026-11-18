@@ -102,20 +102,37 @@ export default function ChatThreadPage() {
   const messageRefs = useRef(new Map<string, HTMLDivElement>());
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setCurrentUserId(user.id);
+      // v1.10.0 — the thread used to wait for THREE sequential network
+      // trips (getUser + members + profile) before showing anything, so
+      // a cold connection stared at skeletons for 8–10s even though the
+      // messages were already in the local cache. Now the user id comes
+      // from the local session (no network), the other person's profile
+      // comes from the cached chat list first, and the server fetch
+      // only refreshes it in the background.
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user.id;
+      if (!userId || cancelled) return;
+      setCurrentUserId(userId);
+
+      const cachedList = (await chatCache.hydrateChatList()) as { chatId: string; otherUser: Profile }[] | null;
+      const cachedItem = cachedList?.find((c) => c.chatId === chatId);
+      if (cachedItem && !cancelled) {
+        setOtherUser(cachedItem.otherUser);
+        setOtherUserOnline(cachedItem.otherUser.is_online);
+        setOtherUserLastSeen(cachedItem.otherUser.last_seen_at);
+      }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const membershipQuery = await (supabase.from("chat_members") as any)
         .select("user_id")
         .eq("chat_id", chatId)
-        .neq("user_id", user.id)
+        .neq("user_id", userId)
         .maybeSingle();
 
       const membership = membershipQuery.data as { user_id: string } | null;
-      const otherUserId = membership?.user_id ?? user.id; // no other member = self-chat (Saved Messages)
+      const otherUserId = membership?.user_id ?? userId; // no other member = self-chat (Saved Messages)
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: profile } = await (supabase.from("profiles") as any)
@@ -123,13 +140,14 @@ export default function ChatThreadPage() {
         .eq("id", otherUserId)
         .maybeSingle();
 
-      if (profile) {
+      if (profile && !cancelled) {
         const p = profile as Profile;
         setOtherUser(p);
         setOtherUserOnline(p.is_online);
         setOtherUserLastSeen(p.last_seen_at);
       }
     })();
+    return () => { cancelled = true; };
   }, [chatId]);
 
   const { messages, loading, typingUserIds, send, edit, remove, notifyTyping } = useChat(chatId);
@@ -409,25 +427,12 @@ export default function ChatThreadPage() {
     return m.text;
   };
 
-  if (!otherUser) {
-    return (
-      <div className="app-surface flex flex-col h-full">
-        <StatusBar />
-        <div className="mx-auto w-full max-w-[880px] flex flex-col flex-1 min-h-0">
-          <div className="frosted-header flex items-center gap-2 px-4 py-2 animate-pulse">
-            <div className="w-8 h-8 rounded-full" style={{ background: "var(--color-gray-3)" }} />
-            <div className="w-8 h-8 rounded-full ml-1" style={{ background: "var(--color-gray-3)" }} />
-            <div className="flex-1 space-y-1.5">
-              <div className="h-3.5 w-28 rounded-full" style={{ background: "var(--color-gray-3)" }} />
-              <div className="h-2.5 w-16 rounded-full" style={{ background: "var(--color-gray-3)" }} />
-            </div>
-          </div>
-          <MessageSkeleton />
-        </div>
-      </div>
-    );
-  }
-
+  // v1.10.0 — the thread no longer waits for the other person's
+  // profile before showing: the messages (from the local cache, via
+  // useChat) paint at once, and only the header shows a placeholder
+  // until the profile lands. The old `if (!otherUser)` branch returned
+  // a full skeleton screen for the 8–10s the profile fetch took on a
+  // cold connection — hiding messages that were already on the device.
   return (
     <div className="app-surface flex flex-col h-full">
       <StatusBar />
@@ -441,27 +446,39 @@ export default function ChatThreadPage() {
           <button onClick={() => router.push("/chats")} aria-label="Back" className="w-11 h-11 -ml-2 rounded-full flex items-center justify-center flex-shrink-0 md:hidden active:bg-white/60 active:scale-95 transition-all duration-200">
             <ArrowLeft size={22} color="var(--color-blue)" strokeWidth={2} />
           </button>
-          <button onClick={() => isSelfChat ? router.push("/profile") : router.push(`/profile/${otherUser.id}`)} className="flex items-center gap-2 min-w-0">
-            <Avatar name={otherUser.full_name} src={otherUser.avatar_url} size={36} online={!isSelfChat && otherUserOnline} />
-            <div className="min-w-0 text-left">
-              <div className="text-body font-semibold truncate">{isSelfChat ? "Saved Messages" : otherUser.full_name}</div>
-              {!isSelfChat && (
-                <div className="text-caption truncate" style={{ color: otherUserOnline ? "var(--color-green)" : "var(--color-gray-1)" }}>
-                  {otherUserOnline ? "Online" : `Last seen ${formatLastSeen(otherUserLastSeen)}`}
-                </div>
-              )}
+          {otherUser ? (
+            <button onClick={() => isSelfChat ? router.push("/profile") : router.push(`/profile/${otherUser.id}`)} className="flex items-center gap-2 min-w-0">
+              <Avatar name={otherUser.full_name} src={otherUser.avatar_url} size={36} online={!isSelfChat && otherUserOnline} />
+              <div className="min-w-0 text-left">
+                <div className="text-body font-semibold truncate">{isSelfChat ? "Saved Messages" : otherUser.full_name}</div>
+                {!isSelfChat && (
+                  <div className="text-caption truncate" style={{ color: otherUserOnline ? "var(--color-green)" : "var(--color-gray-1)" }}>
+                    {otherUserOnline ? "Online" : `Last seen ${formatLastSeen(otherUserLastSeen)}`}
+                  </div>
+                )}
+              </div>
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 min-w-0 animate-pulse" aria-label="Loading chat">
+              <div className="w-9 h-9 rounded-full flex-shrink-0" style={{ background: "var(--color-gray-3)" }} />
+              <div className="space-y-1.5">
+                <div className="h-3.5 w-28 rounded-full" style={{ background: "var(--color-gray-3)" }} />
+                <div className="h-2.5 w-16 rounded-full" style={{ background: "var(--color-gray-3)" }} />
+              </div>
             </div>
-          </button>
+          )}
         </div>
         {/* v1.9.0 — the header controls are the same on every thread:
             search is always there (it works in Saved Messages too);
             only the call buttons hide in a self-chat, because you
-            cannot call yourself. */}
+            cannot call yourself. Call buttons also stay hidden until
+            the other person is known, so they can never fire with no
+            target (v1.10.0). */}
         <div className="flex items-center gap-1 flex-shrink-0">
           <button aria-label="Search in this chat" onClick={() => setSearchOpen((s) => !s)} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-white/60 active:scale-95 transition-all duration-200">
             <SearchIcon size={19} color={searchOpen ? "var(--color-blue)" : "var(--color-gray-1)"} strokeWidth={1.8} />
           </button>
-          {!isSelfChat && (
+          {otherUser && !isSelfChat && (
             <>
               <button aria-label="Voice call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "voice")} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-white/60 active:scale-95 transition-all duration-200"><Phone size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
               <button aria-label="Video call" onClick={() => placeCall(otherUser.id, otherUser.full_name, otherUser.avatar_url, "video")} className="w-11 h-11 rounded-full flex items-center justify-center active:bg-white/60 active:scale-95 transition-all duration-200"><Video size={19} color="var(--color-blue)" strokeWidth={1.8} /></button>
@@ -519,7 +536,7 @@ export default function ChatThreadPage() {
           <EmptyState
             wordmark
             title="No messages yet"
-            subtitle={`Send the first message to ${isSelfChat ? "yourself" : otherUser.full_name.split(" ")[0]}`}
+            subtitle={`Send the first message to ${isSelfChat ? "yourself" : otherUser?.full_name.split(" ")[0] ?? "this chat"}`}
           />
         ) : isSearching && !searchBusy && searchResults.length === 0 ? (
           <EmptyState
@@ -548,7 +565,7 @@ export default function ChatThreadPage() {
                 <MessageBubble
                   message={{ ...m, status: effectiveStatus ?? m.status }}
                   isMine={isMine}
-                  senderName={isMine ? "You" : otherUser.full_name}
+                  senderName={isMine ? "You" : (otherUser?.full_name ?? "…")}
                   reactions={reactions[m.id] ?? []}
                   currentUserId={currentUserId}
                   onEdit={(text) => edit(m.id, text)}
@@ -563,7 +580,7 @@ export default function ChatThreadPage() {
                   replyTo={
                     replied
                       ? {
-                          senderName: replied.sender_id === currentUserId ? "You" : otherUser.full_name,
+                          senderName: replied.sender_id === currentUserId ? "You" : (otherUser?.full_name ?? "…"),
                           text: replyLabel(replied),
                         }
                       : null
@@ -575,7 +592,7 @@ export default function ChatThreadPage() {
             );
           })
         )}
-        {isOtherTyping && <TypingIndicator label={otherUser.full_name.split(" ")[0] ?? otherUser.full_name} />}
+        {isOtherTyping && <TypingIndicator label={otherUser?.full_name.split(" ")[0] ?? otherUser?.full_name ?? "…"} />}
       </div>
 
       {replyMessage && (
@@ -584,7 +601,7 @@ export default function ChatThreadPage() {
             <span className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: "var(--color-blue)" }} />
             <div className="min-w-0">
               <div className="text-caption font-semibold" style={{ color: "var(--color-blue)" }}>
-                Replying to {replyMessage.sender_id === currentUserId ? "yourself" : otherUser.full_name.split(" ")[0]}
+                Replying to {replyMessage.sender_id === currentUserId ? "yourself" : (otherUser?.full_name.split(" ")[0] ?? "…")}
               </div>
               <div className="text-caption truncate" style={{ color: "var(--color-gray-1)" }}>
                 {truncatePreview(replyLabel(replyMessage), 60)}

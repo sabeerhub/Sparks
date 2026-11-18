@@ -56,7 +56,18 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
   const memberships = membershipsQuery.data as MembershipRow[] | null;
   if (!memberships?.length) return [];
 
-  const chatIds = memberships.map((m) => m.chat_id);
+  // v1.10.0 — one row per chat, even if the membership rows ever
+  // repeat a chat (the PK makes that impossible today, but the list
+  // must never show the same chat twice regardless of what the DB
+  // hands back).
+  const seenChatIds = new Set<string>();
+  const uniqueMemberships = memberships.filter((m) => {
+    if (seenChatIds.has(m.chat_id)) return false;
+    seenChatIds.add(m.chat_id);
+    return true;
+  });
+
+  const chatIds = uniqueMemberships.map((m) => m.chat_id);
 
   // v1.9.0 — these four reads were sequential awaits (7 round trips
   // before the list could paint — the 5–8s skeleton stare on a cold
@@ -152,7 +163,7 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
     if (profile) otherByChatId.set(chatId, profile);
   });
 
-  return memberships
+  return uniqueMemberships
     .map((m) => {
       const chatForSelf = chatById.get(m.chat_id);
       const otherUser = chatForSelf?.is_self_chat ? profileById.get(userId) : otherByChatId.get(m.chat_id);
@@ -176,9 +187,26 @@ export async function fetchChatList(userId: string): Promise<ChatListItem[]> {
         isMuted: m.is_muted,
         isArchived: m.is_archived,
         isOnline: otherUser.is_online,
+        isSelfChat: chatForSelf?.is_self_chat ?? false,
       } satisfies ChatListItem;
     })
     .filter((c): c is ChatListItem => c !== null)
+    .filter((c, _, all) => {
+      // v1.10.0 — ONE Saved Messages row. The live DB holds two
+      // self-chats for the test account (two "Tech" rows in the list),
+      // and the get_or_create_self_chat RPC lives outside the repo
+      // migrations, so its reuse behaviour can't be verified here.
+      // Keep only the most recently active self-chat in the list; the
+      // other rows stay in the DB and are still reachable by direct
+      // link — nothing is deleted.
+      if (!c.isSelfChat) return true;
+      const actives = all.filter((x) => x.isSelfChat);
+      if (actives.length <= 1) return true;
+      const latest = actives.reduce((best, x) =>
+        new Date(x.lastMessageAt || 0).getTime() > new Date(best.lastMessageAt || 0).getTime() ? x : best
+      );
+      return c.chatId === latest.chatId;
+    })
     .sort((a, b) => {
       // Pinned chats first — pinning did nothing to the order before,
       // so the pin was only a glyph. Then most recent first.

@@ -135,6 +135,10 @@ export interface ChatListItem {
   isMuted: boolean;
   isArchived: boolean;
   isOnline: boolean;
+  /** v1.10.0 — true for the user's own Saved Messages chat. The list
+      shows "Saved Messages" for it instead of the user's own name,
+      and fetchChatList collapses duplicate self-chats to one row. */
+  isSelfChat: boolean;
 }
 
 export interface UserSession {
