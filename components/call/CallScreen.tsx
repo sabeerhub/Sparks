@@ -43,6 +43,19 @@ function formatDuration(totalSeconds: number): string {
 const SPEAKER_VOLUME = 1.0;
 const EARPIECE_VOLUME = 0.35;
 
+/**
+ * CallScreen — FaceTime / iOS Phone level, with the app's real liquid
+ * glass. The glass only reads as glass because it always sits over
+ * something real: the remote video while a video call is live, and a
+ * dark blue aurora (see .call-aurora in styles/globals.css) the rest of
+ * the time. Glass over a flat solid colour would look like plain
+ * paint, so there is no flat backdrop anywhere on this screen.
+ *
+ * Every control here is real — mute, camera, speaker, flip camera,
+ * end, accept, decline are all wired to hooks/useCall through
+ * CallProvider. Nothing on this screen is decoration: a control that
+ * could not work would be removed, not left dead.
+ */
 export function CallScreen({
   phase,
   callType,
@@ -93,7 +106,7 @@ export function CallScreen({
   const statusLabel = reconnecting
     ? "Reconnecting…"
     : phase === "incoming-ringing"
-      ? `Incoming ${isVideo ? "video" : "voice"} call…`
+      ? `Incoming ${isVideo ? "video" : "voice"} call`
       : phase === "outgoing-ringing"
         ? "Ringing…"
         : phase === "connecting"
@@ -103,10 +116,7 @@ export function CallScreen({
             : "";
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex flex-col"
-      style={{ background: remoteVideoVisible ? "#000" : "#1D1D1F" }}
-    >
+    <div className="call-aurora fixed inset-0 z-[100] flex flex-col">
       {isVideo && (
         <video
           ref={remoteVideoRef}
@@ -118,32 +128,53 @@ export function CallScreen({
       )}
       {!isVideo && <audio ref={remoteAudioRef} autoPlay />}
 
+      {/* Soft scrim so white text stays legible over video — lighter when
+          the video is live, deeper over the aurora. */}
       <div
         className="absolute inset-0"
-        style={{ background: remoteVideoVisible ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.55)" }}
+        style={{ background: remoteVideoVisible ? "rgba(0,0,0,0.22)" : "rgba(0,0,0,0.18)" }}
       />
 
-      {/* Header — name + status, safe-area aware */}
+      {/* Header — big photo, large name, status, call-type chip */}
       <div
         className="relative z-10 flex flex-col items-center px-6"
         style={{ paddingTop: "max(64px, env(safe-area-inset-top, 0px))" }}
       >
         {(!isVideo || !isActive || !remoteStream) && (
-          <div className={`mb-5 ${isRinging ? "animate-call-ring" : ""}`}>
-            <Avatar name={otherUserName} src={otherUserAvatar} size={112} />
+          <div className={`mb-6 ${isRinging ? "animate-call-ring" : ""}`}>
+            <Avatar name={otherUserName} src={otherUserAvatar} size={128} />
           </div>
         )}
-        <h1 className="text-white text-title font-semibold text-center tracking-tight">{otherUserName}</h1>
-        <p className="text-white/70 text-body mt-1 text-center">{error ?? statusLabel}</p>
+        <h1
+          className="text-white font-semibold text-center tracking-tight"
+          style={{ fontSize: 30, lineHeight: 1.2 }}
+        >
+          {otherUserName}
+        </h1>
+        <p className="text-white/75 text-body mt-2 text-center flex items-center justify-center gap-2">
+          {reconnecting && (
+            <span
+              aria-hidden
+              className="inline-block w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"
+            />
+          )}
+          {error ?? statusLabel}
+        </p>
+        {/* Call-type chip — frosted glass, so it is obvious at a glance
+            whether this is voice or video. */}
+        <span className="glass-dark mt-4 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-white text-caption font-medium">
+          {isVideo ? <Video size={13} strokeWidth={2} /> : <Phone size={13} strokeWidth={2} />}
+          {isVideo ? "Video call" : "Voice call"}
+        </span>
         {isVideo && isActive && !remoteStream && (
-          <p className="text-white/50 text-body mt-2">Waiting for video…</p>
+          <p className="text-white/50 text-body mt-3">Waiting for video…</p>
         )}
       </div>
 
-      {/* Local preview — avatar placeholder when the camera is off */}
+      {/* Local preview — glass frame over the aurora / video */}
       {isVideo && (
         <div
-          className="glass-dark absolute top-6 right-5 z-20 w-24 h-32 rounded-2xl overflow-hidden"
+          className="glass-dark absolute top-6 right-5 z-20 w-24 h-32 rounded-[20px] overflow-hidden"
           style={{ top: "max(24px, env(safe-area-inset-top, 0px))" }}
         >
           {cameraOff || !localStream ? (
@@ -159,22 +190,28 @@ export function CallScreen({
 
       <div className="flex-1" />
 
-      {/* Frosted-glass control bar */}
+      {/* Liquid-glass control bar — frosted, over the video / aurora */}
       <div
         className="glass-dark relative z-10 mx-4 mb-4 rounded-[28px] px-4 pt-5"
         style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom, 0px))" }}
       >
         {isRinging && phase === "incoming-ringing" ? (
-          <div className="flex items-center justify-center gap-16 pb-1">
-            <button onClick={onDecline} className="flex flex-col items-center gap-2 active:scale-95 transition-transform duration-200" aria-label="Decline call">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "#FF3B30" }}>
-                <PhoneOff size={26} color="white" strokeWidth={2} />
+          <div className="flex items-center justify-center gap-20 pb-1">
+            <button onClick={onDecline} className="flex flex-col items-center gap-2.5 active:scale-95 transition-transform duration-200" aria-label="Decline call">
+              <div
+                className="w-[72px] h-[72px] rounded-full flex items-center justify-center"
+                style={{ background: "#FF3B30", boxShadow: "0 8px 24px rgba(255,59,48,0.45)" }}
+              >
+                <PhoneOff size={30} color="white" strokeWidth={2} />
               </div>
               <span className="text-white text-caption font-medium">Decline</span>
             </button>
-            <button onClick={onAccept} className="flex flex-col items-center gap-2 active:scale-95 transition-transform duration-200" aria-label="Accept call">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "#34C759" }}>
-                <Phone size={26} color="white" strokeWidth={2} />
+            <button onClick={onAccept} className="flex flex-col items-center gap-2.5 active:scale-95 transition-transform duration-200" aria-label="Accept call">
+              <div
+                className="animate-accept-pulse w-[72px] h-[72px] rounded-full flex items-center justify-center"
+                style={{ background: "#34C759", boxShadow: "0 8px 24px rgba(52,199,89,0.45)" }}
+              >
+                <Phone size={30} color="white" strokeWidth={2} />
               </div>
               <span className="text-white text-caption font-medium">Accept</span>
             </button>
@@ -222,9 +259,13 @@ function CallControlButton({
     <button onClick={onClick} className="flex flex-col items-center gap-2 active:scale-95 transition-transform duration-200" aria-label={label}>
       <div
         className="w-14 h-14 rounded-full flex items-center justify-center"
-        style={{ background: active ? "white" : "rgba(255,255,255,0.2)" }}
+        style={
+          active
+            ? { background: "white", boxShadow: "0 0 0 1px rgba(255,255,255,0.6), 0 4px 16px rgba(0,122,255,0.35)" }
+            : { background: "rgba(255,255,255,0.16)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.28)", border: "1px solid rgba(255,255,255,0.22)" }
+        }
       >
-        <Icon size={22} color={active ? "black" : "white"} strokeWidth={1.8} />
+        <Icon size={22} color={active ? "#1D1D1F" : "white"} strokeWidth={1.8} />
       </div>
       <span className="text-white text-caption font-medium">{label}</span>
     </button>

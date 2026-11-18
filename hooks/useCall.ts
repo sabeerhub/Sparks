@@ -50,6 +50,16 @@ export type CallPhase = "idle" | "outgoing-ringing" | "incoming-ringing" | "conn
 
 const RING_TIMEOUT_MS = 45_000;
 
+// Reconnect policy (v1.6.0): a mobile network wobble must never end a
+// call by itself. 15s of grace with up to 3 ICE restarts a few seconds
+// apart — the old 5s + one restart could not survive a real carrier
+// network change, which is why calls ended by themselves after about
+// a minute. Only when the grace truly runs out, still disconnected,
+// does the call end.
+const RECONNECT_GRACE_MS = 15_000;
+const MAX_ICE_RESTARTS = 3;
+const ICE_RESTART_INTERVAL_MS = 4_000;
+
 interface IncomingCallInfo {
   call: CallRow;
   callerName: string;
@@ -78,7 +88,8 @@ export function useCall() {
   const statusUnsubRef = useRef<(() => void) | null>(null);
   const pendingIceRef = useRef<RTCIceCandidateInit[]>([]);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const iceRestartedRef = useRef(false);
+  const iceRestartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const iceRestartCountRef = useRef(0);
   const ringEnabledRef = useRef(true);
 
   const cleanup = useCallback(() => {
@@ -86,7 +97,9 @@ export function useCall() {
     if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
     if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
     reconnectTimerRef.current = null;
-    iceRestartedRef.current = false;
+    if (iceRestartTimerRef.current) clearTimeout(iceRestartTimerRef.current);
+    iceRestartTimerRef.current = null;
+    iceRestartCountRef.current = 0;
     stopRingtone();
     setReconnecting(false);
     statusUnsubRef.current?.();
@@ -132,30 +145,62 @@ export function useCall() {
       if (pc.connectionState === "connected") {
         if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
         reconnectTimerRef.current = null;
-        iceRestartedRef.current = false;
+        if (iceRestartTimerRef.current) clearTimeout(iceRestartTimerRef.current);
+        iceRestartTimerRef.current = null;
+        iceRestartCountRef.current = 0;
         stopRingtone();
         setReconnecting(false);
         setPhase("active");
       } else if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
-        // Brief network drop? Give it a 5s grace + one ICE restart before
-        // ending the call, instead of dropping the user mid-sentence.
+        // A brief network drop must never end a call by itself. Give it
+        // the full 15s grace with up to 3 ICE restarts a few seconds
+        // apart, and only end the call when the grace truly runs out
+        // with the connection still down. The screen shows
+        // "Reconnecting…" the whole time (see CallScreen) — never a
+        // fake "connected" while the media path is down.
         if (reconnectTimerRef.current) return;
         setReconnecting(true);
-        if (!iceRestartedRef.current) {
-          iceRestartedRef.current = true;
+        iceRestartCountRef.current = 0;
+
+        // Fresh ICE candidates travel over the signaling channel — if
+        // that channel dropped too, rejoin it so the restart can
+        // actually get through. The Supabase socket normally rejoins
+        // channels itself on reconnect; this is the belt-and-braces
+        // check for a channel left closed/errored.
+        const channel = channelRef.current;
+        if (channel && (channel.state === "closed" || channel.state === "errored")) {
+          try {
+            channel.subscribe();
+          } catch {
+            // Socket rejoin still covers it; the grace timer decides.
+          }
+        }
+
+        const tryRestart = () => {
+          // Call already cleaned up, or recovered on its own — stop.
+          if (pcRef.current !== pc || pc.connectionState === "connected") return;
+          if (iceRestartCountRef.current >= MAX_ICE_RESTARTS) return;
+          iceRestartCountRef.current += 1;
           try {
             pc.restartIce();
           } catch {
             // restartIce is best-effort; the grace timer still decides.
           }
-        }
+          // Space the next try a few seconds out — a restart needs
+          // time to gather fresh candidates before another one helps.
+          iceRestartTimerRef.current = setTimeout(tryRestart, ICE_RESTART_INTERVAL_MS);
+        };
+        tryRestart();
+
         reconnectTimerRef.current = setTimeout(() => {
           reconnectTimerRef.current = null;
+          if (iceRestartTimerRef.current) clearTimeout(iceRestartTimerRef.current);
+          iceRestartTimerRef.current = null;
           if (pcRef.current?.connectionState !== "connected") {
             setError("Call connection lost.");
             reset();
           }
-        }, 5000);
+        }, RECONNECT_GRACE_MS);
       }
     };
 

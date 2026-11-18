@@ -106,22 +106,44 @@ Then add your Vercel production URL as an additional redirect URL in
 Supabase (see §4.3) and in the Google OAuth client's authorized
 redirect URIs.
 
-## 6. TURN setup for calls (optional, recommended for real users)
+## 6. TURN setup for calls (built-in fallback included; your own relay recommended for real users)
 
 Calls use free Google STUN servers by default, which is enough for
 most direct connections. On restrictive networks (some corporate Wi-Fi,
-some mobile carriers) a TURN relay is needed or calls will fail to
-connect. The app picks up TURN automatically from env vars — no code
-changes needed:
+some mobile carriers) a TURN relay is needed — without one, two phones
+on mobile data often cannot reach each other directly, and a call can
+end by itself after about a minute when the carrier changes the
+network path. The app now ships with a built-in fallback relay so
+calls work out of the box:
 
-- `NEXT_PUBLIC_TURN_URL` (e.g. `turns:global.relay.metered.ca:443?transport=tcp`)
-- `NEXT_PUBLIC_TURN_USERNAME`
-- `NEXT_PUBLIC_TURN_CREDENTIAL`
+- **Built-in (already on, no setup):** OpenRelay, a free public relay
+  run by Metered.ca (`turn:openrelay.metered.ca:80` and
+  `turns:openrelay.metered.ca:443?transport=tcp`, username/credential
+  `openrelayproject`). Those are PUBLIC demo credentials published by
+  Metered.ca for anyone to use — they are not a secret and not private
+  to this app. Honest limit: it is a free shared service with no
+  uptime guarantee, fine for testing and getting started, not a
+  production promise.
+- **Your own relay (recommended for real users):** create a free
+  Metered.ca account and use your own TURN credentials instead — your
+  own relay takes priority over the public fallback automatically.
+  Steps:
+  1. Go to https://www.metered.ca and create a free account.
+  2. In the Metered dashboard, open your TURN servers page and copy
+     the TURN server URL, username and credential.
+  3. In Vercel, open the project → Settings → Environment Variables,
+     and add these three (Production + Preview):
+     - `NEXT_PUBLIC_TURN_URL` (e.g. `turns:global.relay.metered.ca:443?transport=tcp`)
+     - `NEXT_PUBLIC_TURN_USERNAME`
+     - `NEXT_PUBLIC_TURN_CREDENTIAL`
+  4. Redeploy (Vercel → Deployments → ⋯ → Redeploy, or push a new
+     commit — env vars only take effect on a new deployment).
+  5. Test a call on mobile data on both phones, for longer than a
+     minute, before calling it done.
 
-A common free option is Metered.ca's free tier. Set the three vars in
-Vercel (Production + Preview) and redeploy. If calls connect fine on
-your own network without TURN, you can skip this — but test on a
-second network (e.g. mobile data) before deciding.
+If calls connect fine on your own network without TURN, you can skip
+your own relay — but test on a second network (e.g. mobile data)
+before deciding.
 
 ## 7. Post-deploy checks
 

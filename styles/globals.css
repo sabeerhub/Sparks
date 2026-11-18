@@ -182,6 +182,19 @@ html, body {
     0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
+/* Dark aurora behind the call screen (v1.6.0). The call screen's glass
+   only reads as glass because it sits over something real: the remote
+   video while a video call is live, and this deep-blue aurora the rest
+   of the time. Glass over a flat solid colour looks like plain paint —
+   that is why the call screen never uses a flat background. */
+.call-aurora {
+  background:
+    radial-gradient(70% 45% at 15% 10%, rgba(0, 122, 255, 0.38), transparent 70%),
+    radial-gradient(60% 40% at 88% 22%, rgba(100, 140, 255, 0.30), transparent 70%),
+    radial-gradient(75% 50% at 50% 95%, rgba(0, 80, 180, 0.32), transparent 72%),
+    #1D1D1F;
+}
+
 /* Translucent pill field: glass that takes a blue focus ring. */
 .glass-input {
   background: rgba(255, 255, 255, 0.6);
@@ -423,10 +436,24 @@ textarea:focus-visible {
   border-radius: 9999px;
 }
 
+/* Soft green pulse on the Accept button while a call is ringing in —
+   the one button the eye should find first. */
+@keyframes accept-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.5); }
+  70% { box-shadow: 0 0 0 16px rgba(52, 199, 89, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
+}
+
+.animate-accept-pulse {
+  animation: accept-pulse 1.6s ease-out infinite;
+  border-radius: 9999px;
+}
+
 /* Reduced motion: no pulsing, no bouncing, no sheen, no wordmark loop —
    the wordmark is static solid ink and every surface stays still. */
 @media (prefers-reduced-motion: reduce) {
   .animate-call-ring,
+  .animate-accept-pulse,
   .animate-typing-dot {
     animation: none;
   }
