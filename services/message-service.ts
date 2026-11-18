@@ -393,7 +393,11 @@ export async function markDelivered(messageIds: string[]) {
   if (!messageIds.length) return;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
-  const rows = messageIds.map((id) => ({ message_id: id, user_id: user.id, status: "delivered" as const }));
+  const now = new Date().toISOString();
+  // updated_at is set explicitly: there is no trigger bumping it on
+  // update, so without this the "seen at" time would stay at the
+  // first receipt write instead of the real read time.
+  const rows = messageIds.map((id) => ({ message_id: id, user_id: user.id, status: "delivered" as const, updated_at: now }));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from("message_receipts") as any).upsert(rows, { onConflict: "message_id,user_id" });
   if (error) throw error;
@@ -403,10 +407,73 @@ export async function markRead(messageIds: string[]) {
   if (!messageIds.length) return;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
-  const rows = messageIds.map((id) => ({ message_id: id, user_id: user.id, status: "read" as const }));
+  const now = new Date().toISOString();
+  // updated_at is set explicitly (see markDelivered): it is the real
+  // "seen at" time the long-press Seen-by list shows.
+  const rows = messageIds.map((id) => ({ message_id: id, user_id: user.id, status: "read" as const, updated_at: now }));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from("message_receipts") as any).upsert(rows, { onConflict: "message_id,user_id" });
   if (error) throw error;
+}
+
+/**
+ * Read/delivered state of the given messages as seen by ONE reader
+ * (the other participant, for the sender's ticks). Only rows that
+ * reader actually wrote are returned — a message with no row here
+ * was never read by them, and the caller keeps its local "sent"
+ * state instead of inventing one.
+ */
+export async function fetchMessageStatuses(
+  messageIds: string[],
+  readerUserId: string
+): Promise<Record<string, "delivered" | "read">> {
+  if (!messageIds.length) return {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from("message_receipts") as any)
+    .select("message_id, status")
+    .eq("user_id", readerUserId)
+    .in("message_id", messageIds);
+  if (error) throw error;
+  const map: Record<string, "delivered" | "read"> = {};
+  ((data ?? []) as { message_id: string; status: "delivered" | "read" }[]).forEach((r) => {
+    map[r.message_id] = r.status;
+  });
+  return map;
+}
+
+export interface MessageReader {
+  userId: string;
+  name: string;
+  avatarUrl: string | null;
+  /** When they read it — the receipt's updated_at, written by markRead. */
+  readAt: string;
+}
+
+/**
+ * Who has read one message, and when — the long-press "Seen by" list.
+ * Only receipts with status 'read' count: a row that only says
+ * 'delivered' is not a read. Ordered by when they read it, earliest
+ * first. RLS lets any chat member read these rows, so the sender can
+ * see them; nobody outside the chat can.
+ */
+export async function fetchMessageReaders(messageId: string): Promise<MessageReader[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from("message_receipts") as any)
+    .select("user_id, updated_at, profiles(full_name, avatar_url)")
+    .eq("message_id", messageId)
+    .eq("status", "read")
+    .order("updated_at", { ascending: true });
+  if (error) throw error;
+  return ((data ?? []) as {
+    user_id: string;
+    updated_at: string;
+    profiles: { full_name: string; avatar_url: string | null } | null;
+  }[]).map((r) => ({
+    userId: r.user_id,
+    name: r.profiles?.full_name ?? "Someone",
+    avatarUrl: r.profiles?.avatar_url ?? null,
+    readAt: r.updated_at,
+  }));
 }
 
 export async function setTyping(chatId: string, isTyping: boolean) {

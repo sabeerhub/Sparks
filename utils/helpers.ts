@@ -9,6 +9,24 @@ export function formatMessageTime(iso: string): string {
   return date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
+/**
+ * "Seen by" time for the long-press read list: the time the message
+ * was read, in the reader's local time. Today shows just the time
+ * ("2:14 PM"); older reads name the day ("Yesterday, 2:14 PM").
+ */
+export function formatSeenTime(iso: string): string {
+  const date = new Date(iso);
+  const time = date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const now = new Date();
+  if (date.toDateString() === now.toDateString()) return time;
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return `Yesterday, ${time}`;
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / 86_400_000);
+  if (diffDays < 7) return `${date.toLocaleDateString(undefined, { weekday: "short" })}, ${time}`;
+  return `${date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}, ${time}`;
+}
+
 export function formatLastSeen(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const minutes = Math.floor(diffMs / 60_000);

@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Avatar } from "@/components/ui/Avatar";
 import { SparkWordmark } from "@/components/brand/SparkWordmark";
 import { useChatStore } from "@/store/chat-store";
+import { useChatListReceiptSync } from "@/hooks/useChatListReceiptSync";
 import { fetchChatList, setChatPinned, setChatMuted, setChatArchived, markChatRead, deleteChatForSelf, blockUser, searchUsers } from "@/services/chat-service";
 import { searchAllMessages, type GlobalMessageHit } from "@/services/message-service";
 import { getUnreadCount } from "@/services/notification-service";
@@ -108,6 +109,10 @@ export default function ChatsPage() {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
+
+  // v1.8.3 — receipt writes (either phone, any chat) refresh the list,
+  // so a badge cleared by opening a thread disappears here too.
+  useChatListReceiptSync(userId, "mobile");
 
   // Unified search: debounced server-side lookup for messages + people.
   // The local chat filter below is instant; these two calls take ~300ms

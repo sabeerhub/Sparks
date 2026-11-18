@@ -10,6 +10,12 @@
  * overlaying it, auto-scroll is instant and only follows new messages
  * (typing no longer yanks the list), and the composer pill re-measures
  * after every text change.
+ * v1.8.3 — opening a thread marks EVERY unread message in the chat as
+ * read on the server and clears the list badge at once (the old code
+ * only marked the 50 loaded messages, and nothing ever told the list
+ * — that is why the badge sat there until a long-press mark-as-read).
+ * The sender's ticks now load when the thread opens, not only when a
+ * receipt event fires while it is open.
  */
 "use client";
 
@@ -25,11 +31,12 @@ import { ForwardSheet } from "@/components/chat/ForwardSheet";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useChat } from "@/hooks/useChat";
 import { usePresence, useProfilePresence, useReceiptUpdates } from "@/hooks/useRealtime";
-import { markRead, reactToMessage, removeReaction, fetchReactions, searchMessages } from "@/services/message-service";
+import { reactToMessage, removeReaction, fetchReactions, searchMessages, fetchMessageStatuses } from "@/services/message-service";
 import { markChatNotificationsRead } from "@/services/notification-service";
-import { setChatArchived } from "@/services/chat-service";
+import { setChatArchived, markChatRead } from "@/services/chat-service";
 import { useChatStore } from "@/store/chat-store";
 import { createClient } from "@/lib/supabase";
+import { chatCache } from "@/lib/storage";
 import { formatLastSeen, formatDayLabel, formatMessageTime, truncatePreview } from "@/utils/helpers";
 import { useCallActions } from "@/components/call/CallProvider";
 import type { Profile, DecryptedMessage, MessageReaction } from "@/types";
@@ -213,16 +220,28 @@ export default function ChatThreadPage() {
     [currentUserId]
   );
 
-  const markMessagesRead = useCallback(async () => {
-    if (!messages.length || !currentUserId) return;
-    const unread = messages
-      .filter((m) => m.sender_id !== currentUserId && m.status !== "read")
-      .map((m) => m.id);
-    if (unread.length === 0) return;
-    await markRead(unread).catch(() => {});
-  }, [messages, currentUserId]);
-
-  useEffect(() => { markMessagesRead(); }, [markMessagesRead]);
+  // Opening a thread means you have read it. v1.8.3 — the old code
+  // only marked the 50 messages loaded on screen, filtered on a
+  // `status` field that fetchMessages hard-codes to "sent" for every
+  // message (so the filter never meant anything). Now it marks EVERY
+  // unread message in the chat on the server, then clears the badge in
+  // the list at once: the list must not wait for a refetch to show it,
+  // because going back restores the cached list and its badge would
+  // otherwise sit there until a manual long-press mark-as-read. New
+  // messages that arrive while the thread is open are marked read on
+  // arrival by useChat's realtime handler.
+  useEffect(() => {
+    if (!currentUserId) return;
+    (async () => {
+      await markChatRead(chatId, currentUserId).catch(() => {});
+      const store = useChatStore.getState();
+      const next = store.chatList.map((c) =>
+        c.chatId === chatId ? { ...c, unreadCount: 0 } : c
+      );
+      store.setChatList(next);
+      await chatCache.setChatList(next as never).catch(() => {});
+    })();
+  }, [chatId, currentUserId]);
 
   // Opening this chat clears its notifications: a notification only
   // stays unread while you are NOT looking at the chat. (The trigger
@@ -303,21 +322,31 @@ export default function ChatThreadPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId]);
 
-  useReceiptUpdates(chatId, async () => {
-    if (!currentUserId) return;
+  // The sender's ticks: read state of MY messages as seen by the
+  // other person. v1.8.3 — this used to load only when a realtime
+  // receipt event fired while the thread was open, so opening a thread
+  // showed single ticks on messages the other person had already
+  // read. Now it loads when the thread opens too, and refreshes live
+  // after that. A message with no receipt row keeps its local "sent"
+  // state — never invented.
+  const refreshMyMessageStatuses = useCallback(async () => {
+    if (!currentUserId || !otherUser) return;
     const myMessageIds = messages.filter((m) => m.sender_id === currentUserId).map((m) => m.id);
     if (!myMessageIds.length) return;
+    try {
+      const map = await fetchMessageStatuses(myMessageIds, otherUser.id);
+      setMessageStatuses((prev) => ({ ...prev, ...map }));
+    } catch {
+      // Keep the previous ticks — a failed refresh must never blank them.
+    }
+  }, [currentUserId, otherUser, messages]);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase.from("message_receipts") as any)
-      .select("message_id, status")
-      .in("message_id", myMessageIds);
+  useEffect(() => {
+    refreshMyMessageStatuses();
+  }, [refreshMyMessageStatuses]);
 
-    const statusMap: Record<string, DecryptedMessage["status"]> = {};
-    (data ?? []).forEach((r: { message_id: string; status: string }) => {
-      statusMap[r.message_id] = r.status as DecryptedMessage["status"];
-    });
-    setMessageStatuses(statusMap);
+  useReceiptUpdates(chatId, () => {
+    refreshMyMessageStatuses();
   });
 
   // Auto-scroll follows new messages only when you are already near the

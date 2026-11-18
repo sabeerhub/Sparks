@@ -12,6 +12,7 @@ import { useState } from "react";
 import type { DecryptedMessage, MessageReaction } from "@/types";
 import { formatMessageTime, truncatePreview } from "@/utils/helpers";
 import { MessageContextMenu } from "./MessageContextMenu";
+import { fetchMessageReaders, type MessageReader } from "@/services/message-service";
 import { MediaContent } from "./MediaContent";
 import type { ViewerImage } from "./ImageViewer";
 
@@ -97,6 +98,19 @@ export function MessageBubble({
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(message.text);
+  // "Seen by" readers for the long-press menu — loaded only when the
+  // menu opens, never for every bubble on screen.
+  const [readers, setReaders] = useState<MessageReader[] | null>(null);
+  const [readersLoading, setReadersLoading] = useState(false);
+
+  const openMenu = () => {
+    setMenuOpen(true);
+    setReadersLoading(true);
+    fetchMessageReaders(message.id)
+      .then((rows) => setReaders(rows))
+      .catch(() => setReaders([]))
+      .finally(() => setReadersLoading(false));
+  };
 
   if (message.deleted_at) {
     return (
@@ -152,9 +166,9 @@ export function MessageBubble({
         <div
           onContextMenu={(e) => {
             e.preventDefault();
-            setMenuOpen(true);
+            openMenu();
           }}
-          onDoubleClick={() => setMenuOpen(true)}
+          onDoubleClick={() => openMenu()}
         >
           {isMedia ? (
             <MediaContent
@@ -313,6 +327,9 @@ export function MessageBubble({
         <MessageContextMenu
           isMine={isMine}
           text={message.text}
+          readers={readers}
+          readersLoading={readersLoading}
+          currentUserId={currentUserId}
           onClose={() => setMenuOpen(false)}
           onReact={(emoji) => {
             onReact(emoji);

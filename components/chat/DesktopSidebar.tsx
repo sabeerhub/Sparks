@@ -8,6 +8,7 @@ import { ChatActionSheet } from "@/components/chat/ChatActionSheet";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SparkWordmark } from "@/components/brand/SparkWordmark";
 import { useChatStore } from "@/store/chat-store";
+import { useChatListReceiptSync } from "@/hooks/useChatListReceiptSync";
 import { fetchChatList, setChatPinned, setChatMuted, setChatArchived, markChatRead, deleteChatForSelf, blockUser } from "@/services/chat-service";
 import { getUnreadCount } from "@/services/notification-service";
 import { createClient } from "@/lib/supabase";
@@ -59,6 +60,12 @@ export function DesktopSidebar() {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
+
+  // v1.8.3 — receipt writes (either phone, any chat) refresh the list,
+  // so a badge cleared by opening a thread disappears here too. The
+  // sidebar stays mounted across chats, so without this it would go
+  // stale the moment a thread is opened.
+  useChatListReceiptSync(userId, "desktop");
 
   const filtered = chatList
     .filter((c) => !c.isArchived)

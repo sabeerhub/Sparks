@@ -5,10 +5,16 @@
  * it because no forward flow existed; v1.5.1 built the real flow
  * (ForwardSheet), so the row is honest again. The "➕" emoji is gone —
  * it used to set your reaction to a plus sign. Six real reactions remain.
+ * v1.8.3 — a "Seen by" section at the top: who has read this message
+ * and when, from the real receipt rows (only 'read' counts, never
+ * invented). "Not seen yet" when nobody has read it.
  */
 "use client";
 
 import { useState } from "react";
+import { Avatar } from "@/components/ui/Avatar";
+import { formatSeenTime } from "@/utils/helpers";
+import type { MessageReader } from "@/services/message-service";
 
 const EMOJIS = ["❤️", "👍", "😂", "😮", "😢", "🙏"];
 
@@ -16,6 +22,11 @@ interface MessageContextMenuProps {
   isMine: boolean;
   /** The message's text, so Copy has something real to copy. */
   text: string;
+  /** Who has read this message, loaded when the menu opens — null while loading. */
+  readers?: MessageReader[] | null;
+  readersLoading?: boolean;
+  /** The current user's id, so their own read shows as "You". */
+  currentUserId?: string | null;
   onClose: () => void;
   onReact: (emoji: string) => void;
   onReply: () => void;
@@ -24,7 +35,7 @@ interface MessageContextMenuProps {
   onDelete: () => void;
 }
 
-export function MessageContextMenu({ isMine, text, onClose, onReact, onReply, onForward, onEdit, onDelete }: MessageContextMenuProps) {
+export function MessageContextMenu({ isMine, text, readers, readersLoading = false, currentUserId, onClose, onReact, onReply, onForward, onEdit, onDelete }: MessageContextMenuProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -57,6 +68,35 @@ export function MessageContextMenu({ isMine, text, onClose, onReact, onReply, on
               {emoji}
             </button>
           ))}
+        </div>
+
+        {/* Seen by — who has read this message, and when. Only 'read'
+            receipts count, so this never invents a reader or a time;
+            the time is the receipt's updated_at, written by markRead
+            in the reader's local time. */}
+        <div className="px-4 py-3 border-b" style={{ borderColor: "var(--color-gray-2)" }}>
+          <div className="text-caption font-semibold uppercase tracking-wide mb-2" style={{ color: "var(--color-gray-1)" }}>
+            Seen by
+          </div>
+          {readersLoading ? (
+            <div className="text-body" style={{ color: "var(--color-gray-1)" }}>Loading…</div>
+          ) : readers && readers.length > 0 ? (
+            <div className="space-y-2.5">
+              {readers.map((r) => (
+                <div key={r.userId} className="flex items-center gap-2.5">
+                  <Avatar name={r.name} src={r.avatarUrl} size={28} />
+                  <span className="flex-1 min-w-0 text-body font-medium truncate" style={{ color: "var(--color-black)" }}>
+                    {r.userId === currentUserId ? "You" : r.name}
+                  </span>
+                  <span className="text-caption flex-shrink-0" style={{ color: "var(--color-gray-1)" }}>
+                    {formatSeenTime(r.readAt)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-body" style={{ color: "var(--color-gray-1)" }}>Not seen yet</div>
+          )}
         </div>
 
         {actions.map((action) => (
